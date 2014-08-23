@@ -2,18 +2,6 @@
 
 set -v
 
-pwd
-ls -Rt .
-
-echo $TRAVIS_BUILD_DIR
-ls -Rt $TRAVIS_BUILD_DIR
-
-echo $HOME
-ls -Rt $HOME
-
-echo $ODOO_REPO
-ls -Rt $ODOO_REPO
-
-pylint --rcfile=../maintainer-quality-tools/travis/cfg/travis_run_pylint.cfg odoo-$VERSION/openerp
+pylint --rcfile=../maintainer-quality-tools/travis/cfg/travis_run_pylint.cfg ../odoo-$VERSION/openerp
 pylint_status=$?
 exit $((${pylint_status}))
