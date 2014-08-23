@@ -1,0 +1,7 @@
+#!/bin/bash
+
+set -v
+
+pylint --rcfile=cfg/pylint_vauxoo.cfg . openerp
+pylint_status=$?
+exit $((${pylint_status}))
