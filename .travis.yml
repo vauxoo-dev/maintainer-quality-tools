@@ -28,8 +28,8 @@ install:
 
 script:
   - travis_run_flake8
-  - travis_run_tests 8.0 #only used if VERSION not set in env
   - travis_run_pylint
+  - travis_run_tests 8.0 #only used if VERSION not set in env
 
 #after_success:
 #  coveralls

@@ -2,6 +2,6 @@
 
 set -v
 
-pylint --rcfile=../maintainer-quality-tools/travis/cfg/pylint_vauxoo.cfg . openerp
+pylint --rcfile=../maintainer-quality-tools/travis/cfg/travis_run_pylint.cfg . openerp
 pylint_status=$?
 exit $((${pylint_status}))
