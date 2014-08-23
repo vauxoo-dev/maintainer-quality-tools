@@ -2,6 +2,6 @@
 
 set -v
 
-pylint --rcfile=../maintainer-quality-tools/travis/cfg/travis_run_pylint.cfg . openerp
+pylint --rcfile=../maintainer-quality-tools/travis/cfg/travis_run_pylint.cfg odoo-$VERSION/openerp
 pylint_status=$?
 exit $((${pylint_status}))
