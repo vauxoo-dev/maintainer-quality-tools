@@ -8,14 +8,19 @@ fi
 
 : ${ODOO_REPO:="odoo/odoo"}  # default value, if not set
 IFS="/" read -a REPO <<< "${ODOO_REPO}"
+echo "${REPO[0]}/${REPO[1]}"
+echo "${REPO}"
 ODOO_URL="https://github.com/${REPO[0]}/${REPO[1]}/archive/${VERSION}.tar.gz"
 
+echo "pylint --rcfile=../maintainer-quality-tools/travis/cfg/travis_run_pylint.cfg ../${REPO[0]}-${VERSION}/openerp"
+
+
 echo "Installing Odoo ${ODOO_URL}"
-wget -O odoo.tar.gz ${ODOO_URL}
-tar -xf odoo.tar.gz -C ../
+#wget -O odoo.tar.gz ${ODOO_URL}
+#tar -xf odoo.tar.gz -C ../
 
-sudo apt-get -q install expect-dev  # provides unbuffer utility
-sudo apt-get -q install python-lxml  # because pip installation is slooow
+#sudo apt-get -q install expect-dev  # provides unbuffer utility
+#sudo apt-get -q install python-lxml  # because pip installation is slooow
 
-pip install -q QUnitSuite flake8 coveralls pylint
-pip install -q -r $(dirname ${BASH_SOURCE[0]})/requirements.txt
+#pip install -q QUnitSuite flake8 coveralls pylint
+#pip install -q -r $(dirname ${BASH_SOURCE[0]})/requirements.txt
