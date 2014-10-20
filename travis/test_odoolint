@@ -1,5 +1,11 @@
 #!/usr/bin/env python
 # coding: utf-8
+import subprocess
 
-import ast
+def main():
+    travis_build_dir = os.environ.get("TRAVIS_BUILD_DIR", "../..")
+    cmd_odoo_lint = 'odoolint '
+    subprocess.check_call(cmd_odoo_lint % cmd_options, shell=True)
 
+if __name__ == '__main__':
+    exit(main())

@@ -11,36 +11,6 @@ import sys
 
 import ast
 
-def multi_getattr(obj, attr, default=None):
-    """
-    Get a named attribute from an object; multi_getattr(x, 'a.b.c.d') is
-    equivalent to x.a.b.c.d. When a default argument is given, it is
-    returned when any attribute in the chain doesn't exist; without
-    it, an exception is raised when a missing attribute is encountered.
-
-    """
-    attributes = attr.split(".")
-    for i in attributes:
-        try:
-            obj = getattr(obj, i)
-        except AttributeError:
-            #if default:
-            return default
-            #else:
-               # raise
-    return obj
-
-def get_pack_from_astnode(ast_node):
-    pack_names = []
-    if isinstance(ast_node, ast.Import):
-        pack_names.extend([pack.name for pack in 
-                           multi_getattr(ast_node, "names")])
-    elif isinstance(ast_node, ast.ImportFrom):
-        pack_from_import = multi_getattr(ast_node, "module")
-        if pack_from_import:
-            pack_names.append(pack_from_import)
-    return pack_names
-
 def odoo_lint(dir_path):
     count_fails = 0
     for dirname, dirnames, filenames in os.walk(dir_path):
@@ -56,32 +26,21 @@ def odoo_lint(dir_path):
                     pass
                 if parsed:
                     for node in ast.walk(parsed):
+                        # Fail "print" sentence
                         if isinstance(node, ast.Print):
                             count_fails += 1
                             message = '{}:{}: [print sentence] "print" '\
                                       'sentence detected'\
                                       '\n'.format(fname_path, node.lineno)
                             sys.stdout.write(message)
-                        node_packages = get_pack_from_astnode(node)
-                        if 'pdb' in node_packages:
-                            message = '{}:{}: [import pdb sentence] '\
-                                      '"import pdb" sentence detected'\
-                                      '\n'.format(fname_path,
-                                                  node.lineno)
-                            sys.stdout.write(message)
-                        if 'pupdb' in node_packages:
-                            message = '{}:{}: [import pupdb sentence] '\
-                                      '"import pdb" sentence detected'\
-                                      '\n'.format(fname_path,
-                                                  node.lineno)
-                            sys.stdout.write(message)
     return count_fails
 
 def main():
     if len( sys.argv ) == 2 and os.path.isdir(sys.argv[1]):
-        odoo_lint(sys.argv[1])
+        return odoo_lint(sys.argv[1])
     else:
         logging.warning("First param should be directoy path to check")
+        return -1
 
 if __name__ == '__main__':
     exit(main())
