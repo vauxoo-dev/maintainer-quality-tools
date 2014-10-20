@@ -1,5 +1,11 @@
 #!/usr/bin/env python
 # coding: utf-8
+
+'''
+Execute odoolint script with TRAVIS_BUILD_DIR
+'''
+
+import os
 import subprocess
 
 '''
