@@ -11,9 +11,14 @@ import sys
 
 import ast
 
+
 def odoo_lint(dir_path):
+    """
+    Core method to check fails.
+    @dir_path: Full path or relative path to *.py files to check
+    """
     count_fails = 0
-    for dirname, dirnames, filenames in os.walk(dir_path):
+    for dirname, dummy, filenames in os.walk(dir_path):
         for filename in filenames:
             fext = os.path.splitext(filename)[1]
             if fext == '.py':
@@ -21,9 +26,9 @@ def odoo_lint(dir_path):
                 try:
                     with open(fname_path) as fin:
                         parsed = ast.parse(fin.read())
-                except:
-                    parsed = None
-                    pass
+                except SyntaxError:
+                    parsed = False
+                    # Syntax error is not a goal of fail for this script
                 if parsed:
                     for node in ast.walk(parsed):
                         # Fail "print" sentence
@@ -35,8 +40,12 @@ def odoo_lint(dir_path):
                             sys.stdout.write(message)
     return count_fails
 
+
 def main():
-    if len( sys.argv ) == 2 and os.path.isdir(sys.argv[1]):
+    """
+    Main method to run core method
+    """
+    if len(sys.argv) == 2 and os.path.isdir(sys.argv[1]):
         return odoo_lint(sys.argv[1])
     else:
         logging.warning("First param should be directoy path to check")
