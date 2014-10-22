@@ -5,11 +5,10 @@
 This module make custom fails to sourcecode of odoo modules.
 """
 
+import ast
 import logging
 import os
 import sys
-
-import ast
 
 
 def odoo_lint(dir_path):
