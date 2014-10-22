@@ -8,12 +8,13 @@ Execute odoolint script with TRAVIS_BUILD_DIR
 import os
 import subprocess
 
+
 def main():
     '''
     Main function to main control
     '''
     travis_build_dir = os.environ.get("TRAVIS_BUILD_DIR", "../..")
-    cmd_odoo_lint = 'odoolint %s'%(travis_build_dir)
+    cmd_odoo_lint = 'odoolint %s' % (travis_build_dir)
     return subprocess.check_call(cmd_odoo_lint, shell=True)
 
 if __name__ == '__main__':
