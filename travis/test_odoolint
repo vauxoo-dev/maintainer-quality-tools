@@ -8,13 +8,6 @@ Execute odoolint script with TRAVIS_BUILD_DIR
 import os
 import subprocess
 
-'''
-Execute odoolint script with TRAVIS_BUILD_DIR
-'''
-
-import os
-import subprocess
-
 
 def main():
     '''
