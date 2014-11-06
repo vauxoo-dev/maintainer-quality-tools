@@ -6,6 +6,7 @@ from pylint.interfaces import IAstroidChecker
 from pylint.checkers import BaseChecker
 from pylint.checkers import utils
 
+
 class OdooAstroidChecker(BaseChecker):
     """add member attributes defined using my own "properties" function
     to the class locals dictionary
@@ -21,10 +22,10 @@ class OdooAstroidChecker(BaseChecker):
                   'Used when a print statement is used ',),
     }
     # this is important so that your checker is executed before others
-    priority = -1 
+    priority = -1
 
     # Decorator used to be more verborse than using 'EO001' as message
-    @utils.check_messages('print-statement') 
+    @utils.check_messages('print-statement')
     def visit_print(self, node):
         self.add_message('print-statement', node=node)
 
