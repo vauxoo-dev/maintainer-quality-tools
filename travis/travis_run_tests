@@ -39,7 +39,6 @@ if __name__ == '__main__':
     tests = [
         ['test_flake8'],
         ['test_pylint'],
-        ['test_odoolint'],
         ['test_server'],
     ]
     exit(main(tests))
