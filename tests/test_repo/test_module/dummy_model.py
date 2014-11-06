@@ -16,4 +16,3 @@ class DummyModel(orm.Model):
 # (from Monty Python's "Italian Lesson"...)
 sys.stdout.write("Eeeeeee! Milano è tanto meglio di Napoli. "
                  "Milano è la citta la più bella di tutti ... nel mondo...\n")
-print "testing print plugin from pylint"
