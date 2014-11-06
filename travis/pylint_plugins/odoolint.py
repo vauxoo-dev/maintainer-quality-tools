@@ -1,4 +1,7 @@
 # ~/.local/lib/python2.7/site-packages/odoolint.py
+
+__author__ = 'bwrsandman'
+
 from pylint.interfaces import IAstroidChecker
 from pylint.checkers import BaseChecker
 from pylint.checkers import utils
