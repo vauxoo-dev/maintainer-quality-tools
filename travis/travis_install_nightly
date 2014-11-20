@@ -29,7 +29,6 @@ tar -xf odoo.tar.gz -C ${HOME}
 
 sudo apt-get -qy install expect-dev  # provides unbuffer utility
 sudo apt-get -qy install python-lxml  # because pip installation is slooow
-sudo apt-get -qy install postgres # because pip installation is slooow
 
 pip install -q QUnitSuite flake8 coveralls pylint
 pip install -q -r $(dirname ${BASH_SOURCE[0]})/requirements.txt
