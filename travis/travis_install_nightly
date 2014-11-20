@@ -15,13 +15,26 @@ sudo echo 'APT::Get::Assume-Yes "true";' >> /etc/apt/apt.conf \
 
 sudo apt-get update
 sudo apt-get install -q wget bzr  #  Required by shippable
+sudo apt-get install -qy postgresql
+/etc/init.d/postgresql start
+export curr_user="$(whoami)"
+sudo su postgres -c "psql -c 'CREATE ROLE ${curr_user} SUPERUSER INHERIT CREATEDB CREATEROLE';"
+sudo su postgres -c "psql -c 'ALTER ROLE ${curr_user} WITH LOGIN;'"
+
+psql
+CREATE ROLE root 
+ LOGIN ENCRYPTED PASSWORD '1234'
+ SUPERUSER INHERIT CREATEDB CREATEROLE;
+\q
+
 
 echo "Installing Odoo ${ODOO_URL}"
 wget -O odoo.tar.gz ${ODOO_URL}
 tar -xf odoo.tar.gz -C ${HOME}
 
-sudo apt-get -q install expect-dev  # provides unbuffer utility
-sudo apt-get -q install python-lxml  # because pip installation is slooow
+sudo apt-get -qy install expect-dev  # provides unbuffer utility
+sudo apt-get -qy install python-lxml  # because pip installation is slooow
+sudo apt-get -qy install postgres # because pip installation is slooow
 
 pip install -q QUnitSuite flake8 coveralls pylint
 pip install -q -r $(dirname ${BASH_SOURCE[0]})/requirements.txt
