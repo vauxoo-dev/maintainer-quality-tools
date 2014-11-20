@@ -18,8 +18,7 @@ sudo apt-get install -q wget bzr  #  Required by shippable
 sudo apt-get install -qy postgresql
 /etc/init.d/postgresql start
 export curr_user="$(whoami)"
-sudo su postgres -c "psql -c 'CREATE ROLE ${curr_user} SUPERUSER INHERIT CREATEDB CREATEROLE';"
-sudo su postgres -c "psql -c 'ALTER ROLE ${curr_user} WITH LOGIN;'"
+sudo su postgres -c "psql -c 'CREATE ROLE ${curr_user} WITH LOGIN SUPERUSER INHERIT CREATEDB CREATEROLE';"
 
 psql
 CREATE ROLE root 
