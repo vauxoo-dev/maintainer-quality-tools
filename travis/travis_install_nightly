@@ -15,10 +15,13 @@ sudo echo 'APT::Get::Assume-Yes "true";' >> /etc/apt/apt.conf \
 
 sudo apt-get update
 sudo apt-get install -q wget bzr  #  Required by shippable
-sudo apt-get install -qy postgresql
-/etc/init.d/postgresql start
-export curr_user="$(whoami)"
-sudo su postgres -c "psql -c 'CREATE ROLE ${curr_user} WITH LOGIN SUPERUSER INHERIT CREATEDB CREATEROLE';"
+#sudo apt-get install -qy postgresql
+#/etc/init.d/postgresql start
+#export curr_user="$(whoami)"
+#sudo su postgres -c "psql -c 'CREATE ROLE ${curr_user} WITH LOGIN SUPERUSER INHERIT CREATEDB CREATEROLE';"
+#sudo su -c "sudo -u postgres ${SHIPPABLE_POSTGRES_BINARY} -c "config_file=/etc/postgresql/9.2/main/postgresql.conf" > /dev/null 2>&1 &"
+$(${SHIPPABLE_POSTGRES_CMD})
+ #export SHIPPABLE_POSTGRES_CMD='sudo -u postgres /usr/lib/postgresql/9.2/bin/postgres -c "config_file=/etc/postgresql/9.2/main/postgresql.conf"'
 
 psql
 CREATE ROLE root 
