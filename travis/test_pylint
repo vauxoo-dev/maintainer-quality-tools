@@ -17,7 +17,7 @@ fi
 
 : ${ODOO_REPO:="odoo/odoo"}  # default value, if not set
 IFS="/" read -a REPO <<< "${ODOO_REPO}"
-export PYTHONPATH=${PYTHONPATH}:"${HOME}/${REPO[1]}-${VERSION}/openerp"
+export PYTHONPATH=${PYTHONPATH}:"${HOME}/${REPO[1]}-${VERSION}"
 
 #run pylint command
 pylint --rcfile=${PYLINT_CONFIG_DIR}/travis_run_pylint.cfg ${MODULES_TO_TEST}
