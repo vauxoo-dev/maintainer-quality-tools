@@ -1,0 +1,83 @@
+#!/usr/bin/env python
+
+import os
+import subprocess
+import sys
+import yaml
+
+
+def get_cmd_strs_starts(cmd_strs_starts):
+    cmd_strs_starts_list = []
+    if cmd_strs_starts:
+        cmd_strs_starts_list = [cmd_str_starts.strip()
+                                for cmd_str_starts
+                                in cmd_strs_starts.split(',')]
+    return cmd_strs_starts_list
+
+
+def get_env_str_starts(str_starts, environ):
+    env_shippable_cmd_list = []
+    for env_name in environ.keys():
+        if env_name.startswith(str_starts):
+            env_shippable_cmd_list.append(env_name)
+    return env_shippable_cmd_list
+
+
+def run_env_str_starts(str_starts, environ):
+    env_shippable_cmd_list = get_env_str_starts(str_starts, environ)
+    for env_shippable_cmd in env_shippable_cmd_list:
+        cmd = ['sh', '-c', os.environ[env_shippable_cmd]]
+        sys.stdout.write("Running cmd %s [%s]\n" % (
+            env_shippable_cmd,
+            os.environ[env_shippable_cmd]))
+        subprocess.call(cmd)
+        sys.stdout.write("cmd finished\n")
+
+
+def get_yml_file(build_dir, possible_yml_names=None):
+    if possible_yml_names is None:
+        possible_yml_names = ['.travis.yml', 'shippable.yml']
+    for possible_yml_name in possible_yml_names:
+        fname_yml = os.path.join(os.path.expanduser(build_dir),
+                                 os.path.expanduser(possible_yml_name))
+        if os.path.isfile(fname_yml):
+            return fname_yml
+    return None
+
+
+def get_custom_env_cmd(build_dir, str_starts, possible_yml_names=None):
+    fname_yml = get_yml_file(build_dir, possible_yml_names)
+    env_cmd = {}
+    if fname_yml:
+        with open(fname_yml, "r") as f_yml:
+            yml_data = yaml.load(f_yml)
+            build_image = yml_data.get('build_image')
+            if os.environ.get('SHIPPABLE') == 'true':
+                if build_image is None\
+                   or build_image.startswith('shippable/minv'):
+                    #  default image of shippable don't have installed bzr
+                    #  but travis has installed bzr.
+                    #  Then we need add dependencies
+                    #  of travis that shippable don't have
+                    #  for not modified .travis file.
+                    env_cmd.update({
+                        str_starts + 'BZR_INSTALL':
+                            "sudo apt-get update && "
+                            "sudo apt-get install -yf bzr",
+                    })
+    return env_cmd
+
+
+def main():
+    cmd_strs_starts = os.environ.get('CMD_STRS_STARTS')
+    for cmd_str_starts in get_cmd_strs_starts(cmd_strs_starts):
+        env = get_custom_env_cmd(
+            os.environ.get('TRAVIS_BUILD_DIR', '../..'),
+            cmd_str_starts)
+        env.update(os.environ)
+        run_env_str_starts(cmd_str_starts, env)
+    return 0
+
+
+if __name__ == '__main__':
+    exit(main())
