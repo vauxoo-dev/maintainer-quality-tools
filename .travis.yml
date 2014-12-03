@@ -4,7 +4,7 @@
 
 language: python
 
-build_image: ocaimages/oca-odoo
+build_image: ocaimages/oca-odoo:dev-moylop260
 
 python:
   - "2.7"
