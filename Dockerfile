@@ -59,3 +59,6 @@ RUN rm -rf $VIRTUAL_ENV/lib/python2.7/no-global-site-packages.txt
 ADD * /tmp/
 RUN WITHOUT_ODOO=1 /tmp/travis_install_nightly
 RUN apt-get clean && rm -rf /var/lib/apt/lists/* && rm -rf /tmp/*
+
+ENV WITHOUT_DEPENDENCIES true
+ENV PROBANDO hola mundo

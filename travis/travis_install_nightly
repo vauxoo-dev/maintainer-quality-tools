@@ -17,11 +17,13 @@ if [ "x${WITHOUT_ODOO}" == "x" ] ; then
     tar -xf odoo.tar.gz -C ${HOME}
 fi
 
-sudo apt-get -q -y install expect-dev  # provides unbuffer utility
-sudo apt-get -q -y install python-lxml  # because pip installation is slooow
+if [ "x${WITHOUT_DEPENDENCIES}" == "x" ] ; then
+    sudo apt-get -q -y install expect-dev  # provides unbuffer utility
+    sudo apt-get -q -y install python-lxml  # because pip installation is slooow
 
-pip install -q QUnitSuite flake8 coveralls pylint
-pip install -q -r $(dirname ${BASH_SOURCE[0]})/requirements.txt
+    pip install -q QUnitSuite flake8 coveralls pylint
+    pip install -q -r $(dirname ${BASH_SOURCE[0]})/requirements.txt
+fi
 
 if [ "${SHIPPABLE}" == "true" ] ; then
     echo "Installing for shippable"
