@@ -25,6 +25,8 @@ env:
 
 install:
   - python -c "import os;print os.environ"
+  - echo ${WITHOUT_DEPENDENCIES}
+  - echo ${PROBANDO}
   - cp -r ../maintainer-quality-tools/ $HOME
   - mv tests/test_repo/* ./
   - export PATH=$HOME/maintainer-quality-tools/travis:$PATH
