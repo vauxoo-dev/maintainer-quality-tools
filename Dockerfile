@@ -26,7 +26,8 @@ RUN apt-get update -q && apt-get upgrade -q \
     htop \
     postgresql-9.3 \
     postgresql-contrib-9.3 \
-    postgresql-client-9.3
+    postgresql-client-9.3 \
+    libpq-dev
 
 # Installing pip
 RUN cd /tmp && wget -q https://raw.githubusercontent.com/pypa/pip/master/contrib/get-pip.py && python get-pip.py
@@ -58,8 +59,5 @@ WORKDIR /root
 RUN rm -rf $VIRTUAL_ENV/lib/python2.7/no-global-site-packages.txt
 
 ADD * /tmp/
-RUN WITHOUT_ODOO=1 SHIPPABLE="true" /tmp/travis_install_nightly
+RUN WITHOUT_ODOO=1 SHIPPABLE="true" WITHOUT_DEPENDENCIES="" /tmp/travis_install_nightly
 RUN apt-get clean && rm -rf /var/lib/apt/lists/* && rm -rf /tmp/* && apt-get update
-
-ENV WITHOUT_DEPENDENCIES true
-ENV PROBANDO hola mundo
