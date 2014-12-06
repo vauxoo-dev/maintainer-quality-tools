@@ -1,6 +1,6 @@
 FROM ubuntu:14.04
 
-MAINTAINER "Vauxoo"
+# MAINTAINER "Vauxoo"
 
 #  Fix http://stackoverflow.com/questions/22466255/is-it-possibe-to-answer-dialog-questions-when-installing-under-docker
 ENV DEBIAN_FRONTEND noninteractive
