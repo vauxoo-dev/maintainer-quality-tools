@@ -76,7 +76,7 @@ RUN mkdir -p /etc/ssl/private-copy \
         && chown -R postgres /etc/ssl/private
 
 #  Create postgres role to root
-RUN sudo su -c "sudo -u postgres /usr/lib/postgresql/9.3/bin/postgres -c "config_file=/etc/postgresql/9.3/main/postgresql.conf" > /tmp/pg.log 2>&1 & sleep 5s"
+RUN su - postgres /etc/init.d/postgresql start \
     && su - postgres -c 'psql -c "CREATE ROLE root LOGIN SUPERUSER INHERIT CREATEDB CREATEROLE;"'
 
 ADD * /tmp/
