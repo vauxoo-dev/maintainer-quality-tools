@@ -1,7 +1,11 @@
 #!/bin/bash
 
-$(${CMD_POSTGRESQL_SSL}) && $(${CMD_POSTGRESQL_START})
+#  Running CMD environment variables
+$(${CMD_POSTGRESQL_SSL})
+$(${CMD_POSTGRESQL_START})
+
+#  Force odoo to run with root user. With shippable ci we can't change user to run build
 find ${HOME} -name server.py -exec sed -i "s/== 'root'/== 'force_root'/g" {} \;
 
-# Workaround to force using system site packages (see https://github.com/Shippable/support/issues/241#issuecomment-57947925)
+#  Workaround to force using system site packages (see https://github.com/Shippable/support/issues/241#issuecomment-57947925)
 rm -rf $VIRTUAL_ENV/lib/python2.7/no-global-site-packages.txt
