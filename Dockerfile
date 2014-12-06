@@ -49,6 +49,8 @@ RUN apt-get install --allow-unauthenticated -q libssl-dev \
 RUN apt-get install --allow-unauthenticated -q postgresql-9.3 \
     postgresql-contrib-9.3 \
     postgresql-client-9.3
+
+#  Adding environment variable to start postgres
 ENV CMD_POSTGRESQL_SSL sudo mkdir -p /etc/ssl/private-copy; sudo mkdir -p /etc/ssl/private; sudo mv /etc/ssl/private/* /etc/ssl/private-copy/; sudo rm -r /etc/ssl/private; sudo mv /etc/ssl/private-copy /etc/ssl/private; sudo chmod -R 0700 /etc/ssl/private; sudo chown -R postgres /etc/ssl/private
 ENV CMD_POSTGRESQL_START sudo su -c "sudo -u postgres /usr/lib/postgresql/9.3/bin/postgres -c "config_file=/etc/postgresql/9.3/main/postgresql.conf" > /tmp/pg.log 2>&1 & sleep 5s"
 
@@ -59,42 +61,29 @@ RUN ln -s /usr/include/freetype2 /usr/local/include/freetype \
     && ln -s /usr/lib/x86_64-linux-gnu/libz.so /usr/lib/
 
 #  Installing pip
-RUN cd /tmp && wget -q https://raw.githubusercontent.com/pypa/pip/master/contrib/get-pip.py && python get-pip.py
-# TODO: Change to apt-get: sudo apt-get install python-pip
+RUN apt-get install python-pip
 
 #  Add git config data to root user
 RUN git config --global user.name oca_docker \
     && git config --global user.email hello@oca.com
 
 #  Fix shippable key issue on start postgresql - https://github.com/docker/docker/issues/783#issuecomment-56013588
-RUN sudo mkdir -p /etc/ssl/private-copy \
-        && sudo mkdir -p /etc/ssl/private \
-        && sudo mv /etc/ssl/private/* /etc/ssl/private-copy/ \
-        && sudo rm -rf /etc/ssl/private \
-        && sudo mv /etc/ssl/private-copy /etc/ssl/private \
-        && sudo chmod -R 0700 /etc/ssl/private \
-        && sudo chown -R postgres /etc/ssl/private
-
-#  Change to user postgres
-USER postgres
+RUN mkdir -p /etc/ssl/private-copy \
+        && mkdir -p /etc/ssl/private \
+        && mv /etc/ssl/private/* /etc/ssl/private-copy/ \
+        && rm -rf /etc/ssl/private \
+        && mv /etc/ssl/private-copy /etc/ssl/private \
+        && chmod -R 0700 /etc/ssl/private \
+        && chown -R postgres /etc/ssl/private
 
 #  Create postgres role to root
-RUN /etc/init.d/postgresql start \
-    && psql -c  "CREATE ROLE root LOGIN SUPERUSER INHERIT CREATEDB CREATEROLE;"
-
-USER root
-WORKDIR /root
-
-#  Workaround to force using system site packages (see https://github.com/Shippable/support/issues/241#issuecomment-57947925)
-RUN rm -rf $VIRTUAL_ENV/lib/python2.7/no-global-site-packages.txt
+RUN $(${CMD_POSTGRESQL_SSL}) && $(${CMD_POSTGRESQL_START}) \
+    && su - postgres -c 'psql -c "CREATE ROLE root LOGIN SUPERUSER INHERIT CREATEDB CREATEROLE;"'
 
 ADD * /tmp/
-#  TODO: Adding copy ../
 
 #  Installing basic odoo dependencies
 RUN WITHOUT_ODOO=1 SHIPPABLE="true" WITHOUT_DEPENDENCIES="" /tmp/travis_install_nightly
 
 #  Setting global env for next shippable build
 ENV WITHOUT_DEPENDENCIES 1
-
-## RUN apt-get clean && rm -rf /var/lib/apt/lists/* && rm -rf /tmp/* && apt-get update
