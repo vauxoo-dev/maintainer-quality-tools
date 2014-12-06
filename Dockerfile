@@ -1,6 +1,6 @@
 FROM ubuntu:14.04
 
-MAINTAINER "Moises Lopez <moylop260@vauxoo.com>"
+MAINTAINER "Vauxoo"
 
 RUN echo 'APT::Get::Assume-Yes "true";' >> /etc/apt/apt.conf \
     && echo 'APT::Get::force-yes "true";' >> /etc/apt/apt.conf
@@ -16,6 +16,7 @@ ENV PYTHONIOENCODING utf-8
 #  Fixin http://stackoverflow.com/questions/22466255/is-it-possibe-to-answer-dialog-questions-when-installing-under-docker
 ENV DEBIAN_FRONTEND noninteractive
 
+# Installing basic os package
 RUN apt-get update -q && apt-get upgrade -q \
     && apt-get install --allow-unauthenticated -q bzr \
     python \
@@ -30,8 +31,22 @@ RUN apt-get update -q && apt-get upgrade -q \
     postgresql-9.3 \
     postgresql-contrib-9.3 \
     postgresql-client-9.3 \
-    libpq-dev \
-    libjpeg-dev
+
+# Installing basic odoo package
+RUN apt-get install --allow-unauthenticated -q libssl-dev \
+    libyaml-dev \
+    libjpeg-dev \
+    libgeoip-dev \
+    libffi-dev \
+    libqrencode-dev \
+    libfreetype6-dev \
+    zlib1g-dev \
+    python-lxml \
+    libpq-dev
+RUN ln -s /usr/include/freetype2 /usr/local/include/freetype \
+    && ln -s /usr/lib/x86_64-linux-gnu/libjpeg.so /usr/lib/ \
+    && ln -s /usr/lib/x86_64-linux-gnu/libfreetype.so /usr/lib/ \
+    && ln -s /usr/lib/x86_64-linux-gnu/libz.so /usr/lib/
 
 # Installing pip
 RUN cd /tmp && wget -q https://raw.githubusercontent.com/pypa/pip/master/contrib/get-pip.py && python get-pip.py
