@@ -18,6 +18,7 @@ if [ "x${WITHOUT_ODOO}" == "x" ] ; then
 fi
 
 if [ "x${WITHOUT_DEPENDENCIES}" == "x" ] ; then
+    echo "Installing dependencies"
     sudo apt-get -q -y install expect-dev  # provides unbuffer utility
     sudo apt-get -q -y install python-lxml  # because pip installation is slooow
 
