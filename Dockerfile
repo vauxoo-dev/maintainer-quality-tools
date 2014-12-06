@@ -50,9 +50,8 @@ RUN apt-get install --allow-unauthenticated -q postgresql-9.3 \
     postgresql-contrib-9.3 \
     postgresql-client-9.3
 
-#  Adding environment variable to start postgres
-ENV CMD_POSTGRESQL_SSL sudo mkdir -p /etc/ssl/private-copy; sudo mkdir -p /etc/ssl/private; sudo mv /etc/ssl/private/* /etc/ssl/private-copy/; sudo rm -r /etc/ssl/private; sudo mv /etc/ssl/private-copy /etc/ssl/private; sudo chmod -R 0700 /etc/ssl/private; sudo chown -R postgres /etc/ssl/private
-ENV CMD_POSTGRESQL_START sudo su -c "sudo -u postgres /usr/lib/postgresql/9.3/bin/postgres -c "config_file=/etc/postgresql/9.3/main/postgresql.conf" > /tmp/pg.log 2>&1 & sleep 5s"
+# Fix AUFS - https://github.com/docker/docker/issues/783#issuecomment-56013588
+RUN sudo mkdir -p /etc/ssl/private-copy; sudo mkdir -p /etc/ssl/private; sudo mv /etc/ssl/private/* /etc/ssl/private-copy/; sudo rm -r /etc/ssl/private; sudo mv /etc/ssl/private-copy /etc/ssl/private; sudo chmod -R 0700 /etc/ssl/private; sudo chown -R postgres /etc/ssl/private
 
 #  Fix http://www.nigeldunn.com/2011/05/14/ubuntu-11-04-libjpeg-so-libpng-so-php-installation-issues/
 RUN ln -s /usr/include/freetype2 /usr/local/include/freetype \
@@ -77,7 +76,7 @@ RUN mkdir -p /etc/ssl/private-copy \
         && chown -R postgres /etc/ssl/private
 
 #  Create postgres role to root
-RUN $(${CMD_POSTGRESQL_SSL}) && $(${CMD_POSTGRESQL_START}) \
+RUN sudo su -c "sudo -u postgres /usr/lib/postgresql/9.3/bin/postgres -c "config_file=/etc/postgresql/9.3/main/postgresql.conf" > /tmp/pg.log 2>&1 & sleep 5s"
     && su - postgres -c 'psql -c "CREATE ROLE root LOGIN SUPERUSER INHERIT CREATEDB CREATEROLE;"'
 
 ADD * /tmp/

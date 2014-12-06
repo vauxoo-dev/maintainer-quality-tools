@@ -1,8 +1,7 @@
 #!/bin/bash
 
 #  Running CMD environment variables
-$(${CMD_POSTGRESQL_SSL})
-$(${CMD_POSTGRESQL_START})
+sudo su -c 'sudo -u postgres /usr/lib/postgresql/9.3/bin/postgres -c "config_file=/etc/postgresql/9.3/main/postgresql.conf" > /tmp/pg.log 2>&1 & sleep 5s'
 
 #  Force odoo to run with root user. With shippable ci we can't change user to run build
 find ${HOME} -name server.py -exec sed -i "s/== 'root'/== 'force_root'/g" {} \;
