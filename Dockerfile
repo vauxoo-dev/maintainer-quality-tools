@@ -30,7 +30,8 @@ RUN apt-get update -q && apt-get upgrade -q \
     postgresql-9.3 \
     postgresql-contrib-9.3 \
     postgresql-client-9.3 \
-    libpq-dev
+    libpq-dev \
+    libjpeg-dev
 
 # Installing pip
 RUN cd /tmp && wget -q https://raw.githubusercontent.com/pypa/pip/master/contrib/get-pip.py && python get-pip.py
