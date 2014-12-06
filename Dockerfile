@@ -50,9 +50,6 @@ RUN apt-get install --allow-unauthenticated -q postgresql-9.3 \
     postgresql-contrib-9.3 \
     postgresql-client-9.3
 
-#  Fix AUFS - https://github.com/docker/docker/issues/783#issuecomment-56013588
-RUN sudo mkdir -p /etc/ssl/private-copy; sudo mkdir -p /etc/ssl/private; sudo mv /etc/ssl/private/* /etc/ssl/private-copy/; sudo rm -r /etc/ssl/private; sudo mv /etc/ssl/private-copy /etc/ssl/private; sudo chmod -R 0700 /etc/ssl/private; sudo chown -R postgres /etc/ssl/private
-
 #  Fix http://www.nigeldunn.com/2011/05/14/ubuntu-11-04-libjpeg-so-libpng-so-php-installation-issues/
 RUN ln -s /usr/include/freetype2 /usr/local/include/freetype \
     && ln -s /usr/lib/x86_64-linux-gnu/libjpeg.so /usr/lib/ \
