@@ -86,7 +86,7 @@ WORKDIR /root
 #  Workaround to force using system site packages (see https://github.com/Shippable/support/issues/241#issuecomment-57947925)
 RUN rm -rf $VIRTUAL_ENV/lib/python2.7/no-global-site-packages.txt
 
-#  ADD * /tmp/
+ADD * /tmp/
 #  TODO: Adding copy ../
 
 #  Installing basic odoo dependencies
