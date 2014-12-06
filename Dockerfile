@@ -13,6 +13,9 @@ RUN locale-gen fr_FR \
 
 ENV PYTHONIOENCODING utf-8
 
+#  Fixin http://stackoverflow.com/questions/22466255/is-it-possibe-to-answer-dialog-questions-when-installing-under-docker
+ENV DEBIAN_FRONTEND noninteractive
+
 RUN apt-get update -q && apt-get upgrade -q \
     && apt-get install --allow-unauthenticated -q bzr \
     python \
