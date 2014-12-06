@@ -32,7 +32,7 @@ RUN mkdir /extras
 RUN git clone https://github.com/OCA/maintainer-quality-tools.git -b master /extras/mqt
 
 #  Installing basic odoo dependencies
-RUN WITHOUT_ODOO=1 SHIPPABLE="true" WITHOUT_DEPENDENCIES="" /tmp/mqt
+RUN WITHOUT_ODOO=1 SHIPPABLE="true" WITHOUT_DEPENDENCIES="" /extras/mqt
 
 #  Setting global env for next shippable build
 ENV WITHOUT_DEPENDENCIES 1
