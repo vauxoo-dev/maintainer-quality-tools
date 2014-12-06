@@ -25,7 +25,8 @@ RUN apt-get update -q && apt-get upgrade -q \
     tmux \
     htop \
     postgresql-9.3 \
-    postgresql-contrib-9.3
+    postgresql-contrib-9.3 \
+    postgresql-client-9.3
 
 # Installing pip
 RUN cd /tmp && wget -q https://raw.githubusercontent.com/pypa/pip/master/contrib/get-pip.py && python get-pip.py
@@ -59,6 +60,7 @@ RUN rm -rf $VIRTUAL_ENV/lib/python2.7/no-global-site-packages.txt
 ADD * /tmp/
 RUN WITHOUT_ODOO=1 /tmp/travis_install_nightly
 RUN apt-get clean && rm -rf /var/lib/apt/lists/* && rm -rf /tmp/*
+RUN apt-get update
 
 ENV WITHOUT_DEPENDENCIES true
 ENV PROBANDO hola mundo
