@@ -231,6 +231,7 @@ def main():
             with open('stdout.log', 'r') as ftemp1:
                 print("ftemp1.read()")
                 print(ftemp1.read())
+                print("HEERE FINISH")
             # Find errors, except from failed mails
             errors = has_test_errors(
                 "stdout.log", database, odoo_version, check_loaded)
