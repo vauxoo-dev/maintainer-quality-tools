@@ -64,6 +64,9 @@ def has_test_errors(fname, dbname, odoo_version, check_loaded=True):
     last_log_record = dict.fromkeys(log_start_regex.groupindex.keys())
     with open(fname) as log:
         for line in log:
+            print("line------")
+            print(line)
+            print("------line")
             line = color_regex.sub('', line)
             match = log_start_regex.match(line)
             if match:
@@ -86,7 +89,9 @@ def has_test_errors(fname, dbname, odoo_version, check_loaded=True):
             if report_pattern(log_record):
                 errors.append(log_record['message'])
                 break
-
+    print("log_records-----")
+    print(log_records)
+    print("-----log_records")
     if check_loaded:
         if not [r for r in log_records if 'Modules loaded.' == r['message']]:
             errors.append({'message': "Modules loaded message not found."})
