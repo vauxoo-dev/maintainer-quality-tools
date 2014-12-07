@@ -217,15 +217,15 @@ def main():
             command[-1] = to_test
             print(' '.join(command))
             # Run test command; unbuffer keeps output colors
-            command_call = ["unbuffer"] + command
-            pipe = subprocess.Popen(command_call,
-                                    stderr=subprocess.STDOUT,
-                                    stdout=subprocess.PIPE)
-            with open('stdout.log', 'w') as stdout:
-                for line in pipe.stdout:
-                    stdout.write(line)
-                    print(line.strip())
-            returncode = pipe.wait()
+            #command_call = ["unbuffer"] + command
+            pipe = subprocess.call(command)
+                                    #stderr=subprocess.STDOUT,
+                                    #stdout=subprocess.PIPE)
+            #with open('stdout.log', 'w') as stdout:
+             #   for line in pipe.stdout:
+              #      stdout.write(line)
+               #     print(line.strip())
+            #returncode = pipe.wait()
             # Find errors, except from failed mails
             errors = has_test_errors(
                 "stdout.log", database, odoo_version, check_loaded)
