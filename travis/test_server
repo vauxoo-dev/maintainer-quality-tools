@@ -229,7 +229,7 @@ def main():
             # Find errors, except from failed mails
             #errors = has_test_errors(
             #    "stdout.log", database, odoo_version, check_loaded)
-            errors = 0
+            errors, returncode = 0, 0
             if errors:
                 counted_errors += errors
                 all_errors.append(to_test)
