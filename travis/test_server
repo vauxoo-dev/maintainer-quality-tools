@@ -9,6 +9,7 @@ import sys
 from getaddons import get_addons
 from getaddons import get_modules
 from travis_helpers import success_msg, fail_msg
+import time
 
 
 def has_test_errors(fname, dbname, odoo_version, check_loaded=True):
@@ -227,6 +228,7 @@ def main():
                     print(line.strip())
             returncode = pipe.wait()
             # Find errors, except from failed mails
+            time.sleep(5)
             errors = has_test_errors(
                 "stdout.log", database, odoo_version, check_loaded)
             if errors:
