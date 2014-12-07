@@ -70,9 +70,11 @@ def has_test_errors(fname, dbname, odoo_version, check_loaded=True):
             line = color_regex.sub('', line)
             match = log_start_regex.match(line)
             if match:
+                print("match True")
                 last_log_record = match.groupdict()
                 log_records.append(last_log_record)
             else:
+                print("match False")
                 last_log_record['message'] = '%s\n%s' % (
                     last_log_record['message'], line.rstrip('\n')
                 )
