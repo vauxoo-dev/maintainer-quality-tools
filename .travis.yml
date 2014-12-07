@@ -14,13 +14,13 @@ virtualenv:
 
 env:
   - VERSION="8.0" INCLUDE="broken_module" SERVER_EXPECTED_ERRORS="1"  # test errors are detected
-  #- VERSION="master" EXCLUDE="broken_module"  # EXCLUDE usage example - update with erroring modules list
-  #- VERSION="8.0" INCLUDE="test_module,second_module" OPTIONS="--log-level=debug"  # OPTIONS usage example
-  #- VERSION="8.0" INCLUDE="test_module,second_module" INSTALL_OPTIONS="--log-level=info"
-  #- VERSION="8.0" INCLUDE="test_module,second_module" UNIT_TEST="1"
-  #- VERSION="7.0" INCLUDE="test_module,second_module" ODOO_REPO="OCA/OCB"  # ODOO_REPO usage example
-  #- VERSION="6.1" INCLUDE="test_module,second_module"
-  #- VERSION="" INCLUDE="test_module,second_module"  # test fallback to script argument
+  - VERSION="master" EXCLUDE="broken_module"  # EXCLUDE usage example - update with erroring modules list
+  - VERSION="8.0" INCLUDE="test_module,second_module" OPTIONS="--log-level=debug"  # OPTIONS usage example
+  - VERSION="8.0" INCLUDE="test_module,second_module" INSTALL_OPTIONS="--log-level=info"
+  - VERSION="8.0" INCLUDE="test_module,second_module" UNIT_TEST="1"
+  - VERSION="7.0" INCLUDE="test_module,second_module" ODOO_REPO="OCA/OCB"  # ODOO_REPO usage example
+  - VERSION="6.1" INCLUDE="test_module,second_module"
+  - VERSION="" INCLUDE="test_module,second_module"  # test fallback to script argument
   # - VERSION="6.0"  # Test script not ready for v6.0
 
 install:
