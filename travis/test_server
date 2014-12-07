@@ -226,7 +226,7 @@ def main():
             with open('stdout.log', 'w') as stdout:
                 for line in pipe.stdout:
                     stdout.write(line)
-                    print(line.strip())
+                    print("*************----" + line.strip())
             returncode = pipe.wait()
             # Find errors, except from failed mails
             time.sleep(5)
