@@ -73,6 +73,11 @@ def has_test_errors(fname, dbname, odoo_version, check_loaded=True):
                 print("match True")
                 last_log_record = match.groupdict()
                 log_records.append(last_log_record)
+            elif "Coverage.py warning: No data was collected." == \
+                 line.rstrip('\n'):
+                 last_log_record['message'] = '%s' % (
+                    line.rstrip('\n')
+                )
             else:
                 print("match False")
                 last_log_record['message'] = '%s\n%s' % (
