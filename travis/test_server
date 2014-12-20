@@ -2,6 +2,7 @@
 
 from __future__ import print_function
 
+import multiprocessing
 import re
 import os
 import subprocess
@@ -9,7 +10,6 @@ import sys
 from getaddons import get_addons
 from getaddons import get_modules
 from travis_helpers import success_msg, fail_msg
-
 
 def has_test_errors(fname, dbname, odoo_version, check_loaded=True):
     """
@@ -118,11 +118,13 @@ def main():
         print("WARNING: no env variable set for VERSION. "
               "Using '%s'" % odoo_version)
     test_loghandler = None
+    workers = multiprocessing.cpu_count() * 2 + 1
     if odoo_version == "6.1":
         install_options += ["--test-disable"]
         test_loglevel = 'test'
     else:
         options += ["--test-enable"]
+        options += ["--workers=%d" % (workers)]
         if odoo_version == '7.0':
             test_loglevel = 'test'
         else:
