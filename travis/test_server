@@ -118,18 +118,20 @@ def main():
         print("WARNING: no env variable set for VERSION. "
               "Using '%s'" % odoo_version)
     test_loghandler = None
-    workers = multiprocessing.cpu_count() * 2 + 1
+    workers = multiprocessing.cpu_count()
+    worker_cmd = []
     if odoo_version == "6.1":
         install_options += ["--test-disable"]
         test_loglevel = 'test'
     else:
         options += ["--test-enable"]
-        install_options += ["--workers=%d" % (workers)]
         if odoo_version == '7.0':
             test_loglevel = 'test'
         else:
             test_loglevel = 'info'
             test_loghandler = 'openerp.tools.yaml_import:DEBUG'
+    if odoo_version >= "7.0":
+        worker_cmd = ["--workers=%d" % (workers)]
     odoo_full = os.environ.get("ODOO_REPO", "odoo/odoo")
     odoo_org, odoo_repo = odoo_full.split('/')
     server_dirname = "%s-%s" % (odoo_repo, odoo_version)
@@ -173,7 +175,7 @@ def main():
                 "--stop-after-init",
                 "--addons-path", addons_path,
                 "--init", preinstall_modules,
-                ] + install_options
+                ] + install_options + worker_cmd
     print(" ".join(cmd_odoo))
     subprocess.check_call(cmd_odoo)
 
@@ -186,7 +188,8 @@ def main():
                             "--stop-after-init",
                             "--log-level=warn",
                             "--addons-path", addons_path,
-                            ] + install_options + ["--init", None]
+                            ] + install_options + ["--init", None] \
+                              + worker_cmd
 
         cmd_odoo_test = ["coverage", "run",
                          "%s/openerp-server" % server_path,
@@ -194,8 +197,7 @@ def main():
                          "--stop-after-init",
                          "--log-level", test_loglevel,
                          "--addons-path", addons_path,
-                         "--workers=%d" % (workers),
-                         ]
+                         ] + worker_cmd
         if test_loghandler is not None:
             cmd_odoo_test += ['--log-handler', test_loghandler]
         cmd_odoo_test += options + ["--update", None]
@@ -211,8 +213,7 @@ def main():
                          "--stop-after-init",
                          "--log-level", test_loglevel,
                          "--addons-path", addons_path,
-                         "--workers=%d" % (workers),
-                         ]
+                         ] + worker_cmd
         if test_loghandler is not None:
             cmd_odoo_test += ['--log-handler', test_loghandler]
         cmd_odoo_test += options + ["--init", None]
