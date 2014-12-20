@@ -194,6 +194,7 @@ def main():
                          "--stop-after-init",
                          "--log-level", test_loglevel,
                          "--addons-path", addons_path,
+                         "--workers=%d" % (workers),
                          ]
         if test_loghandler is not None:
             cmd_odoo_test += ['--log-handler', test_loghandler]
@@ -210,6 +211,7 @@ def main():
                          "--stop-after-init",
                          "--log-level", test_loglevel,
                          "--addons-path", addons_path,
+                         "--workers=%d" % (workers),
                          ]
         if test_loghandler is not None:
             cmd_odoo_test += ['--log-handler', test_loghandler]
