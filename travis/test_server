@@ -118,7 +118,7 @@ def main():
         print("WARNING: no env variable set for VERSION. "
               "Using '%s'" % odoo_version)
     test_loghandler = None
-    workers = multiprocessing.cpu_count()
+    workers = multiprocessing.cpu_count() * 2 + 1
     if odoo_version == "6.1":
         install_options += ["--test-disable"]
         test_loglevel = 'test'
