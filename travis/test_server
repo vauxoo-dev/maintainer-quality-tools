@@ -124,7 +124,7 @@ def main():
         test_loglevel = 'test'
     else:
         options += ["--test-enable"]
-        options += ["--workers=%d" % (workers)]
+        install_options += ["--workers=%d" % (workers)]
         if odoo_version == '7.0':
             test_loglevel = 'test'
         else:
