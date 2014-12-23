@@ -198,7 +198,7 @@ def main():
                             "--stop-after-init",
                             "--log-level=warn",
                             "--addons-path", addons_path,
-                            ] + worker_cmd + \
+                            ] + worker_cmd \
                             + install_options + ["--init", None]
 
         cmd_odoo_test = ["coverage", "run",
@@ -207,7 +207,7 @@ def main():
                          "--stop-after-init",
                          "--log-level", test_loglevel,
                          "--addons-path", addons_path,
-                         ] + worker_cmd + \
+                         ] + worker_cmd \
                          + options + ["--update", None]
 
         commands = ((cmd_odoo_install, False),
@@ -221,7 +221,7 @@ def main():
                          "--stop-after-init",
                          "--log-level", test_loglevel,
                          "--addons-path", addons_path,
-                         ] + worker_cmd + \
+                         ] + worker_cmd \
                          + options + ["--init", None]
         commands = ((cmd_odoo_test, True),
                     )
