@@ -126,7 +126,7 @@ def main():
               "Using '%s'" % odoo_version)
 
     worker_cmd = []
-    if os.environ.get('SHIPPABLE', False) == "true"
+    if os.environ.get('SHIPPABLE', False) == "true":
         if odoo_version >= "7.0":
             workers = multiprocessing.cpu_count() * 2 + 1
             worker_cmd = ["--workers=%d" % (workers)]
