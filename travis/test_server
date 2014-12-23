@@ -2,6 +2,7 @@
 
 from __future__ import print_function
 
+import multiprocessing
 import re
 import os
 import subprocess
@@ -124,6 +125,11 @@ def main():
         print("WARNING: no env variable set for VERSION. "
               "Using '%s'" % odoo_version)
 
+    worker_cmd = []
+    if os.environ.get('SHIPPABLE', False) == "true"
+        if odoo_version >= "7.0":
+            workers = multiprocessing.cpu_count() * 2 + 1
+            worker_cmd = ["--workers=%d" % (workers)]
     if odoo_version == "6.1":
         install_options += ["--test-disable"]
         test_loglevel = 'test'
@@ -179,7 +185,7 @@ def main():
                 "--init", preinstall_modules,
                 "--logfile=" +\
                 fname_log]\
-                + install_options
+                + install_options + worker_cmd
     print(" ".join(cmd_odoo))
     subprocess.check_call(cmd_odoo)
 
@@ -192,7 +198,8 @@ def main():
                             "--stop-after-init",
                             "--log-level=warn",
                             "--addons-path", addons_path,
-                            ] + install_options + ["--init", None]
+                            ] + worker_cmd + \
+                            + install_options + ["--init", None]
 
         cmd_odoo_test = ["coverage", "run",
                          "%s/openerp-server" % server_path,
@@ -200,7 +207,8 @@ def main():
                          "--stop-after-init",
                          "--log-level", test_loglevel,
                          "--addons-path", addons_path,
-                         ] + options + ["--update", None]
+                         ] + worker_cmd + \
+                         + options + ["--update", None]
 
         commands = ((cmd_odoo_install, False),
                     (cmd_odoo_test, True),
@@ -213,7 +221,8 @@ def main():
                          "--stop-after-init",
                          "--log-level", test_loglevel,
                          "--addons-path", addons_path,
-                         ] + options + ["--init", None]
+                         ] + worker_cmd + \
+                         + options + ["--init", None]
         commands = ((cmd_odoo_test, True),
                     )
     all_errors = []
