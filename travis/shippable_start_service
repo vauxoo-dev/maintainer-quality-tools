@@ -7,4 +7,4 @@ export FNAME_SCRIPT_SH="$(dirname ${BASH_SOURCE[0]})/script_shippable_install_ni
 export CMD_STRS_STARTS="SHIPPABLE_CMD_CI_"
 unset PGCLUSTER  # Temp fix https://github.com/Shippable/support/issues/1689
 $(dirname ${BASH_SOURCE[0]})/run_env_cmd ${FNAME_SCRIPT_SH} && ${FNAME_SCRIPT_SH}
-sleep 15
+sleep 30
