@@ -11,6 +11,7 @@ from test_server import fname_log
 
 def main(test_list):
     subprocess.call(["shippable_start_service"])
+    os.environ['PG_CLUSTER'] = None
 
     args = sys.argv[1:]
     results = []
