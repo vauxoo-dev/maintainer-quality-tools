@@ -8,11 +8,13 @@ import subprocess
 import sys
 from travis_helpers import success_msg, fail_msg
 from test_server import fname_log
+import time
 
 def main(test_list):
     # Temp fix https://github.com/Shippable/support/issues/1689
     os.environ.pop("PGCLUSTER", None)
     subprocess.call(["shippable_start_service"])
+    time.sleep(30)
 
     args = sys.argv[1:]
     results = []
