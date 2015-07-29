@@ -105,7 +105,8 @@ class CheckModuleDescription(object):
         else:
             self.confirm_run(self.args)
 
-        self.syntax_error = []
+        self.doc_syntax_rst = []
+        self.desc_syntax_rst = []
         self.missing_rst = []
         self.icon_missing = []
         self.doc_missing = []
@@ -207,12 +208,13 @@ class CheckModuleDescription(object):
             self._log_warn(
                 self.desc_legacy,
                 'Using description key in __openerp__.py (legacy mode):')
-        if (self.syntax_error or self.missing_rst or self.icon_missing
+        if (self.desc_syntax_rst or self.doc_syntax_rst
+                or self.missing_rst or self.icon_missing
                 or self.doc_missing):
             self.logger.error('='*80)
             self.logger.error('Error Summary:')
-            if self.syntax_error:
-                self._log_error(self.syntax_error, 'README.rst syntax errors:')
+            if self.desc_syntax_rst:
+                self._log_error(self.desc_syntax_rst, 'README.rst syntax errors:')
             if self.missing_rst:
                 self._log_error(
                     self.missing_rst, 'Missing README.rst files:')
@@ -220,6 +222,8 @@ class CheckModuleDescription(object):
                 self._log_error(self.icon_missing, 'Missing icon.png:')
             if self.doc_missing:
                 self._log_error(self.doc_missing, 'Missing doc/index.rst:')
+            if self.doc_syntax_rst:
+                self._log_error(self.doc_syntax_rst, 'doc/index.rst syntax errors:')
             exit(1)
         return True
 
@@ -261,7 +265,8 @@ class CheckModuleDescription(object):
         """
         self.logger.info(module + ': Checking description')
         if 'README.rst' in filenames:
-            self.check_rst_syntax(root, module, 'README.rst')
+            if self.check_rst_syntax(root, module, 'README.rst'):
+                self.desc_syntax_rst.append(module)
         else:
             self.missing_rst.append(module)
 
@@ -288,8 +293,8 @@ class CheckModuleDescription(object):
             self.logger.error(
                 'RST Syntax error in ' + module + ' module:\n\n\t' +
                 errors.rstrip() + '\n')
-            self.syntax_error.append(module)
-        return True
+            return True
+        return False
 
     def is_odoo_module(self, filenames):
         """
@@ -324,7 +329,8 @@ class CheckModuleDescription(object):
         doc = os.path.join(self.path, module, 'doc')
         index = os.path.join(self.path, module, 'doc/index.rst')
         if os.path.exists(index):
-            self.check_rst_syntax(root, module, 'doc/index.rst')
+            if self.check_rst_syntax(root, module, 'doc/index.rst'):
+                self.doc_syntax_rst.append(module)
         else:
             if os.path.exists(doc):
                 self.logger.error('missing doc/index.rst')
