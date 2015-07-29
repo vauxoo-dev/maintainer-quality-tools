@@ -88,13 +88,20 @@ class CheckModuleDescription(object):
     epilog = '\n'.join([
         "Odoo Developer Comunity Tool",
         "Development by Katherine Zaoral (github: @zaoral)",
-        "Coded by Katherine Zaoral <kathy@vauxoo.com>.",
+        "Coded by Katherine Zaoral <info@vauxoo.com>.",
         "Source code at git:Vauxoo/addons-vauxoo."
     ])
 
     def __init__(self):
         """
-        Initialization of the class.
+        Initialization of checker, Will:
+
+            - prepare the logger for the current run
+            - check the paramerts and confirm them
+            - save the important parameters.
+            - initializate the variables that manage the list with the
+              errors.
+
         @return: None
         """
         self.prepare_logger()
@@ -141,7 +148,7 @@ class CheckModuleDescription(object):
 
     def confirm_run(self, args):
         """
-        Manual confirmation before runing the script. Very usefull.
+        Manual confirmation before runing the script.
         @param args: dictionary of arguments.
         @return True or exit the program in the confirm is no.
         """
@@ -174,7 +181,7 @@ class CheckModuleDescription(object):
 
     def prepare_logger(self):
         """
-        Create the logget for the script
+        Create the logger for the script
         @return True
         """
         logging.setLoggerClass(ColoredLogger)
@@ -196,7 +203,6 @@ class CheckModuleDescription(object):
                 self.check_icon_missing(module)
                 self.check_doc(root, module)
         self.log_error_summary()
-        return True
 
     def log_error_summary(self):
         """
@@ -225,23 +231,18 @@ class CheckModuleDescription(object):
             if self.doc_syntax_rst:
                 self._log_error(self.doc_syntax_rst, 'doc/index.rst syntax errors:')
             exit(1)
-        return True
 
     def _log_error(self, module_list, msg):
         """
         call error log.
-        @return True
         """
         self.logger.error(self._log_msg(module_list, msg))
-        return True
 
     def _log_warn(self, module_list, msg):
         """
         call warn log.
-        @return True
         """
         self.logger.warn(self._log_msg(module_list, msg))
-        return True
 
     def _log_msg(self, module_list, msg):
         """
@@ -277,7 +278,6 @@ class CheckModuleDescription(object):
                 self.logger.warn(
                     'Legagy mode: Using description in __openerp__.py file')
                 self.desc_legacy.append(module)
-        return True
 
     def check_rst_syntax(self, root, module, filename):
         """
@@ -309,7 +309,6 @@ class CheckModuleDescription(object):
     def check_icon_missing(self, module):
         """
         check if the module has an icon.png
-        @return true
         """
         self.logger.info(module + ': Checking icon')
         module_icon = os.path.join(
@@ -317,7 +316,6 @@ class CheckModuleDescription(object):
         if not os.path.exists(module_icon):
             self.logger.error('missing icon.png')
             self.icon_missing.append(module)
-        return True
 
     def check_doc(self, root, module):
         """
@@ -335,7 +333,6 @@ class CheckModuleDescription(object):
             if os.path.exists(doc):
                 self.logger.error('missing doc/index.rst')
                 self.doc_missing.append(module)
-        return True
 
 
 def main():
