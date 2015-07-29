@@ -191,9 +191,9 @@ class CheckModuleDescription(object):
             if self.is_odoo_module(filenames):
                 module = os.path.basename(root)
                 self.logger.info('Checking module: ' + module)
-                self.check_description(module, filenames)
+                self.check_description(root, module, filenames)
                 self.check_icon_missing(module)
-                self.check_doc(module)
+                self.check_doc(root, module)
         self.log_error_summary()
         return True
 
@@ -249,7 +249,7 @@ class CheckModuleDescription(object):
             res = '\n    -'.join(res)
         return res
 
-    def check_description(self, module, filenames):
+    def check_description(self, root, module, filenames):
         """
         This method check the module description.
 
@@ -261,11 +261,11 @@ class CheckModuleDescription(object):
         """
         self.logger.info(module + ': Checking description')
         if 'README.rst' in filenames:
-            self.check_rst_syntax(module, 'README.rst')
+            self.check_rst_syntax(root, module, 'README.rst')
         else:
             self.missing_rst.append(module)
 
-        with open(os.path.join(module, '__openerp__.py'), 'r') as fopenerp:
+        with open(os.path.join(root, '__openerp__.py'), 'r') as fopenerp:
             data = fopenerp.read()
             data = eval(data)
             if 'description' in data.keys():
@@ -274,13 +274,13 @@ class CheckModuleDescription(object):
                 self.desc_legacy.append(module)
         return True
 
-    def check_rst_syntax(self, module, filename):
+    def check_rst_syntax(self, root, module, filename):
         """
         This method check if the rst file have a valid syntax.
         @return True
         """
         errors = subprocess.Popen(
-            ['rst2html.py', os.path.join(module, filename),
+            ['rst2html.py', os.path.join(root, filename),
              '/dev/null', '-r', '1'],
             stderr=subprocess.STDOUT,
             stdout=subprocess.PIPE).stdout.read()
@@ -314,7 +314,7 @@ class CheckModuleDescription(object):
             self.icon_missing.append(module)
         return True
 
-    def check_doc(self, module):
+    def check_doc(self, root, module):
         """
         Check if the module has a doc directory. And if it have it check that
         the index.rst file exist and have the correct rst syntax
@@ -324,7 +324,7 @@ class CheckModuleDescription(object):
         doc = os.path.join(self.path, module, 'doc')
         index = os.path.join(self.path, module, 'doc/index.rst')
         if os.path.exists(index):
-            self.check_rst_syntax(module, 'doc/index.rst')
+            self.check_rst_syntax(root, module, 'doc/index.rst')
         else:
             if os.path.exists(doc):
                 self.logger.error('missing doc/index.rst')
