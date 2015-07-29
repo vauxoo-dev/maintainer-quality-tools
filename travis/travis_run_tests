@@ -39,7 +39,7 @@ def main(test_list):
 
 if __name__ == '__main__':
     do_lint_check = os.environ.get("LINT_CHECK", '1') == "1"
-    do_module_check = os.environ.get("MODULE_CHE0K", '0') == "1"
+    do_module_check = os.environ.get("MODULE_CHECK", '0') == "1"
     do_tests = os.environ.get("TESTS", '1') == "1"
     export_transifex = os.environ.get("TRANSIFEX") == "1"
     # Variable TRAVIS_PULL_REQUEST corresponds to pull request number if the
