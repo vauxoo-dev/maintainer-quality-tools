@@ -72,7 +72,7 @@ class ColoredLogger(logging.Logger):
 
 
 
-class CheckModuleDescription(object):
+class OdooLint(object):
 
     description = """
     This script will check that all modules to ensure that:
@@ -128,7 +128,7 @@ class CheckModuleDescription(object):
         @return dictionary of the arguments.
         """
         parser = argparse.ArgumentParser(
-            prog='description2html',
+            prog='odoo_lint',
             description=self.description,
             formatter_class=argparse.RawDescriptionHelpFormatter,
             epilog=self.epilog)
@@ -185,7 +185,7 @@ class CheckModuleDescription(object):
         @return True
         """
         logging.setLoggerClass(ColoredLogger)
-        self.logger = logging.getLogger('check_modules')
+        self.logger = logging.getLogger('odoo_lint')
         self.logger.setLevel(logging.DEBUG)
         return True
 
@@ -336,7 +336,7 @@ class CheckModuleDescription(object):
 
 
 def main():
-    obj = CheckModuleDescription()
+    obj = OdooLint()
     obj.run()
     return True
 
