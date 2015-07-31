@@ -11,6 +11,7 @@ from getaddons import get_modules
 from travis_helpers import success_msg, fail_msg
 from get_modules_changed import get_modules_changed
 
+
 def has_test_errors(fname, dbname, odoo_version, check_loaded=True):
     """
     Check a list of log lines for test errors.
@@ -143,7 +144,7 @@ def get_addons_to_check(travis_build_dir, odoo_include, odoo_exclude,
     :param odoo_exclude: addons to exclude (travis parameter)
     :param changed_include: Boolean to get git diff and detect
         modules changed and append in odoo_include
-	(travis parameter).
+        (travis parameter).
         Default: False
     : param branch_base: str with name of branch base to get diff
         This variable is unused if "changed_include" is False.
@@ -203,7 +204,7 @@ def main():
     odoo_unittest = str2bool(os.environ.get("UNIT_TEST"))
     odoo_exclude = os.environ.get("EXCLUDE")
     odoo_include = os.environ.get("INCLUDE")
-    include_changed = os.environ.has_key("INCLUDE_CHANGED")
+    include_changed = "INCLUDE_CHANGED" in os.environ
     options = os.environ.get("OPTIONS", "").split()
     install_options = os.environ.get("INSTALL_OPTIONS", "").split()
     expected_errors = int(os.environ.get("SERVER_EXPECTED_ERRORS", "0"))

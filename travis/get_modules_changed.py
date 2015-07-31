@@ -15,11 +15,3 @@ def get_modules_changed(path, ref, ref_base=None):
     modules = set(get_modules(path))
     modules_changed = list(modules & folders_changed)
     return modules_changed
-
-
-if __name__ == '__main__':
-    import os
-    modules_changed = get_modules_changed(
-        os.path.join(os.environ['TRAVIS_BUILD_DIR']),
-        os.environ['TRAVIS_BRANCH'], 'master')
-    print modules_changed

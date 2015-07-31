@@ -57,7 +57,7 @@ class GitRun(object):
             to compare with base_ref.
             Default: Current ref of self.repo_path.
             e.g. "feature/x" or "SHA_NUMBER"
-        :return: List of name of items changed 
+        :return: List of name of items changed
             detected with diff of base_ref..ref
         """
         command = ['diff', '--name-only', base_ref + '..']
@@ -66,4 +66,3 @@ class GitRun(object):
         res = self.run(command)
         items = res.split('\n') if res else []
         return items
-
