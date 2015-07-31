@@ -9,6 +9,7 @@ import sys
 from getaddons import get_addons
 from getaddons import get_modules
 from travis_helpers import success_msg, fail_msg
+from get_modules_changed import get_modules_changed
 
 
 def has_test_errors(fname, dbname, odoo_version, check_loaded=True):
@@ -134,18 +135,34 @@ def get_addons_path(travis_home, travis_build_dir, server_path):
     return addons_path
 
 
-def get_addons_to_check(travis_build_dir, odoo_include, odoo_exclude):
+def get_addons_to_check(travis_build_dir, odoo_include, odoo_exclude,
+                        changed_include=False, branch_base=None):
     """
     Get the list of modules that need to be installed
     :param travis_build_dir: Travis build directory
     :param odoo_include: addons to include (travis parameter)
     :param odoo_exclude: addons to exclude (travis parameter)
+    :param changed_include: Boolean to get git diff and detect
+        modules changed and append in odoo_include
+        (travis parameter).
+        Default: False
+    : param branch_base: str with name of branch base to get diff
+        This variable is unused if "changed_include" is False.
     :return: List of addons to test
     """
     if odoo_include:
         addons_list = parse_list(odoo_include)
-    else:
+    elif not changed_include:
         addons_list = get_modules(travis_build_dir)
+    else:
+        addons_list = []
+
+    if changed_include:
+        addons_list.extend(get_modules_changed(
+            travis_build_dir,
+            branch_base))
+        # remove duplicated
+        addons_list = list(set(addons_list))
 
     if odoo_exclude:
         exclude_list = parse_list(odoo_exclude)
@@ -187,10 +204,12 @@ def main():
     odoo_unittest = str2bool(os.environ.get("UNIT_TEST"))
     odoo_exclude = os.environ.get("EXCLUDE")
     odoo_include = os.environ.get("INCLUDE")
+    include_changed = "INCLUDE_CHANGED" in os.environ
     options = os.environ.get("OPTIONS", "").split()
     install_options = os.environ.get("INSTALL_OPTIONS", "").split()
     expected_errors = int(os.environ.get("SERVER_EXPECTED_ERRORS", "0"))
     odoo_version = os.environ.get("VERSION")
+    branch_base = os.environ.get("TRAVIS_BRANCH")
     if not odoo_version:
         # For backward compatibility, take version from parameter
         # if it's not globally set
@@ -211,10 +230,11 @@ def main():
     odoo_full = os.environ.get("ODOO_REPO", "odoo/odoo")
     server_path = get_server_path(odoo_full, odoo_version, travis_home)
     addons_path = get_addons_path(travis_home, travis_build_dir, server_path)
-
     tested_addons_list = get_addons_to_check(travis_build_dir,
                                              odoo_include,
-                                             odoo_exclude)
+                                             odoo_exclude,
+                                             include_changed,
+                                             branch_base)
     tested_addons = ','.join(tested_addons_list)
 
     print("Working in %s" % travis_build_dir)
