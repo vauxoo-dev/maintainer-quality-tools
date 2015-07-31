@@ -57,3 +57,19 @@ To avoid making again these checks on other builds, you have to add
 LINT_CHECK="0" variable on the line:
 
     - VERSION="7.0" ODOO_REPO="odoo/odoo" LINT_CHECK="0"
+
+
+
+Auto include modules changed
+----------------------------
+Usually you specify the modules to install in .travis.yml file with this content:
+   
+     - VERSION="7.0" INCLUDE="my_module1,my_module2"
+
+You can use the variable INCLUDE_CHANGED to add to INCLUDE variable the modules that changed of work branch vs base branch.
+Example: If your have a pull request with changes in my_module3 and .travis.yml have this content:
+
+    - VERSION="7.0" INCLUDE="my_module1,my_module2" INCLUDE_CHANGED=
+
+Then you will have a test with next modules: my_module1, mymodule2 and *mymodule3*
+
