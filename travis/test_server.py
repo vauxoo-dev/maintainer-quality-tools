@@ -146,9 +146,9 @@ def get_addons_to_check(travis_build_dir, odoo_include, odoo_exclude,
 	(travis parameter).
         Default: False
     : param branch_base: str with name of branch base to get diff
+        This variable is unused if "changed_include" is False.
     :return: List of addons to test
     """
-#    import pdb;pdb.set_trace()
     if odoo_include:
         addons_list = parse_list(odoo_include)
     elif not changed_include:
@@ -229,7 +229,6 @@ def main():
     odoo_full = os.environ.get("ODOO_REPO", "odoo/odoo")
     server_path = get_server_path(odoo_full, odoo_version, travis_home)
     addons_path = get_addons_path(travis_home, travis_build_dir, server_path)
-
     tested_addons_list = get_addons_to_check(travis_build_dir,
                                              odoo_include,
                                              odoo_exclude,
