@@ -204,7 +204,7 @@ def main():
     odoo_unittest = str2bool(os.environ.get("UNIT_TEST"))
     odoo_exclude = os.environ.get("EXCLUDE")
     odoo_include = os.environ.get("INCLUDE")
-    include_changed = os.environ.get("INCLUDE_CHANGED")
+    include_changed = str2bool(os.environ.get("INCLUDE_CHANGED"))
     options = os.environ.get("OPTIONS", "").split()
     install_options = os.environ.get("INSTALL_OPTIONS", "").split()
     expected_errors = int(os.environ.get("SERVER_EXPECTED_ERRORS", "0"))
