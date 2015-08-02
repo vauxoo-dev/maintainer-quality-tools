@@ -27,9 +27,7 @@ then
     MODULES_TO_TEST=$(python -c "import test_server;print ' '.join(test_server.get_addons_to_check('${TRAVIS_BUILD_DIR}', '${INCLUDE}', '${EXCLUDE}', '${INCLUDE_CHANGED}' == '1', '${TRAVIS_BRANCH}'))")
 fi
 
-echo ${MODULES_TO_TEST}
-
-read -p "2222 Press [Enter] key to start..."
+echo "Modules to test: "${MODULES_TO_TEST}
 
 #run pylint command
 (cd ${TRAVIS_BUILD_DIR} && pylint --rcfile=${PYLINT_CONFIG_DIR}/travis_run_pylint.cfg ${MODULES_TO_TEST} -d C0103,F0401,I0011)
