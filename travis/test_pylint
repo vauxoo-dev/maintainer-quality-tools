@@ -16,7 +16,7 @@ fi
 : ${ODOO_REPO:="odoo/odoo"}  # default value, if not set
 IFS="/" read -a REPO <<< "${ODOO_REPO}"
 echo $(dirname ${BASH_SOURCE[0]})
-export PYTHONPATH=${PYTHONPATH}:"${HOME}/${REPO[1]}-${VERSION}":"$(dirname ${BASH_SOURCE[0]})/travis"
+export PYTHONPATH=${PYTHONPATH}:"${HOME}/${REPO[1]}-${VERSION}":"$(dirname ${BASH_SOURCE[0]})/travis":"${TRAVIS_BUILD_DIR}"
 
 $(dirname ${BASH_SOURCE[0]})/mk_ln_addons
 #ls -la ${HOME}/${REPO[1]}-${VERSION}/openerp/addons
@@ -30,6 +30,6 @@ fi
 echo "Modules to test: "${MODULES_TO_TEST}
 
 #run pylint command
-(cd ${TRAVIS_BUILD_DIR} && pylint --rcfile=${PYLINT_CONFIG_DIR}/travis_run_pylint.cfg ${MODULES_TO_TEST} -d C0103,F0401,I0011)
+pylint --rcfile=${PYLINT_CONFIG_DIR}/travis_run_pylint.cfg ${MODULES_TO_TEST} -d C0103,F0401,I0011
 pylint_status=$?
 exit $((${pylint_status}))
