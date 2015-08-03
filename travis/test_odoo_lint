@@ -104,6 +104,7 @@ class OdooLint(object):
 
         @return: None
         """
+        self.rst2html_script = self.find_in_path('rst2html')
         self.prepare_logger()
         self.args = self.argument_parser()
         self.path = self.args['path']
@@ -279,13 +280,25 @@ class OdooLint(object):
                     'Legagy mode: Using description in __openerp__.py file')
                 self.desc_legacy.append(module)
 
+    def find_in_path(name):
+        """
+        find the bin path for the given command.
+        """
+        path = os.environ.get('PATH', os.defpath).split(os.pathsep)
+        if config.get('bin_path') and config['bin_path'] != 'None':
+            path.append(config['bin_path'])
+        try:
+            return which(name, path=os.pathsep.join(path))
+        except IOError:
+            return None
+
     def check_rst_syntax(self, root, module, filename):
         """
         This method check if the rst file have a valid syntax.
         @return True
         """
         errors = subprocess.Popen(
-            ['rst2html.py', os.path.join(root, filename),
+            [self.rst2html_script, os.path.join(root, filename),
              '/dev/null', '-r', '1'],
             stderr=subprocess.STDOUT,
             stdout=subprocess.PIPE).stdout.read()
