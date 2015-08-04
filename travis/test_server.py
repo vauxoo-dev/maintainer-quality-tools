@@ -113,12 +113,22 @@ def get_server_path(odoo_full, odoo_version, travis_home):
     :param odoo_version: Odoo version
     :param travis_home: Travis home directory
     :return: Server path
-    """
+     """
     odoo_org, odoo_repo = odoo_full.split('/')
     server_dirname = "%s-%s" % (odoo_repo, odoo_version)
     server_path = os.path.join(travis_home, server_dirname)
     return server_path
 
+def get_default_server_path():
+    """
+    Calculate server path with hardcode to environment variables
+    used in MQT and travis.
+    :return: Server path
+    """
+    odoo_full = os.environ.get("ODOO_REPO", "odoo/odoo")
+    odoo_version = os.environ.get("VERSION")
+    travis_home = os.environ.get("HOME", "~/")
+    return get_server_path(odoo_full, odoo_version, travis_home)
 
 def get_addons_path(travis_home, travis_build_dir, server_path):
     """

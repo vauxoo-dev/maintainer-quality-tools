@@ -50,8 +50,8 @@ if __name__ == '__main__':
     tests = []
     # By default, do lint checks
     if do_lint_check:
-        tests.append(['test_flake8'])
-        tests.append(['test_pylint'])
+#        tests.append(['test_flake8'])
+        tests.append(['odoo_test_pylint.py'])
     # Test module structure
     if do_odoo_lint:
         tests.append(['test_odoo_lint', '-p',
