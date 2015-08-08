@@ -11,6 +11,7 @@ from test_server import get_default_server_path
 from getaddons import get_addons, get_modules
 from sys_propagate_test import sys_propagate_test
 
+
 def run_pylint(paths_to_check, conf_file,
                odoo_path=None, addons_path=None):
     """
@@ -57,6 +58,16 @@ def run_pylint(paths_to_check, conf_file,
     run_pylint()
 
 
+def setup_server_symlink(symlink_path, server_path,
+                         addons_paths=None):
+    """
+    Setup server with symlinks to allow execute
+    `from openerp.addons import {MODULE_OTHER_PATH}` with pylint.
+    We can't to use `sys.modules` in pylint because by next issue:
+        https://bitbucket.org/logilab/pylint/issues/616/modules-renamed-with-sysmodules-are-unable
+    But we can use symlink to work with this case
+    """
+
 def main():
     conf_file = os.path.join(
         os.path.dirname(os.path.realpath(__file__)),
@@ -77,3 +88,4 @@ def main():
 
 if __name__ == '__main__':
     exit(main())
+
