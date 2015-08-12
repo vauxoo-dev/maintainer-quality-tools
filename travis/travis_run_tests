@@ -12,9 +12,11 @@ import time
 
 def main(test_list):
     # Temp fix https://github.com/Shippable/support/issues/1689
+    print("now", time.strftime("%H:%M:%S"))
     os.environ.pop("PGCLUSTER", None)
     subprocess.call(["shippable_start_service"])
     time.sleep(30)
+    print("after", time.strftime("%H:%M:%S"))
 
     args = sys.argv[1:]
     results = []
