@@ -1,11 +1,11 @@
 #!/bin/bash
-
+set -v
 pip install -q QUnitSuite flake8 coveralls pylint > /dev/null 2>&1
 
-# We can exit here and do nothing if this only a LINT check
-if [ "${LINT_CHECK}" == "1" ] ; then
-    exit 0
-fi
+## We can exit here and do nothing if this only a LINT check
+#if [ "${TESTS}" != "1" ] ; then
+#    exit 0
+#fi
 
 # For backward compatibility, take version from parameter if it's not globally set
 if [ "x${VERSION}" == "x" ] ; then
@@ -18,12 +18,15 @@ IFS="/" read -a REPO <<< "${ODOO_REPO}"
 ODOO_URL="https://github.com/${REPO[0]}/${REPO[1]}/archive/${VERSION}.tar.gz"
 #ODOO_URL="https://github.com/${REPO[0]}/${REPO[1]}.git"
 
+echo ${REPO_REQUIREMENTS}
+
 if [ "x${REPO_REQUIREMENTS}" == "x" ] ; then
     echo "Installing Odoo ${ODOO_URL}"
     wget -nv -O odoo.tar.gz ${ODOO_URL}
     tar -xf odoo.tar.gz -C ${HOME}
     #git_update ${ODOO_URL} -b ${VERSION} ${HOME}/${REPO[0]}-${VERSION}
 else
+    echo "Installing Odoo from cache"
     export REPO=$(python -c "print '${REPO[0]}'.lower()")
     export BRANCH=$(python -c "print '${VERSION}'.lower()")
     export ODOO_PATH=${HOME}/${REPO[1]}-${BRANCH}
@@ -56,6 +59,8 @@ clone_oca_dependencies
 
 # Workaround to force using system site packages (see https://github.com/Shippable/support/issues/241#issuecomment-57947925)
 rm -f $VIRTUAL_ENV/lib/python2.7/no-global-site-packages.txt
+
+pip install --user -q -r $(dirname ${BASH_SOURCE[0]})/requirements.txt
 
 # Use reference .coveragerc
 cp ${HOME}/maintainer-quality-tools/cfg/.coveragerc .
