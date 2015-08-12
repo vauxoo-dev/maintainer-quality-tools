@@ -12,11 +12,16 @@ import time
 
 def main(test_list):
     subprocess.call(["shippable_start_service"])
-    while not subprocess.Popen(
-        ["psql", '-l'],
-        stdout=subprocess.PIPE, stderr=subprocess.PIPE
-    ).stderr.read():
+    print("Waiting to start psql service...")
+    while True:
+        psql_subprocess = subprocess.Popen(
+            ["psql", '-l'], stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE)
+        psql_subprocess.wait()
+        if not bool(psql_subprocess.stderr.read()):
+            break
         time.sleep(5)
+    print("...psql service started.")
 
     args = sys.argv[1:]
     results = []
