@@ -78,6 +78,10 @@ def get_number_errors(linter_stats):
 
 
 def main():
+    '''
+    Method to run pylint
+    :return: Boolean if all fine return True else False:
+    '''
     conf_file = os.path.join(
         os.path.dirname(os.path.realpath(__file__)),
         'cfg',
@@ -92,7 +96,15 @@ def main():
     linter_stats = run_pylint(
         paths_to_check, conf_file, instance_symlink_path)
     number_errors = get_number_errors(linter_stats)
-    return number_errors
+    expected_errors = int(os.environ.get("PYLINT_EXPECTED_ERRORS", "0"))
+    if number_errors != expected_errors:
+        print("Expected pylint errors {expected_errors}, "
+              "found {number_errors}!".format(
+                  expected_errors=expected_errors,
+                  number_errors=number_errors))
+        return False
+    return True
+
 
 if __name__ == '__main__':
-    exit(main())
+    exit(int(not main()))
