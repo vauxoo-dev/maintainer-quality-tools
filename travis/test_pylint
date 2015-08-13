@@ -5,11 +5,13 @@ from __future__ import print_function
 
 import os
 import sys
+import tempfile
 
-import pylint
+import pylint.lint
 
-from test_server import (get_default_travis_server_path,
-                         get_default_travis_addons_path)
+from test_server import (get_default_travis_addons_path,
+                         get_default_travis_server_path)
+
 
 def setup_server_symlink(server_path, addons_paths,
                          symlink_path):
@@ -48,6 +50,7 @@ def run_pylint(paths_to_check, conf_file,
     :param conf_file: String with file name of config file to use.
     :param sys_paths: List of all paths to add to sys.path
         to support a `import PACKAGE`
+    :return: Dict with python linter stats
    """
     if isinstance(paths_to_check, basestring):
         paths_to_check = [paths_to_check]
@@ -56,32 +59,40 @@ def run_pylint(paths_to_check, conf_file,
     if isinstance(sys_paths, list):
         for sys_path in sys_paths:
             sys.path.append(sys_path)
-    command = ['pylint', '--rcfile=' + conf_file]
-    command.extend(paths_to_check)
-    sys.argv = command
-    print("si entro 1")
-    try:
-        res = pylint.run_epylint()
-        print("si entro 3")
-    finally:
-        print("si entro 2")
-    print("Si entro 4")
+    pylint_params = ['--rcfile=' + conf_file]
+    pylint_params.extend(paths_to_check)
+    pylint_res = pylint.lint.Run(pylint_params, exit=False)
+    return pylint_res.linter.stats
+
+
+def get_number_errors(linter_stats):
+    """
+    Verify the dictionary statistics to get number of errors.
+    :param linter_stats: Dict of type pylint.lint.Run().linter.stats
+    :return: Integer with quantity of
+    """
+    number_errors = 0
+    for msg in linter_stats['by_msg']:
+        number_errors += linter_stats['by_msg'][msg]
+    return number_errors
+
 
 def main():
     conf_file = os.path.join(
         os.path.dirname(os.path.realpath(__file__)),
         'cfg',
         "travis_run_pylint.cfg")
-    paths_to_check = os.environ['TRAVIS_BUILD_DIR'] + '/account_bank_statement_vauxoo'
+    paths_to_check = os.environ['TRAVIS_BUILD_DIR']
     odoo_path = get_default_travis_server_path()
     addons_path = get_default_travis_addons_path()
-    instance_symlink_path = "/tmp/odoo"
+    instance_symlink_path = os.path.join(
+        tempfile.gettempdir(), 'instance')
     setup_server_symlink(odoo_path, addons_path,
                          instance_symlink_path)
-    res = run_pylint(paths_to_check, conf_file, instance_symlink_path)
-    #·TODO: Num of errors
-    return res
+    linter_stats = run_pylint(
+        paths_to_check, conf_file, instance_symlink_path)
+    number_errors = get_number_errors(linter_stats)
+    return number_errors
 
 if __name__ == '__main__':
     exit(main())
-
