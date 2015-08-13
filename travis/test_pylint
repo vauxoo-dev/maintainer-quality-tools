@@ -1,23 +1,87 @@
-#!/bin/bash
+#!/usr/bin/env python
+# coding: utf-8
 
-MODULES_TO_TEST=$TRAVIS_BUILD_DIR
-PYLINT_CONFIG_DIR="$(dirname $0)/cfg"
+from __future__ import print_function
 
-# Fix pylint path. More info: https://www.mail-archive.com/code-quality@python.org/msg00294.html
-export PYTHONPATH=${PYTHONPATH}:${MODULES_TO_TEST}
-touch $MODULES_TO_TEST/__init__.py
+import os
+import sys
 
-# Set openerp in global path to fix "import" from addons
-if [ "x${VERSION}" == "x" ] ; then
-    VERSION="${1}"
-    echo "WARNING: no env variable set for VERSION. Using '${1}'."
-fi
+import pylint
 
-: ${ODOO_REPO:="odoo/odoo"}  # default value, if not set
-IFS="/" read -a REPO <<< "${ODOO_REPO}"
-export PATH=${PATH}:${PWD}/../${REPO[1]}-${VERSION}/openerp
+from test_server import (get_default_travis_server_path,
+                         get_default_travis_addons_path)
 
-#run pylint command
-pylint --rcfile=${PYLINT_CONFIG_DIR}/travis_run_pylint.cfg ${MODULES_TO_TEST}
-pylint_status=$?
-exit $((${pylint_status}))
+def setup_server_symlink(server_path, addons_paths,
+                         symlink_path):
+    """
+    Create a folder with setup server with symlinks to allow execute
+    `from openerp.addons import {MODULE_OTHER_PATH}` with pylint.
+    We can't to use `sys.modules` in pylint by next issue:
+        https://bitbucket.org/logilab/pylint/issues/616/modules-renamed-with-sysmodules-are-unable
+    :param addons_paths: String of odoo addons paths splitted by commas.
+    :param symlink_path: Path to create symlinks.
+    :return: True if finish done
+    """
+    if not os.path.exists(os.path.dirname(symlink_path)):
+        os.makedirs(os.path.dirname(symlink_path))
+    if not os.path.lexists(symlink_path):
+        os.symlink(server_path, symlink_path)
+    for addons_path in addons_paths.split(','):
+        for addon_path in os.listdir(addons_path):
+            addon_symlink_path = os.path.join(
+                symlink_path, 'openerp', 'addons',
+                addon_path)
+            if not os.path.lexists(addon_symlink_path):
+                os.symlink(
+                    os.path.join(addons_path, addon_path),
+                    addon_symlink_path,
+                )
+    return True
+
+
+def run_pylint(paths_to_check, conf_file,
+               sys_paths=None):
+    """
+    Execute pylint command with extra parameters.
+    :param paths_to_check: List of paths to check pylint.
+        pylint will include recursive childs paths.
+    :param conf_file: String with file name of config file to use.
+    :param sys_paths: List of all paths to add to sys.path
+        to support a `import PACKAGE`
+   """
+    if isinstance(paths_to_check, basestring):
+        paths_to_check = [paths_to_check]
+    if isinstance(sys_paths, basestring):
+        sys_paths = [sys_paths]
+    if isinstance(sys_paths, list):
+        for sys_path in sys_paths:
+            sys.path.append(sys_path)
+    command = ['pylint', '--rcfile=' + conf_file]
+    command.extend(paths_to_check)
+    sys.argv = command
+    print("si entro 1")
+    try:
+        res = pylint.run_epylint()
+        print("si entro 3")
+    finally:
+        print("si entro 2")
+    print("Si entro 4")
+
+def main():
+    conf_file = os.path.join(
+        os.path.dirname(os.path.realpath(__file__)),
+        'cfg',
+        "travis_run_pylint.cfg")
+    paths_to_check = os.environ['TRAVIS_BUILD_DIR'] + '/account_bank_statement_vauxoo'
+    odoo_path = get_default_travis_server_path()
+    addons_path = get_default_travis_addons_path()
+    instance_symlink_path = "/tmp/odoo"
+    setup_server_symlink(odoo_path, addons_path,
+                         instance_symlink_path)
+    res = run_pylint(paths_to_check, conf_file, instance_symlink_path)
+    #·TODO: Num of errors
+    return res
+
+if __name__ == '__main__':
+    exit(main())
+
