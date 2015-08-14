@@ -25,14 +25,16 @@ ODOO_MODULE_MSGS = {
         'odoo module should be a file ./doc/index.rst'
     ),
     'WO030': (
-        'Missing required keys in manifest file',
+        'Missing required ' + str(MANIFEST_REQUIRED_KEYS) +
+        ' keys in manifest file',
         'manifest-missing-key',
-        'odoo module manifest file __openerp__.py '
-        'should be next required keys ' +
-        str(MANIFEST_REQUIRED_KEYS)
+        'odoo module manifest file __openerp__.py should be next '
+        'required keys ' + str(MANIFEST_REQUIRED_KEYS)
     ),
     'WO040': (
-        'Missing README.rst file',
+        'Missing ./README.rst file. Template here: '
+        'https://github.com/OCA/maintainer-tools/blob/master/'
+        'template/module/README.rst',
         'missing-readme',
         'odoo module should be description in ./README.rst file '
         'you can see template here: '
@@ -46,12 +48,12 @@ ODOO_MODULE_MSGS = {
         'manifest file __openerp__',
     ),
     'EO030': (
-        'README syntax error',
+        './README.rst syntax error',
         'readme-syntax-error',
         'odoo ./README.rst file has syntax error'
     ),
     'EO020': (
-        'Documentation syntax error',
+        './doc/index.rst syntax error',
         'doc-syntax-error',
         'odoo ./doc/index.rst file has syntax error'
     ),
