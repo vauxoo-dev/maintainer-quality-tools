@@ -10,7 +10,6 @@ import tempfile
 import pylint.lint
 
 from getaddons import get_modules_changed
-
 from test_server import (get_default_travis_addons_path,
                          get_default_travis_server_path)
 
@@ -123,7 +122,7 @@ def main():
     expected_errors = int(
         os.environ.get("PYLINT_EXPECTED_ERRORS", "0"))
     if number_errors != expected_errors:
-        print("Expected pylint errors {expected_errors}, "
+        print("pylint expected errors {expected_errors}, "
               "found {number_errors}!".format(
                   expected_errors=expected_errors,
                   number_errors=number_errors))
