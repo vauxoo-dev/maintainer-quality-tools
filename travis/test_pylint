@@ -9,7 +9,7 @@ import tempfile
 
 import pylint.lint
 
-from getaddons import get_modules_changed
+from getaddons import is_module, get_modules_changed
 from test_server import (get_default_travis_addons_path,
                          get_default_travis_server_path)
 
@@ -34,7 +34,8 @@ def setup_server_symlink(server_path, addons_paths,
             addon_symlink_path = os.path.join(
                 symlink_path, 'openerp', 'addons',
                 addon_path)
-            if not os.path.lexists(addon_symlink_path):
+            if not os.path.lexists(addon_symlink_path) and \
+                is_module(addon_path):
                 os.symlink(
                     os.path.join(addons_path, addon_path),
                     addon_symlink_path,
