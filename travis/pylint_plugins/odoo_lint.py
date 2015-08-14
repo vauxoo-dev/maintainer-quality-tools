@@ -10,6 +10,7 @@ from pylint.checkers import utils
 
 MANIFEST_FILES = ['__odoo__.py', '__openerp__.py', '__terp__.py']
 MANIFEST_REQUIRED_KEYS = ['name', 'license']
+AUTHOR_REQUIRED = 'Odoo Community Association (OCA)'
 ODOO_MODULE_MSGS = {
     # Using prefix EO for errors
     #  and WO for warnings from odoo_lint
@@ -47,6 +48,15 @@ ODOO_MODULE_MSGS = {
         'odoo module should not have description key in '
         'manifest file __openerp__',
     ),
+    'WO060': (
+        'Missing author "' + AUTHOR_REQUIRED +
+        '" more info here: https://github.com/OCA/maintainer-tools'
+        '/blob/master/CONTRIBUTING.md#modules',
+        'missing-required-author',
+        'Odoo module of OCA should be the community author '
+        'more info here: https://github.com/OCA/maintainer-tools'
+        '/blob/master/CONTRIBUTING.md#modules'
+    ),
     'EO030': (
         './README.rst syntax error',
         'readme-syntax-error',
@@ -73,6 +83,7 @@ class OdooLintAstroidChecker(BaseChecker):
 
     msgs = ODOO_MODULE_MSGS
     manifest_required_keys = MANIFEST_REQUIRED_KEYS
+    author_required = AUTHOR_REQUIRED
 
     def is_odoo_module(self, module_file):
         '''Check if directory of py module is a odoo module too.
@@ -125,6 +136,7 @@ class OdooLintAstroidChecker(BaseChecker):
             standard method of pylint.
         :return: None
         '''
+        import ipdb
         odoo_files = self.is_odoo_module(node.file)
         if odoo_files:
             self.module_path = os.path.dirname(node.file)
@@ -220,6 +232,17 @@ class OdooLintAstroidChecker(BaseChecker):
             return True
         return 'description' not in manifest_dict
 
+    def _check_missing_required_author(self):
+        '''Check if manifest file has required author
+        :return: True if is found it else False'''
+        manifest_dict = self._check_manifest_syntax_error()
+        if not manifest_dict:
+            return True
+        authors = manifest_dict.get('author', '').split(',')
+        for author in authors:
+            if self.author_required in author:
+                return True
+        return False
 
 def register(linter):
     """Required method to auto register this checker"""
