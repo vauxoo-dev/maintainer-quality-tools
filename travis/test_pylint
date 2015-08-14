@@ -29,11 +29,12 @@ def setup_server_symlink(server_path, addons_paths,
         os.makedirs(os.path.dirname(symlink_path))
     if not os.path.lexists(symlink_path):
         os.symlink(server_path, symlink_path)
+    addons_symlink_path_base = os.path.join(
+        symlink_path, 'openerp', 'addons')
     for addons_path in addons_paths.split(','):
         for addon_path in os.listdir(addons_path):
             addon_symlink_path = os.path.join(
-                symlink_path, 'openerp', 'addons',
-                addon_path)
+                addons_symlink_path_base, addon_path)
             if not os.path.lexists(addon_symlink_path) and \
                 is_module(addon_path):
                 os.symlink(
@@ -93,10 +94,12 @@ def main():
     paths_to_check = os.environ['TRAVIS_BUILD_DIR']
     odoo_path = get_default_travis_server_path()
     addons_path = get_default_travis_addons_path()
-    instance_symlink_path = os.path.join(
-        tempfile.gettempdir(), 'instance')
-    setup_server_symlink(odoo_path, addons_path,
-                         instance_symlink_path)
+    instance_symlink_path = None
+    if os.path.exists(odoo_path):
+        instance_symlink_path = os.path.join(
+            tempfile.gettempdir(), 'instance')
+        setup_server_symlink(odoo_path, addons_path,
+                             instance_symlink_path)
     result = True
     linter_stats = run_pylint(
         paths_to_check, conf_file, instance_symlink_path)
