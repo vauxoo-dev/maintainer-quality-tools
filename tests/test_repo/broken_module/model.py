@@ -2,12 +2,15 @@
 from openerp.osv import orm, fields
 
 import os
-import os  # W0404 - duplicated import
+import os as os2  # W0404 - duplicated import
 
 import __openerp__  # W0403 - relative import
 
 # w0402 - deprecated module
-import pdb, pudb, ipdb  #pylint: disable=W0403
+import pdb  # pylint: disable=W0403
+import pudb  # pylint: disable=W0403
+import ipdb  # pylint: disable=W0403
+
 
 class test_model(orm.Model):
     _name = "test.model"
@@ -27,7 +30,7 @@ class test_model(orm.Model):
         return value
 
     def method_e1306(self):
-        return "%s %s"%('value1')
+        return "%s %s" % ('value1')
 
     def method_e1601(self):
         print "Hello world!"
@@ -37,10 +40,13 @@ class test_model(orm.Model):
         return False
 
     def method_w0102(self, arg1, arg2=[]):
-        pass
+        # avoid imported but unused
+        all_imports = (
+            os, os2, __openerp__, pdb, pudb, ipdb)
+        return all_imports
 
     def method_w0104_w0105(self):
-        any_effect
+        2*6*0
         "str any effect"
 
     def method_w0109(self):
@@ -49,9 +55,12 @@ class test_model(orm.Model):
             'key2': 'value2',
             'key1': 'value3',
         }
+        return my_duplicated_key_dict
 
     def method_w1401(self):
-        my_str = r'\d'
+        my_regex_str_bad = '\d'
+        my_regex_str_good = r'\d'
+        return my_regex_str_bad, my_regex_str_good
 
 
 def method_w1111(self):
