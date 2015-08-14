@@ -1,6 +1,7 @@
 # ~/.local/lib/python2.7/site-packages/odoolint.py
 
 import os
+import subprocess
 
 from pylint.interfaces import IAstroidChecker
 from pylint.checkers import BaseChecker
@@ -8,14 +9,56 @@ from pylint.checkers import utils
 
 
 MANIFEST_FILES = ['__odoo__.py', '__openerp__.py', '__terp__.py']
+MANIFEST_REQUIRED_KEYS = ['name', 'license']
 ODOO_MODULE_MSGS = {
     # Using prefix EO for errors
     #  and WO for warnings from odoo_lint
-    'WO100': (
+    'WO010': (
         'Missing icon',
-        'missing-icon',
-        'Your odoo module should be a icon image '
-        'in subfolder ./static/description/icon.png',
+        'missing-icon',  # Name used to found check method.
+        'odoo module should be a file '
+        './static/description/icon.png',
+    ),
+    'WO020': (
+        'Documentation is missing',
+        'missing-doc',
+        'odoo module should be a file ./doc/index.rst'
+    ),
+    'WO030': (
+        'Missing required keys in manifest file',
+        'manifest-missing-key',
+        'odoo module manifest file __openerp__.py '
+        'should be next required keys ' +
+        str(MANIFEST_REQUIRED_KEYS)
+    ),
+    'WO040': (
+        'Missing README.rst file',
+        'missing-readme',
+        'odoo module should be description in ./README.rst file '
+        'you can see template here: '
+        'https://github.com/OCA/maintainer-tools/blob/master/'
+        'template/module/README.rst'
+    ),
+    'WO050': (
+        'Manifest deprecated description',
+        'deprecated-description',
+        'odoo module should not have description key in '
+        'manifest file __openerp__',
+    ),
+    'EO030': (
+        'README syntax error',
+        'readme-syntax-error',
+        'odoo ./README.rst file has syntax error'
+    ),
+    'EO020': (
+        'Documentation syntax error',
+        'doc-syntax-error',
+        'odoo ./doc/index.rst file has syntax error'
+    ),
+    'EO010': (
+        'Manifest file syntax error',
+        'manifest-syntax-error',
+        'odoo manifest file __openerp__.py has syntax error'
     ),
 }
 
@@ -27,6 +70,7 @@ class OdooLintAstroidChecker(BaseChecker):
     name = 'odoo_lint'
 
     msgs = ODOO_MODULE_MSGS
+    manifest_required_keys = MANIFEST_REQUIRED_KEYS
 
     def is_odoo_module(self, module_file):
         '''Check if directory of py module is a odoo module too.
@@ -36,15 +80,28 @@ class OdooLintAstroidChecker(BaseChecker):
             If is a folder py module then will receive
                 `__init__.py file path.
             A normal py file is a module too.
-        :return: True if is a odoo module else False
+        :return: List of names files with match to MANIFEST_FILES
         '''
         return os.path.basename(module_file) == '__init__.py' and \
-            any([
+            [
                 filename
                 for filename in os.listdir(
                     os.path.dirname(module_file))
                 if filename in MANIFEST_FILES
-            ])
+            ]
+
+    def check_rst_syntax(self, fname):
+        '''Check syntax in rst files.
+        :param fname: String with file name path to check
+        :return: False if fname has errors else True
+        '''
+        cmd = ['rst2html.py', fname, '/dev/null', '-r', '1']
+        errors = subprocess.Popen(
+            cmd, stderr=subprocess.STDOUT,
+            stdout=subprocess.PIPE).stdout.read()
+        if errors:
+            return False
+        return True
 
     @utils.check_messages(*(ODOO_MODULE_MSGS.keys()))
     def visit_module(self, node):
@@ -56,26 +113,110 @@ class OdooLintAstroidChecker(BaseChecker):
                     to check missing-icon message name key
         And should return True if all fine else False.
         If is false then method of pylint add_message will invoke
+        You can use `self.module_path` variable in those methods
+            to get full path of odoo module directory.
+        You can use `self.manifest_file` variable in those methods
+            to get full path of MANIFEST_FILE found (__openerp__.py)
+        You can use `self.manifest_content` variable in those methods
+            to get full content of MANIFEST_FILE found.
         :param node: A astroid.scoped_nodes.Module from visit*
             standard method of pylint.
         :return: None
         '''
-        if self.is_odoo_module(node.file):
+        odoo_files = self.is_odoo_module(node.file)
+        if odoo_files:
+            self.module_path = os.path.dirname(node.file)
+            self.manifest_file = os.path.join(
+                self.module_path, odoo_files[0])
+            self.manifest_content = open(self.manifest_file).read()
             for msg_code, (title, name_key, description) in \
                     ODOO_MODULE_MSGS.iteritems():
                 check_method = getattr(
                     self, '_check_' + name_key.replace('-', '_'))
-                if not check_method(os.path.dirname(node.file)):
-                    self.add_message('missing-icon', node=node)
+                if not check_method():
+                    self.add_message(name_key, node=node)
 
-    def _check_missing_icon(self, odoo_module_path):
+    def _check_missing_icon(self):
         """Check if a odoo module has a icon image
-        :param odoo_module_path: Full path directory of odoo module
         :return: True if icon is found else False.
         """
         icon_path = os.path.join(
-            odoo_module_path, 'static', 'description', 'icon.png')
-        return os.path.exists(icon_path)
+            self.module_path, 'static', 'description', 'icon.png')
+        return os.path.isfile(icon_path)
+
+    def _check_missing_doc(self):
+        '''
+        Check if the module has a ./doc/index.rst file
+        :return: If exists return full path else False
+        '''
+        doc_path = os.path.join(
+            self.module_path, 'doc', 'index.rst')
+        if os.path.isfile(doc_path):
+            return doc_path
+        return False
+
+    def _check_doc_syntax_error(self):
+        '''
+        Check syntaxis of ./doc/index.rst file with `rst2html`
+        :return: if has syntaxis error return False
+            else True but if don't exists file return True
+        '''
+        fpath = self._check_missing_doc()
+        if not fpath:
+            return True
+        return self.check_rst_syntax(fpath)
+
+    def _check_manifest_syntax_error(self):
+        '''
+        Check any exception in `self.manifest_content`
+        :return: manifest content dict if no errors else None
+        '''
+        try:
+            manifest_dict = eval(self.manifest_content)
+        except BaseException:  # Why can be any exception
+            manifest_dict = None
+        return manifest_dict
+
+    def _check_manifest_missing_key(self):
+        '''Check if a required key is missing in manifest file
+        :return: False if key required is missing else True
+        '''
+        manifest_dict = self._check_manifest_syntax_error()
+        if not manifest_dict:
+            return True
+        return set(self.manifest_required_keys).issubset(
+            set(manifest_dict.keys()))
+
+    def _check_missing_readme(self):
+        '''
+        Check if the module has a ./README.rst file
+        :return: If exists return full path else False
+        '''
+        readme_path = os.path.join(
+            self.module_path, 'README.rst')
+        if os.path.isfile(readme_path):
+            return readme_path
+        return False
+
+    def _check_readme_syntax_error(self):
+        '''
+        Check syntaxis of ./README.rst file with `rst2html`
+        :return: if has syntaxis error return False
+            else True but if don't exists file return True
+        '''
+        fpath = self._check_missing_readme()
+        if not fpath:
+            return True
+        return self.check_rst_syntax(fpath)
+
+    def _check_deprecated_description(self):
+        '''Check if description is defined in manifest file
+        :return: False if is defined else True
+        '''
+        manifest_dict = self._check_manifest_syntax_error()
+        if not manifest_dict:
+            return True
+        return 'description' not in manifest_dict
 
 
 def register(linter):
