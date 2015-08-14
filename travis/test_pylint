@@ -9,6 +9,8 @@ import tempfile
 
 import pylint.lint
 
+from getaddons import get_modules_changed
+
 from test_server import (get_default_travis_addons_path,
                          get_default_travis_server_path)
 
@@ -45,17 +47,19 @@ def run_pylint(paths_to_check, conf_file,
                sys_paths=None):
     """
     Execute pylint command with extra parameters.
-    :param paths_to_check: List of paths to check pylint.
+    :param paths_to_check: List or str of paths to check pylint.
         pylint will include recursive childs paths.
+        With str you will need to use splitted commas
     :param conf_file: String with file name of config file to use.
-    :param sys_paths: List of all paths to add to sys.path
+    :param sys_paths: List or str of all paths to add to sys.path
         to support a `import PACKAGE`
+        With str you will need to use splitted commas
     :return: Dict with python linter stats
    """
     if isinstance(paths_to_check, basestring):
-        paths_to_check = [paths_to_check]
+        paths_to_check = paths_to_check.split(',')
     if isinstance(sys_paths, basestring):
-        sys_paths = [sys_paths]
+        sys_paths = sys_paths.split(',')
     if isinstance(sys_paths, list):
         for sys_path in sys_paths:
             sys.path.append(sys_path)
@@ -79,8 +83,8 @@ def get_number_errors(linter_stats):
 
 def main():
     '''
-    Method to run pylint
-    :return: Boolean if all fine return True else False:
+    Method to run pylint.
+    :return: Boolean if all fine return True else False
     '''
     conf_file = os.path.join(
         os.path.dirname(os.path.realpath(__file__)),
@@ -93,17 +97,38 @@ def main():
         tempfile.gettempdir(), 'instance')
     setup_server_symlink(odoo_path, addons_path,
                          instance_symlink_path)
+    result = True
     linter_stats = run_pylint(
         paths_to_check, conf_file, instance_symlink_path)
     number_errors = get_number_errors(linter_stats)
-    expected_errors = int(os.environ.get("PYLINT_EXPECTED_ERRORS", "0"))
+    is_pull_request = os.environ.get('TRAVIS_PULL_REQUEST', 'false') != 'false'
+    if is_pull_request:
+        # If is a pr then use new config file of pylint
+        future_conf_file = os.path.join(
+            os.path.dirname(os.path.realpath(__file__)),
+            'cfg',
+            "travis_run_pylint_pr.cfg")
+        branch_name_diff = os.environ.get('TRAVIS_BRANCH', False)
+        if branch_name_diff:
+            modules_changed = get_modules_changed(
+                paths_to_check, 'origin/' + branch_name_diff)
+            paths_module_changed = [
+                os.path.join(paths_to_check, module_changed)
+                for module_changed in modules_changed]
+            if paths_module_changed:
+                linter_stats = run_pylint(
+                    paths_module_changed, future_conf_file,
+                    instance_symlink_path)
+                number_errors += get_number_errors(linter_stats)
+    expected_errors = int(
+        os.environ.get("PYLINT_EXPECTED_ERRORS", "0"))
     if number_errors != expected_errors:
         print("Expected pylint errors {expected_errors}, "
               "found {number_errors}!".format(
                   expected_errors=expected_errors,
                   number_errors=number_errors))
-        return False
-    return True
+        result = False
+    return result
 
 
 if __name__ == '__main__':
