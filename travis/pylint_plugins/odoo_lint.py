@@ -11,66 +11,58 @@ from pylint.checkers import utils
 MANIFEST_FILES = ['__odoo__.py', '__openerp__.py', '__terp__.py']
 MANIFEST_REQUIRED_KEYS = ['name', 'license']
 AUTHOR_REQUIRED = 'Odoo Community Association (OCA)'
+MSG_GUIDELINES = 'You can review guidelines here: ' + \
+    'https://github.com/OCA/maintainer-tools/blob/' + \
+    'master/CONTRIBUTING.md'
+MSG_TMPL = '{msg_guidelines}'  # Require {msg_guidelines}
+README_TMPL_URL = 'https://github.com/OCA/maintainer-tools' + \
+    '/blob/master/template/module/README.rst'
 ODOO_MODULE_MSGS = {
-    # Using prefix EO for errors
     #  and WO for warnings from odoo_lint
     'WO010': (
-        'Missing icon',
+        'Missing icon ./static/description/icon.png',
         'missing-icon',  # Name used to found check method.
-        'odoo module should be a file '
-        './static/description/icon.png',
+        MSG_TMPL,
     ),
     'WO020': (
-        'Documentation is missing',
+        'Documentation ./doc/index.rst is missing',
         'missing-doc',
-        'odoo module should be a file ./doc/index.rst'
+        MSG_TMPL,
     ),
     'WO030': (
-        'Missing required %s'
-        ' keys in manifest file',
+        'Missing required %s keys in manifest file __openerp__.py',
         'manifest-missing-key',
-        'odoo module manifest file __openerp__.py has defined '
-        'required keys in manifest_required_keys param.'
+        MSG_TMPL,
     ),
     'WO040': (
-        'Missing ./README.rst file. Template here: '
-        'https://github.com/OCA/maintainer-tools/blob/master/'
-        'template/module/README.rst',
+        'Missing ./README.rst file. Template here: %s',
         'missing-readme',
-        'odoo module should be description in ./README.rst file '
-        'you can see template here: '
-        'https://github.com/OCA/maintainer-tools/blob/master/'
-        'template/module/README.rst'
+        MSG_TMPL,
     ),
     'WO050': (
-        'Manifest deprecated description',
+        'Deprecated description in manifest file __openerp__.py',
         'deprecated-description',
-        'odoo module should not have description key in '
-        'manifest file __openerp__',
+        MSG_TMPL,
     ),
     'WO060': (
-        'Missing author required "%s"'
-        ' more info here: https://github.com/OCA/maintainer-tools'
-        '/blob/master/CONTRIBUTING.md#modules',
+        'Missing author required "%s"',
         'missing-required-author',
-        'Odoo module of OCA should be the community author '
-        'more info here: https://github.com/OCA/maintainer-tools'
-        '/blob/master/CONTRIBUTING.md#modules'
+        MSG_TMPL,
     ),
     'EO030': (
-        './README.rst syntax error',
+        'Syntax error in file ./README.rst',
         'readme-syntax-error',
-        'odoo ./README.rst file has syntax error'
+        MSG_TMPL,
     ),
     'EO020': (
-        './doc/index.rst syntax error',
+        'Syntax error in file ./doc/index.rst',
         'doc-syntax-error',
-        'odoo ./doc/index.rst file has syntax error'
+        MSG_TMPL,
     ),
     'EO010': (
-        'Manifest file syntax error',
+        'Syntax error in manifest file __openerp__.py',
         'manifest-syntax-error',
-        'odoo manifest file __openerp__.py has syntax error'
+        MSG_TMPL,
     ),
 }
 
@@ -95,9 +87,37 @@ class OdooLintAstroidChecker(BaseChecker):
                     'default': MANIFEST_REQUIRED_KEYS,
                     'help': 'List of keys required in manifest odoo file __openerp__.py, separated by a comma.'
                 }),
+               ('msg_guidelines',
+                {
+                    'type': 'string',
+                    'metavar': '<comma separated values>',
+                    'default': MSG_GUIDELINES,
+                    'help': 'Message of guidelines to show with ' + \
+                        '--help-msg=<msg_id> param.',
+                }),
+               ('readme_template_url',
+                {
+                    'type': 'string',
+                    'metavar': '<string>',
+                    'default': README_TMPL_URL,
+                    'help': 'URL of README.rst template file',
+                }),
                )
 
     msgs = ODOO_MODULE_MSGS
+
+    def add_msg_guidelines(self, msg_guidelines):
+        new_msgs = {}
+        for msg_code, (title, name_key, description) in \
+            self.msgs.iteritems():
+            new_msgs[msg_code] = (
+                title, name_key,
+                description.format(msg_guidelines=msg_guidelines))
+        self.msgs = new_msgs
+
+    def __init__(self, linter=None):
+        BaseChecker.__init__(self, linter)
+        self.add_msg_guidelines(self.config.msg_guidelines)
 
     def is_odoo_module(self, module_file):
         '''Check if directory of py module is a odoo module too.
@@ -157,7 +177,7 @@ class OdooLintAstroidChecker(BaseChecker):
                 self.module_path, odoo_files[0])
             self.manifest_content = open(self.manifest_file).read()
             for msg_code, (title, name_key, description) in \
-                    ODOO_MODULE_MSGS.iteritems():
+                    sorted(self.msgs.iteritems()):
                 check_method = getattr(
                     self, '_check_' + name_key.replace('-', '_'))
                 self.msg_args = None
@@ -227,6 +247,7 @@ class OdooLintAstroidChecker(BaseChecker):
             self.module_path, 'README.rst')
         if os.path.isfile(readme_path):
             return readme_path
+        self.msg_args = (self.config.readme_template_url,)
         return False
 
     def _check_readme_syntax_error(self):
@@ -259,8 +280,8 @@ class OdooLintAstroidChecker(BaseChecker):
         author_required = self.config.manifest_author_required
         for author in authors:
             if author_required in author:
-                self.msg_args = (author_required,)
                 return True
+        self.msg_args = (author_required,)
         return False
 
 def register(linter):
