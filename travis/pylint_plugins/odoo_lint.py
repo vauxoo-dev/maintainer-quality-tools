@@ -78,22 +78,25 @@ class OdooLintAstroidChecker(BaseChecker):
                 {'type': 'string',
                  'metavar': '<string>',
                  'default': AUTHOR_REQUIRED,
-                 'help': 'Name of author required in manifest odoo file __odoo__.py.'
+                 'help': 'Name of author required in manifest ' +
+                         'file __odoo__.py.'
                  }),
                ('manifest_required_keys',
                 {
                     'type': 'csv',
                     'metavar': '<comma separated values>',
                     'default': MANIFEST_REQUIRED_KEYS,
-                    'help': 'List of keys required in manifest odoo file __openerp__.py, separated by a comma.'
+                    'help': 'List of keys required in manifest ' +
+                            'odoo file __openerp__.py, ' +
+                            'separated by a comma.'
                 }),
                ('msg_guidelines',
                 {
                     'type': 'string',
                     'metavar': '<comma separated values>',
                     'default': MSG_GUIDELINES,
-                    'help': 'Message of guidelines to show with ' + \
-                        '--help-msg=<msg_id> param.',
+                    'help': 'Message of guidelines to show with ' +
+                            '--help-msg=<msg_id> param.',
                 }),
                ('readme_template_url',
                 {
@@ -109,7 +112,7 @@ class OdooLintAstroidChecker(BaseChecker):
     def add_msg_guidelines(self, msg_guidelines):
         new_msgs = {}
         for msg_code, (title, name_key, description) in \
-            self.msgs.iteritems():
+                self.msgs.iteritems():
             new_msgs[msg_code] = (
                 title, name_key,
                 description.format(msg_guidelines=msg_guidelines))
@@ -283,6 +286,7 @@ class OdooLintAstroidChecker(BaseChecker):
                 return True
         self.msg_args = (author_required,)
         return False
+
 
 def register(linter):
     """Required method to auto register this checker"""
