@@ -26,11 +26,11 @@ ODOO_MODULE_MSGS = {
         'odoo module should be a file ./doc/index.rst'
     ),
     'WO030': (
-        'Missing required ' + str(MANIFEST_REQUIRED_KEYS) +
+        'Missing required %s'
         ' keys in manifest file',
         'manifest-missing-key',
-        'odoo module manifest file __openerp__.py should be next '
-        'required keys ' + str(MANIFEST_REQUIRED_KEYS)
+        'odoo module manifest file __openerp__.py has defined '
+        'required keys in manifest_required_keys param.'
     ),
     'WO040': (
         'Missing ./README.rst file. Template here: '
@@ -49,8 +49,8 @@ ODOO_MODULE_MSGS = {
         'manifest file __openerp__',
     ),
     'WO060': (
-        'Missing author "' + AUTHOR_REQUIRED +
-        '" more info here: https://github.com/OCA/maintainer-tools'
+        'Missing author required "%s"'
+        ' more info here: https://github.com/OCA/maintainer-tools'
         '/blob/master/CONTRIBUTING.md#modules',
         'missing-required-author',
         'Odoo module of OCA should be the community author '
@@ -94,7 +94,7 @@ class OdooLintAstroidChecker(BaseChecker):
                     'metavar': '<comma separated values>',
                     'default': MANIFEST_REQUIRED_KEYS,
                     'help': 'List of keys required in manifest odoo file __openerp__.py, separated by a comma.'
-                })
+                }),
                )
 
     msgs = ODOO_MODULE_MSGS
@@ -160,8 +160,10 @@ class OdooLintAstroidChecker(BaseChecker):
                     ODOO_MODULE_MSGS.iteritems():
                 check_method = getattr(
                     self, '_check_' + name_key.replace('-', '_'))
+                self.msg_args = None
                 if not check_method():
-                    self.add_message(name_key, node=node)
+                    self.add_message(name_key, node=node,
+                                     args=self.msg_args)
 
     def _check_missing_icon(self):
         """Check if a odoo module has a icon image
@@ -211,7 +213,9 @@ class OdooLintAstroidChecker(BaseChecker):
         manifest_dict = self._check_manifest_syntax_error()
         if not manifest_dict:
             return True
-        return set(self.config.manifest_required_keys).issubset(
+        required_keys = self.config.manifest_required_keys
+        self.msg_args = (required_keys,)
+        return set(required_keys).issubset(
             set(manifest_dict.keys()))
 
     def _check_missing_readme(self):
@@ -252,8 +256,10 @@ class OdooLintAstroidChecker(BaseChecker):
         if not manifest_dict:
             return True
         authors = manifest_dict.get('author', '').split(',')
+        author_required = self.config.manifest_author_required
         for author in authors:
-            if self.config.manifest_author_required in author:
+            if author_required in author:
+                self.msg_args = (author_required,)
                 return True
         return False
 
