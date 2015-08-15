@@ -79,11 +79,25 @@ class OdooLintAstroidChecker(BaseChecker):
 
     __implements__ = IAstroidChecker
 
-    name = 'odoo_lint'
+    # configuration section name
+    name = 'odoolint'
+
+    options = (('manifest_author_required',
+                {'type': 'string',
+                 'metavar': '<string>',
+                 'default': AUTHOR_REQUIRED,
+                 'help': 'Name of author required in manifest odoo file __odoo__.py.'
+                 }),
+               ('manifest_required_keys',
+                {
+                    'type': 'csv',
+                    'metavar': '<comma separated values>',
+                    'default': MANIFEST_REQUIRED_KEYS,
+                    'help': 'List of keys required in manifest odoo file __openerp__.py, separated by a comma.'
+                })
+               )
 
     msgs = ODOO_MODULE_MSGS
-    manifest_required_keys = MANIFEST_REQUIRED_KEYS
-    author_required = AUTHOR_REQUIRED
 
     def is_odoo_module(self, module_file):
         '''Check if directory of py module is a odoo module too.
@@ -136,7 +150,6 @@ class OdooLintAstroidChecker(BaseChecker):
             standard method of pylint.
         :return: None
         '''
-        import ipdb
         odoo_files = self.is_odoo_module(node.file)
         if odoo_files:
             self.module_path = os.path.dirname(node.file)
@@ -198,7 +211,7 @@ class OdooLintAstroidChecker(BaseChecker):
         manifest_dict = self._check_manifest_syntax_error()
         if not manifest_dict:
             return True
-        return set(self.manifest_required_keys).issubset(
+        return set(self.config.manifest_required_keys).issubset(
             set(manifest_dict.keys()))
 
     def _check_missing_readme(self):
@@ -240,7 +253,7 @@ class OdooLintAstroidChecker(BaseChecker):
             return True
         authors = manifest_dict.get('author', '').split(',')
         for author in authors:
-            if self.author_required in author:
+            if self.config.manifest_author_required in author:
                 return True
         return False
 
