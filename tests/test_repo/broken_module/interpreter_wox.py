@@ -1,3 +1,5 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
-from . import interpreter_wox
+
+
+"Module python with interpreter but without execute permission."
