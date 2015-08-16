@@ -18,7 +18,24 @@ MSG_TMPL = '{msg_guidelines}'  # Require {msg_guidelines}
 README_TMPL_URL = 'https://github.com/OCA/maintainer-tools' + \
     '/blob/master/template/module/README.rst'
 ODOO_MODULE_MSGS = {
-    #  and WO for warnings from odoo_lint
+    # ODOO checkers type
+    #  C: convention
+    #  R: refactor
+    #  W: warning
+    #  E: error
+    #  F: fatal
+    # ODOO globals checkers id:
+    #  (Use this value in all class of odoo-lint)
+    #  O
+    # ODOO global checkers class:
+    #  (don't use other value in this class)
+    #  0
+    # ODOO checkers method:
+    #  00 (2 digits from 00 to 99)
+    # Message code of example:
+    #  In this class: WO-0-00, EO-0-00
+    #  OTHER CLASS: WO-1-00, EO-1-00
+
     'WO010': (
         'Missing icon ./static/description/icon.png',
         'missing-icon',  # Name used to found check method.
@@ -63,6 +80,25 @@ ODOO_MODULE_MSGS = {
         'Syntax error in manifest file __openerp__.py',
         'manifest-syntax-error',
         MSG_TMPL,
+    ),
+    'WO055': (
+        'Missing coding comment',
+        'missing-coding-comment',
+        'More info here: '
+        'https://www.python.org/dev/peps/pep-0263/'
+
+    ),
+    'WO056': (
+        'No UTF-8 coding found: Use `# -*- coding: utf-8 -*-` '
+        'in first or second line of your file.',
+        'no-utf8-coding-comment',
+        MSG_TMPL
+    ),
+    'WO057': (
+        'Unexpected interpreter comment and execute permissions. '
+        'Interpreter: %s Exec perm: %s',
+        'unexpected-interpreter-exec-perm',
+        MSG_TMPL
     ),
 }
 
@@ -181,6 +217,51 @@ class OdooLintAstroidChecker(BaseChecker):
             return False
         return True
 
+    def get_interpreter_and_coding(self):
+        '''Get '#!/bin' comment and '# -*- coding:' comment.
+        '''
+        interpreter_bin = ''
+        coding_comment = ''
+        with self.node.file_stream as fstream:
+            cont = 0
+            for line in fstream:
+                cont += 1
+                if "#!" == line[:2]:
+                    interpreter_bin = line
+                if "# -*- coding: " in line:
+                    coding_comment = line
+                if cont == 2:
+                    break
+        return interpreter_bin, coding_comment
+
+    @add_msg
+    def _check_unexpected_interpreter_exec_perm(self):
+        interpreter_bin, coding = self.get_interpreter_and_coding()
+        access_x_ok = os.access(self.node.file, os.X_OK)
+        self.msg_args = (interpreter_bin, access_x_ok)
+        return bool(interpreter_bin) == access_x_ok
+
+    @add_msg
+    def _check_no_utf8_coding_comment(self):
+        '''Check coding utf-8 comment
+        '''
+        interpreter_bin, coding = self.get_interpreter_and_coding()
+        if not coding:
+            return True
+        if coding == '# -*- coding: utf-8 -*-':
+            return True
+        return False
+
+    @add_msg
+    def _check_missing_coding_comment(self):
+        '''
+        Check coding.
+        '''
+        interpreter_bin, coding = self.get_interpreter_and_coding()
+        if coding:
+            return True
+        return False
+
     @utils.check_messages(*(ODOO_MODULE_MSGS.keys()))
     def visit_module(self, node):
         '''
@@ -202,20 +283,22 @@ class OdooLintAstroidChecker(BaseChecker):
         :return: None
         '''
         odoo_files = self.is_odoo_module(node.file)
-        if odoo_files:
-            self.module_path = os.path.dirname(node.file)
-            self.manifest_file = os.path.join(
-                self.module_path, odoo_files[0])
-            self.manifest_content = open(self.manifest_file).read()
-            for msg_code, (title, name_key, description) in \
-                    sorted(self.msgs.iteritems()):
-                check_method = getattr(
-                    self, '_check_' + name_key.replace('-', '_'),
-                    None)
-                if check_method:
-                    self.node = node
-                    self.name_key = msg_code
-                    check_method()
+        self.module_path = os.path.dirname(node.file)
+        self.node = node
+        for msg_code, (title, name_key, description) in \
+                sorted(self.msgs.iteritems()):
+            check_method = getattr(
+                self, '_check_' + name_key.replace('-', '_'),
+                None)
+            self.name_key = msg_code
+            if callable(check_method):
+                self.manifest_file = None
+                self.manifest_content = None
+                if odoo_files:
+                    self.manifest_file = os.path.join(
+                        self.module_path, odoo_files[0])
+                    self.manifest_content = open(self.manifest_file).read()
+                check_method()
 
     @add_msg
     def _check_missing_icon(self):
