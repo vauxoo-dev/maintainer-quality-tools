@@ -105,8 +105,7 @@ ODOO_MODULE_MSGS = {
 
 def add_msg(f):
     def decorator_add_msg(self, node=None):
-        '''
-        if method a decorator to add a msg if the original method
+        '''Decorator method a decorator to add a msg if the original method
         returned a negative value then add message.
         Use object attributes called:
             - name_key: Required string name of message to add.
@@ -218,8 +217,10 @@ class OdooLintAstroidChecker(BaseChecker):
         return True
 
     def get_interpreter_and_coding(self):
-        '''Get '#!/bin' comment and '# -*- coding:' comment.
-        '''
+        """Get '#!/bin' comment and '# -*- coding:' comment.
+        :return: Return a tuple with two string
+            (interpreter_bin, coding_comment)
+        """
         interpreter_bin = ''
         coding_comment = ''
         with self.node.file_stream as fstream:
@@ -243,8 +244,7 @@ class OdooLintAstroidChecker(BaseChecker):
 
     @add_msg
     def _check_no_utf8_coding_comment(self):
-        '''Check coding utf-8 comment
-        '''
+        'Check that the coding utf-8 comment exists'
         interpreter_bin, coding = self.get_interpreter_and_coding()
         if not coding:
             return True
@@ -254,9 +254,7 @@ class OdooLintAstroidChecker(BaseChecker):
 
     @add_msg
     def _check_missing_coding_comment(self):
-        '''
-        Check coding.
-        '''
+        'Check that the coding comment exists.'
         interpreter_bin, coding = self.get_interpreter_and_coding()
         if coding:
             return True
