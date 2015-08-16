@@ -337,7 +337,6 @@ class OdooLintAstroidChecker(BaseChecker):
         return False
 
 
-
 def register(linter):
     """Required method to auto register this checker"""
     linter.register_checker(OdooLintAstroidChecker(linter))
