@@ -220,6 +220,7 @@ class OdooLintAstroidChecker(BaseChecker):
         """Get '#!/bin' comment and '# -*- coding:' comment.
         :return: Return a tuple with two string
             (interpreter_bin, coding_comment)
+            if not found then use empty string
         """
         interpreter_bin = ''
         coding_comment = ''
