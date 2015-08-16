@@ -1,2 +1,2 @@
-# -*- coding: utf-8 -*-
+# -*- coding: latin-1 -*-
 from . import model

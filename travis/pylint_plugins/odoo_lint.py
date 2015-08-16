@@ -7,6 +7,15 @@ from pylint.interfaces import IAstroidChecker
 from pylint.checkers import BaseChecker
 from pylint.checkers import utils
 
+import checker_py
+
+
+'''
+Module to add custom odoo checkers.
+This module just visit astroid node `visit_module`
+and add checks of python and of odoo modules.
+'''
+
 
 MANIFEST_FILES = ['__odoo__.py', '__openerp__.py', '__terp__.py']
 MANIFEST_REQUIRED_KEYS = ['name', 'license']
@@ -291,3 +300,5 @@ class OdooLintAstroidChecker(BaseChecker):
 def register(linter):
     """Required method to auto register this checker"""
     linter.register_checker(OdooLintAstroidChecker(linter))
+    linter.register_checker(checker_py.PyAstroidChecker(linter))
+
