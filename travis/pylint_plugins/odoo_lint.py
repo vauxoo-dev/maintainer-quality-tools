@@ -227,9 +227,9 @@ class OdooLintAstroidChecker(BaseChecker):
             for line in fstream:
                 cont += 1
                 if "#!" == line[:2]:
-                    interpreter_bin = line
+                    interpreter_bin = line.strip('\n')
                 if "# -*- coding: " in line:
-                    coding_comment = line
+                    coding_comment = line.strip('\n')
                 if cont == 2:
                     break
         return interpreter_bin, coding_comment

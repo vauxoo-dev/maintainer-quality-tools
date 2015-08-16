@@ -1,4 +1,4 @@
-
+# without interpreter but with execution perm
 from openerp.osv import orm, fields
 
 import os
