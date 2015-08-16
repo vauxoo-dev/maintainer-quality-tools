@@ -298,6 +298,7 @@ class OdooLintAstroidChecker(BaseChecker):
         if not readme_path:
             self.msg_args = (self.config.readme_template_url,)
             return False
+        return True
 
     @add_msg
     def _check_readme_syntax_error(self):
