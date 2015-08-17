@@ -109,6 +109,16 @@ NO_ODOO_MODULE_MSGS = {
         'openerp-exception-warning',
         MSG_TMPL
     ),
+    'WO059': (
+        'Don\'t use api.one and api.multi decorators together.',
+        'api-one-multi-together',
+        MSG_TMPL
+    ),
+    'WO061': (
+         'Add api.one to copy function.',
+        'copy-wo-api-one',
+        MSG_TMPL
+    ),
 }
 
 
@@ -245,6 +255,22 @@ class OdooLintAstroidChecker(BaseChecker):
                 if cont == 2:
                     break
         return interpreter_bin, coding_comment
+
+    @utils.check_messages('api-one-multi-together',
+                          'copy-wo-api-one')
+    def visit_function(self, node):
+        decors = node.decoratornames()
+        if decors:
+            import pdb;pdb.set_trace()
+        if not self.linter.is_message_enabled('api-one-multi-together'):
+            if 'api.one' in decors and 'api.multi' in decors \
+                    or 'multi' in decors and 'one' in decors:
+                self.add_message('api-one-multi-together', node=node)
+
+        if not self.linter.is_message_enabled('copy-wo-api-one'):
+            if 'copy' == node.name and \
+                    not('api.one' in decors or 'one' in decors):
+                self.add_message('copy-wo-api-one', node=node)
 
     @utils.check_messages('openerp-exception-warning')
     def visit_from(self, node):

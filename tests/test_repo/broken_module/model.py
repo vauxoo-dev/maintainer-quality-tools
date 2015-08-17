@@ -16,6 +16,11 @@ try:
 except ImportError:
     OtherValidException = None
 
+try:
+    from openerp import api
+except:
+    api = None
+
 import os
 import os as os2  # W0404 - duplicated import
 
