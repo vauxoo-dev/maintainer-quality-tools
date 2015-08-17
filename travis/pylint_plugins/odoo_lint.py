@@ -110,7 +110,7 @@ PY_MODULE_MSGS = {
 PY_MSGS = {
     # Messages that don't use visit module metho'WO058': (
     'RO001': (
-        'Import `Warning` should be to renamed as UserError '
+        'Import `Warning` should be renamed as UserError '
         '`from openerp.exceptions import Warning as UserError`',
         'openerp-exception-warning',
         MSG_TMPL
