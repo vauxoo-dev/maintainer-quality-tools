@@ -11,6 +11,11 @@ try:
 except ImportError:
     NoUserError = None
 
+try:
+    from openerp.exceptions import OtherValidException
+except ImportError:
+    OtherValidException = None
+
 import os
 import os as os2  # W0404 - duplicated import
 
@@ -29,7 +34,7 @@ class test_model(orm.Model):
     }
 
     def using_warning(self):
-        return Warning, NoUserError
+        return Warning, NoUserError, OtherValidException
 
     def method_test(self, arg1, arg2):
         return None

@@ -249,9 +249,11 @@ class OdooLintAstroidChecker(BaseChecker):
     @utils.check_messages('openerp-exception-warning')
     def visit_from(self, node):
         if node.modname == 'openerp.exceptions':
-            if ('Warning', 'UserError') not in node.names:
-                self.add_message('openerp-exception-warning',
-                                 node=node)
+            for (import_name, import_as_name) in node.names:
+                if import_name == 'Warning' \
+                        and import_as_name != 'UserError':
+                    self.add_message(
+                        'openerp-exception-warning', node=node)
 
     @add_msg
     def _check_unexpected_interpreter_exec_perm(self):
