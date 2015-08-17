@@ -286,6 +286,8 @@ class OdooLintAstroidChecker(BaseChecker):
         self.node = node
         for msg_code, (title, name_key, description) in \
                 sorted(self.msgs.iteritems()):
+            if not self.linter.is_message_enabled(name_key):
+                continue
             check_method = getattr(
                 self, '_check_' + name_key.replace('-', '_'),
                 None)
