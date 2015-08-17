@@ -3,11 +3,6 @@
 from openerp.osv import fields, orm
 import sys
 
-try:
-    from openerp.exceptions import Warning as UserError
-except ImportError:
-    UserError = None
-
 
 class DummyModel(orm.Model):
     # expect "no access rules" error
@@ -15,9 +10,6 @@ class DummyModel(orm.Model):
     _columns = {
         'name': fields.char('Dummy', size=100),
     }
-
-    def using_user_error(self):
-        return UserError
 
 
 # printout non-ASCII text to check unicode issues

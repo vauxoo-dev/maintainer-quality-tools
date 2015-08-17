@@ -81,6 +81,11 @@ ODOO_MODULE_MSGS = {
         'manifest-syntax-error',
         MSG_TMPL,
     ),
+}
+
+
+PY_MODULE_MSGS = {
+    # Messages that visit module but don't require a odoo module
     'WO055': (
         'Missing coding comment',
         'missing-coding-comment',
@@ -102,7 +107,7 @@ ODOO_MODULE_MSGS = {
     ),
 }
 
-NO_ODOO_MODULE_MSGS = {
+PY_MSGS = {
     # Messages that don't use visit module method
     'WO058': (
         'Use `from openerp.exceptions import Warning as UserError`',
@@ -110,12 +115,12 @@ NO_ODOO_MODULE_MSGS = {
         MSG_TMPL
     ),
     'WO059': (
-        'Don\'t use api.one and api.multi decorators together.',
+        'Detected api.one and api.multi decorators together.',
         'api-one-multi-together',
         MSG_TMPL
     ),
     'WO061': (
-         'Add api.one to copy function.',
+        'Missing api.one in copy function.',
         'copy-wo-api-one',
         MSG_TMPL
     ),
@@ -190,7 +195,8 @@ class OdooLintAstroidChecker(BaseChecker):
                )
 
     msgs = ODOO_MODULE_MSGS
-    msgs.update(NO_ODOO_MODULE_MSGS)
+    msgs.update(PY_MSGS)
+    msgs.update(PY_MODULE_MSGS)
 
     def add_msg_guidelines(self, msg_guidelines):
         new_msgs = {}
@@ -259,17 +265,20 @@ class OdooLintAstroidChecker(BaseChecker):
     @utils.check_messages('api-one-multi-together',
                           'copy-wo-api-one')
     def visit_function(self, node):
-        decors = node.decoratornames()
-        if decors:
-            import pdb;pdb.set_trace()
-        if not self.linter.is_message_enabled('api-one-multi-together'):
-            if 'api.one' in decors and 'api.multi' in decors \
-                    or 'multi' in decors and 'one' in decors:
-                self.add_message('api-one-multi-together', node=node)
+        '''Enable next checks:
+            Check api.one and api.multi together
+            Method copy without api.one
+        '''
+        decor_lastnames = [
+            decor.split('.')[-1] for decor in node.decoratornames()]
+        if self.linter.is_message_enabled('api-one-multi-together'):
+            if 'one' in decor_lastnames \
+                    and 'multi' in decor_lastnames:
+                self.add_message('api-one-multi-together',
+                                 node=node)
 
-        if not self.linter.is_message_enabled('copy-wo-api-one'):
-            if 'copy' == node.name and \
-                    not('api.one' in decors or 'one' in decors):
+        if self.linter.is_message_enabled('copy-wo-api-one'):
+            if 'copy' == node.name and 'one' not in decor_lastnames:
                 self.add_message('copy-wo-api-one', node=node)
 
     @utils.check_messages('openerp-exception-warning')
@@ -306,7 +315,8 @@ class OdooLintAstroidChecker(BaseChecker):
             return True
         return False
 
-    @utils.check_messages(*(ODOO_MODULE_MSGS.keys()))
+    @utils.check_messages(
+        *(ODOO_MODULE_MSGS.keys() + PY_MODULE_MSGS.keys()))
     def visit_module(self, node):
         '''
         Call methods named with name_key from ODOO_MODULE_MSGS
@@ -344,6 +354,10 @@ class OdooLintAstroidChecker(BaseChecker):
                     self.manifest_file = os.path.join(
                         self.module_path, odoo_files[0])
                     self.manifest_content = open(self.manifest_file).read()
+                elif msg_code in ODOO_MODULE_MSGS.keys():
+                    # If is a check of odoo_module
+                    # but no is odoo module
+                    continue
                 check_method()
 
     @add_msg
