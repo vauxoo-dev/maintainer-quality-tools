@@ -67,7 +67,6 @@ if __name__ == '__main__':
 
     VAR1 = method_w1111()
 
-
     class E0101(object):
         def __init__(self):
             return 'E0101'
