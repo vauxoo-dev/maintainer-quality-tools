@@ -1,6 +1,16 @@
 # without interpreter but with execution perm
 from openerp.osv import orm, fields
 
+try:
+    from openerp.exceptions import Warning
+except ImportError:
+    Warning = None
+
+try:
+    from openerp.exceptions import Warning as NoUserError
+except ImportError:
+    NoUserError = None
+
 import os
 import os as os2  # W0404 - duplicated import
 
@@ -17,6 +27,9 @@ class test_model(orm.Model):
     _columns = {
         'name': fields.char('Title', 100),
     }
+
+    def using_warning(self):
+        return Warning, NoUserError
 
     def method_test(self, arg1, arg2):
         return None

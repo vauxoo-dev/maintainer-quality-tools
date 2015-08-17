@@ -102,6 +102,15 @@ ODOO_MODULE_MSGS = {
     ),
 }
 
+NO_ODOO_MODULE_MSGS = {
+    # Messages that don't use visit module method
+    'WO058': (
+        'Use `from openerp.exceptions import Warning as UserError`',
+        'openerp-exception-warning',
+        MSG_TMPL
+    ),
+}
+
 
 def add_msg(f):
     def decorator_add_msg(self, node=None):
@@ -171,6 +180,7 @@ class OdooLintAstroidChecker(BaseChecker):
                )
 
     msgs = ODOO_MODULE_MSGS
+    msgs.update(NO_ODOO_MODULE_MSGS)
 
     def add_msg_guidelines(self, msg_guidelines):
         new_msgs = {}
@@ -235,6 +245,13 @@ class OdooLintAstroidChecker(BaseChecker):
                 if cont == 2:
                     break
         return interpreter_bin, coding_comment
+
+    @utils.check_messages('openerp-exception-warning')
+    def visit_from(self, node):
+        if node.modname == 'openerp.exceptions':
+            if ('Warning', 'UserError') not in node.names:
+                self.add_message('openerp-exception-warning',
+                                 node=node)
 
     @add_msg
     def _check_unexpected_interpreter_exec_perm(self):
