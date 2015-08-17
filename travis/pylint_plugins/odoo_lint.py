@@ -36,47 +36,47 @@ ODOO_MODULE_MSGS = {
     #  In this class: WO-0-00, EO-0-00
     #  OTHER CLASS: WO-1-00, EO-1-00
 
-    'WO010': (
+    'CO001': (
         'Missing icon ./static/description/icon.png',
         'missing-icon',  # Name used to found check method.
         MSG_TMPL,
     ),
-    'WO020': (
+    'CO002': (
         'Documentation ./doc/index.rst is missing',
         'missing-doc',
         MSG_TMPL,
     ),
-    'WO030': (
+    'CO006': (
         'Missing required %s keys in manifest file __openerp__.py',
         'manifest-missing-key',
         MSG_TMPL,
     ),
-    'WO040': (
+    'CO003': (
         'Missing ./README.rst file. Template here: %s',
         'missing-readme',
         MSG_TMPL,
     ),
-    'WO050': (
+    'CO004': (
         'Deprecated description in manifest file __openerp__.py',
         'deprecated-description',
         MSG_TMPL,
     ),
-    'WO060': (
+    'CO005': (
         'Missing author required "%s"',
         'missing-required-author',
         MSG_TMPL,
     ),
-    'EO030': (
+    'EO002': (
         'Syntax error in file ./README.rst',
         'readme-syntax-error',
         MSG_TMPL,
     ),
-    'EO020': (
+    'EO003': (
         'Syntax error in file ./doc/index.rst',
         'doc-syntax-error',
         MSG_TMPL,
     ),
-    'EO010': (
+    'EO001': (
         'Syntax error in manifest file __openerp__.py',
         'manifest-syntax-error',
         MSG_TMPL,
@@ -86,20 +86,20 @@ ODOO_MODULE_MSGS = {
 
 PY_MODULE_MSGS = {
     # Messages that visit module but don't require a odoo module
-    'WO055': (
+    'WO001': (
         'Missing coding comment',
         'missing-coding-comment',
         'More info here: '
         'https://www.python.org/dev/peps/pep-0263/'
 
     ),
-    'WO056': (
+    'CO007': (
         'No UTF-8 coding found: Use `# -*- coding: utf-8 -*-` '
         'in first or second line of your file.',
         'no-utf8-coding-comment',
         MSG_TMPL
     ),
-    'WO057': (
+    'WO002': (
         'Unexpected interpreter comment and execute permissions. '
         'Interpreter: %s Exec perm: %s',
         'unexpected-interpreter-exec-perm',
@@ -108,18 +108,19 @@ PY_MODULE_MSGS = {
 }
 
 PY_MSGS = {
-    # Messages that don't use visit module method
-    'WO058': (
-        'Use `from openerp.exceptions import Warning as UserError`',
+    # Messages that don't use visit module metho'WO058': (
+    'RO001': (
+        'Import `Warning` should be to renamed as UserError '
+        '`from openerp.exceptions import Warning as UserError`',
         'openerp-exception-warning',
         MSG_TMPL
     ),
-    'WO059': (
+    'WO003': (
         'Detected api.one and api.multi decorators together.',
         'api-one-multi-together',
         MSG_TMPL
     ),
-    'WO061': (
+    'WO004': (
         'Missing api.one in copy function.',
         'copy-wo-api-one',
         MSG_TMPL
