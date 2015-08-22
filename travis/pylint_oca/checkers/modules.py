@@ -1,11 +1,17 @@
 from pylint.checkers import utils
 
-from pylint_oca import settings, misc
+from .. import settings, misc
+
 
 OCA_MSGS = {
     'C%d01' % settings.BASE_OMODULE_ID: (
         'Missing author required "%s"',
         'missing-required-author',
+        'ToDo: Msg tmpl...',
+    ),
+    'E%d01' % settings.BASE_OMODULE_ID: (
+        'Syntax error in rst file %s',
+        'rst-syntax-error',
         'ToDo: Msg tmpl...',
     ),
 }
@@ -22,18 +28,15 @@ class ModuleChecker(misc.WrapperModuleChecker):
         'help': 'Name of author required in manifest file.'
         }),
     )
+    msgs = OCA_MSGS.copy()
 
     @utils.check_messages(*(OCA_MSGS.keys()))
     def visit_module(self, node):
-        import pdb
-        pdb.set_trace()
         self.wrapper_visit_module(node)
 
     def _check_missing_required_author(self):
         '''Check if manifest file has required author
         :return: True if is found else False'''
-        if not self.manifest_dict:
-            return True
         authors = self.manifest_dict.get('author', '').split(',')
         author_required = self.config.manifest_author_required
         for author in authors:
@@ -41,3 +44,7 @@ class ModuleChecker(misc.WrapperModuleChecker):
                 return True
         self.msg_args = (author_required,)
         return False
+
+    def _check_rst_syntax_error(self):
+        rst_files = self.filter_files_ext('rst')
+        print rst_files

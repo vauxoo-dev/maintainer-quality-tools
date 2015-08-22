@@ -1,5 +1,6 @@
 
 import os
+import subprocess
 
 from pylint.checkers import BaseChecker
 from pylint.interfaces import IAstroidChecker
@@ -14,12 +15,13 @@ class WrapperModuleChecker(BaseChecker):
     node = None
     manifest_file = None
     manifest_dict = None
+    module_path = None
     msg_args = None
     msg_code = None
     msg_name_key = None
 
     def get_manifest_file(self, node_file):
-        '''Return manifest file path
+        '''Get manifest file path
         :param node_file: String with full path of a python module file.
         :return: Full path of manifest file if exists else return None'''
         if os.path.basename(node_file) == '__init__.py':
@@ -30,6 +32,10 @@ class WrapperModuleChecker(BaseChecker):
                     return manifest_file
 
     def get_manifest_dict(self):
+        '''Get manifest dict object
+        if self.manifest_file is assigned then read it and transform to dict
+        :return: Dict object with content of manifest file.
+        '''
         if self.manifest_file:
             with open(self.manifest_file, 'rb') as mfp:
                 try:
@@ -46,18 +52,14 @@ class WrapperModuleChecker(BaseChecker):
                     to check missing-icon message name key
             And should return True if all fine else False.
         if a False is returned then add message of name-key.
-        You can use `self.module_path` variable in those methods
-            to get full path of odoo module directory.
-        You can use `self.manifest_file` variable in those methods
-            to get full path of MANIFEST_FILE found (__openerp__.py)
-        You can use `self.manifest_content` variable in those methods
-            to get full content of MANIFEST_FILE found.
+        Assign object variables to use in methods.
         :param node: A astroid.scoped_nodes.Module
         :return: None
         '''
         self.manifest_file = self.get_manifest_file(node.file)
         self.manifest_dict = self.get_manifest_dict()
         self.node = node
+        self.module_path = os.path.dirname(node.file)
         for msg_code, (title, name_key, description) in \
                 sorted(self.msgs.iteritems()):
             self.msg_code = msg_code
@@ -68,7 +70,43 @@ class WrapperModuleChecker(BaseChecker):
             check_method = getattr(
                 self, '_check_' + name_key.replace('-', '_'),
                 None)
-            if callable(check_method):
+            is_odoo_check = self.manifest_file and \
+                msg_code[1:3] == str(settings.BASE_OMODULE_ID)
+            is_py_check = msg_code[1:3] == str(settings.BASE_PYMODULE_ID)
+            if callable(check_method) and (is_odoo_check or is_py_check):
                 if not check_method():
                     self.add_message(msg_code, node=node,
                                      args=self.msg_args)
+
+    def filter_files_ext(self, fext):
+        '''Filter files of odoo modules with a file extension.
+        :param fext: Extension name of files to filter.
+        :return: List of relative path of files matched
+                 with extension fext.
+        '''
+        if not fext.startswith('.'):
+            fext = '.' + fext
+        fnames_filtered = []
+        if not self.manifest_file:
+            return fnames_filtered
+
+        for root, dirnames, filenames in os.walk(
+            self.module_path, followlinks=True):
+            for filename in filenames:
+                if os.path.splitext(filename)[1] == fext:
+                    fnames_filtered.append(os.path.relpath(
+                        os.path.join(root, filename), self.module_path))
+        return fnames_filtered
+
+    def check_rst_syntax(self, fname):
+        '''Check syntax in rst files.
+        :param fname: String with file name path to check
+        :return: False if fname has errors else True
+        '''
+        cmd = ['rst2html.py', fname, '/dev/null', '-r', '1']
+        errors = subprocess.Popen(
+            cmd, stderr=subprocess.STDOUT,
+            stdout=subprocess.PIPE).stdout.read()
+        if errors:
+            return False
+        return True
