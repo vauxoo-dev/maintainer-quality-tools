@@ -5,6 +5,61 @@ from pylint.interfaces import IAstroidChecker
 from .. import settings
 
 
+'''
+Enable checkers to visit all nodes different to modules.
+You can use:
+    visit_arguments
+    visit_assattr
+    visit_assert
+    visit_assign
+    visit_assname
+    visit_backquote
+    visit_binop
+    visit_boolop
+    visit_break
+    visit_callfunc
+    visit_class
+    visit_compare
+    visit_continue
+    visit_default
+    visit_delattr
+    visit_delname
+    visit_dict
+    visit_dictcomp
+    visit_discard
+    visit_excepthandler
+    visit_exec
+    visit_extslice
+    visit_for
+    visit_from
+    visit_function
+    visit_genexpr
+    visit_getattr
+    visit_global
+    visit_if
+    visit_ifexp
+    visit_import
+    visit_index
+    visit_lambda
+    visit_listcomp
+    visit_name
+    visit_pass
+    visit_print
+    visit_project
+    visit_raise
+    visit_return
+    visit_setcomp
+    visit_slice
+    visit_subscript
+    visit_tryexcept
+    visit_tryfinally
+    visit_unaryop
+    visit_while
+    visit_yield
+for more info visit pylint doc
+'''
+
+
 OCA_MSGS = {
     # C->convention R->refactor W->warning E->error F->fatal
 
