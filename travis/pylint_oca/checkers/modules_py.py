@@ -1,4 +1,6 @@
 
+import os
+
 from pylint.checkers import utils
 
 from .. import settings, misc
@@ -12,6 +14,12 @@ OCA_MSGS = {
         'No UTF-8 coding found: Use `# -*- coding: utf-8 -*-` '
         'in first or second line.',
         'no-utf8-coding-comment',
+        'ToDo: Msg tmpl...'
+    ),
+    'W%d01' % settings.BASE_PYMODULE_ID: (
+        'Incoherent interpreter comment and executable permission. '
+        'Interpreter: [%s] Exec perm: %s',
+        'incoherent-interpreter-exec-perm',
         'ToDo: Msg tmpl...'
     ),
 }
@@ -51,3 +59,10 @@ class ModuleChecker(misc.WrapperModuleChecker):
         if coding == '# -*- coding: utf-8 -*-':
             return True
         return False
+
+    def _check_incoherent_interpreter_exec_perm(self):
+        'Check coherence of interpreter comment vs executable permission'
+        interpreter_bin, coding = self.get_interpreter_and_coding()
+        access_x_ok = os.access(self.node.file, os.X_OK)
+        self.msg_args = (interpreter_bin, access_x_ok)
+        return bool(interpreter_bin) == access_x_ok

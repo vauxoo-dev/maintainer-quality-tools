@@ -41,6 +41,7 @@ DFTL_MANIFEST_REQUIRED_KEYS = ['license']
 
 class ModuleChecker(misc.WrapperModuleChecker):
     name = settings.CFG_SECTION
+    msgs = OCA_MSGS
     options = (
         ('manifest_author_required', {
             'type': 'string',
@@ -63,7 +64,6 @@ class ModuleChecker(misc.WrapperModuleChecker):
                     'separated by a comma.'
         }),
     )
-    msgs = OCA_MSGS
 
     @utils.check_messages(*(OCA_MSGS.keys()))
     def visit_module(self, node):
