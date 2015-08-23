@@ -1,9 +1,12 @@
 
-# pylint plugin global msg number for odoo modules
+# pylint plugin global msg number for odoo modules msgs
 BASE_OMODULE_ID = 79
 
-# pylint plugin global msg number for python modules
+# pylint plugin global msg number for python modules msgs
 BASE_PYMODULE_ID = 80
+
+# pylint plugin global msg number for no modules msgs
+BASE_NOMODULE_ID = 81
 
 # Manifest files of odoo
 MANIFEST_FILES = ['__odoo__.py', '__openerp__.py', '__terp__.py']
