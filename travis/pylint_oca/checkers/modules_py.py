@@ -14,13 +14,13 @@ OCA_MSGS = {
         'No UTF-8 coding found: Use `# -*- coding: utf-8 -*-` '
         'in first or second line.',
         'no-utf8-coding-comment',
-        'ToDo: Msg tmpl...'
+        settings.DESC_DFLT
     ),
     'W%d01' % settings.BASE_PYMODULE_ID: (
         'Incoherent interpreter comment and executable permission. '
         'Interpreter: [%s] Exec perm: %s',
         'incoherent-interpreter-exec-perm',
-        'ToDo: Msg tmpl...'
+        settings.DESC_DFLT
     ),
 }
 

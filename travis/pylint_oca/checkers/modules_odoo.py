@@ -13,22 +13,22 @@ OCA_MSGS = {
     'C%d01' % settings.BASE_OMODULE_ID: (
         'Missing author required "%s"',
         'missing-required-author',
-        'ToDo: Msg tmpl...'
+        settings.DESC_DFLT
     ),
     'C%d02' % settings.BASE_OMODULE_ID: (
         'Missing ./README.rst file. Template here: %s',
         'missing-readme',
-        'ToDo: Msg tmpl...'
+        settings.DESC_DFLT
     ),
     'C%d03' % settings.BASE_OMODULE_ID: (
         'Missing required %s keys in manifest file',
         'manifest-missing-key',
-        'ToDo: Msg tmpl...'
+        settings.DESC_DFLT
     ),
     'E%d01' % settings.BASE_OMODULE_ID: (
         'RST syntax error %s',
         'rst-syntax-error',
-        'ToDo: Msg tmpl...'
+        settings.DESC_DFLT
     ),
 }
 

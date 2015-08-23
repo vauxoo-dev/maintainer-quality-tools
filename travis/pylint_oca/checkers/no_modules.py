@@ -67,17 +67,17 @@ OCA_MSGS = {
         'Import `Warning` should be renamed as UserError '
         '`from openerp.exceptions import Warning as UserError`',
         'openerp-exception-warning',
-        'ToDo: Msg tmpl...'
+        settings.DESC_DFLT
     ),
     'W%d01' % settings.BASE_NOMODULE_ID: (
         'Detected api.one and api.multi decorators together.',
         'api-one-multi-together',
-        'ToDo: Msg tmpl...'
+        settings.DESC_DFLT
     ),
     'W%d02' % settings.BASE_NOMODULE_ID: (
         'Missing api.one in copy function.',
         'copy-wo-api-one',
-        'ToDo: Msg tmpl...'
+        settings.DESC_DFLT
     ),
 }
 
