@@ -25,6 +25,11 @@ OCA_MSGS = {
         'manifest-missing-key',
         settings.DESC_DFLT
     ),
+    'C%d04' % settings.BASE_OMODULE_ID: (
+        'Deprecated description in manifest file __openerp__.py',
+        'deprecated-description',
+        settings.DESC_DFLT
+    ),
     'E%d01' % settings.BASE_OMODULE_ID: (
         'RST syntax error %s',
         'rst-syntax-error',
@@ -72,6 +77,8 @@ class ModuleChecker(misc.WrapperModuleChecker):
     def _check_missing_required_author(self):
         '''Check if manifest file has required author
         :return: True if is found else False'''
+        if not self.manifest_dict:
+            return True
         authors = self.manifest_dict.get('author', '').split(',')
         author_required = self.config.manifest_author_required
         for author in authors:
@@ -115,3 +122,9 @@ class ModuleChecker(misc.WrapperModuleChecker):
         self.msg_args = (required_keys,)
         return set(required_keys).issubset(
             set(self.manifest_dict.keys()))
+
+    def _check_deprecated_description(self):
+        '''Check if deprecated description is defined in manifest file
+        :return: False if is defined else True
+        '''
+        return 'description' not in self.manifest_dict if self.manifest_dict else True
