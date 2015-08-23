@@ -1,1 +1,2 @@
-from . import modules
+from . import modules_odoo
+from . import modules_py

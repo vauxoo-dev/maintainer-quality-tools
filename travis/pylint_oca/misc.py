@@ -75,8 +75,11 @@ class WrapperModuleChecker(BaseChecker):
             is_py_check = msg_code[1:3] == str(settings.BASE_PYMODULE_ID)
             if callable(check_method) and (is_odoo_check or is_py_check):
                 if not check_method():
-                    self.add_message(msg_code, node=node,
-                                     args=self.msg_args)
+                    if not isinstance(self.msg_args, list):
+                        self.msg_args = [self.msg_args]
+                    for msg_args in self.msg_args:
+                        self.add_message(msg_code, node=node,
+                                         args=msg_args)
 
     def filter_files_ext(self, fext):
         '''Filter files of odoo modules with a file extension.
@@ -91,7 +94,7 @@ class WrapperModuleChecker(BaseChecker):
             return fnames_filtered
 
         for root, dirnames, filenames in os.walk(
-            self.module_path, followlinks=True):
+                self.module_path, followlinks=True):
             for filename in filenames:
                 if os.path.splitext(filename)[1] == fext:
                     fnames_filtered.append(os.path.relpath(
@@ -101,12 +104,10 @@ class WrapperModuleChecker(BaseChecker):
     def check_rst_syntax(self, fname):
         '''Check syntax in rst files.
         :param fname: String with file name path to check
-        :return: False if fname has errors else True
+        :return: Return errors. Empty string if not errors. 
         '''
         cmd = ['rst2html.py', fname, '/dev/null', '-r', '1']
         errors = subprocess.Popen(
             cmd, stderr=subprocess.STDOUT,
             stdout=subprocess.PIPE).stdout.read()
-        if errors:
-            return False
-        return True
+        return errors
