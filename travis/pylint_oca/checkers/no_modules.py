@@ -1,5 +1,5 @@
 
-from pylint.checkers import BaseChecker
+from pylint.checkers import BaseChecker, utils
 from pylint.interfaces import IAstroidChecker
 
 from .. import settings
@@ -12,28 +12,27 @@ OCA_MSGS = {
         'Import `Warning` should be renamed as UserError '
         '`from openerp.exceptions import Warning as UserError`',
         'openerp-exception-warning',
-        MSG_TMPL
+        'ToDo: Msg tmpl...'
     ),
     'W%d01' % settings.BASE_NOMODULE_ID: (
         'Detected api.one and api.multi decorators together.',
         'api-one-multi-together',
-        MSG_TMPL
+        'ToDo: Msg tmpl...'
     ),
-    'W%d04' % settings.BASE_NOMODULE_ID: (
+    'W%d02' % settings.BASE_NOMODULE_ID: (
         'Missing api.one in copy function.',
         'copy-wo-api-one',
-        MSG_TMPL
+        'ToDo: Msg tmpl...'
     ),
 }
 
 
-class WrapperModuleChecker(BaseChecker):
+class NoModuleChecker(BaseChecker):
 
     __implements__ = IAstroidChecker
 
     name = settings.CFG_SECTION
     msgs = OCA_MSGS
-
 
     @utils.check_messages('api-one-multi-together',
                           'copy-wo-api-one')
@@ -63,3 +62,10 @@ class WrapperModuleChecker(BaseChecker):
                         and import_as_name != 'UserError':
                     self.add_message(
                         'openerp-exception-warning', node=node)
+
+    def get_decorators_names(self, decorators):
+        nodes = []
+        if decorators:
+            nodes = decorators.nodes
+        return [getattr(decorator, 'attrname', '')
+                for decorator in nodes if decorator is not None]
