@@ -1,10 +1,7 @@
 
-import os
-
 from pylint.checkers import utils
 
 from .. import settings, misc
-
 
 
 OCA_MSGS = {

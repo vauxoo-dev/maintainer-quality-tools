@@ -6,7 +6,6 @@ from pylint.checkers import utils
 from .. import settings, misc
 
 
-
 OCA_MSGS = {
     # C->convention R->refactor W->warning E->error F->fatal
 
