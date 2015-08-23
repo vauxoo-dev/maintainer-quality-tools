@@ -57,7 +57,7 @@ class ModuleChecker(misc.WrapperModuleChecker):
         ('manifest_required_keys', {
             'type': 'csv',
             'metavar': '<comma separated values>',
-            'default': DFLT_MANIFEST_REQUIRED_KEYS,
+            'default': DFTL_MANIFEST_REQUIRED_KEYS,
             'help': 'List of keys required in manifest ' +
                     'odoo file __openerp__.py, ' +
                     'separated by a comma.'
