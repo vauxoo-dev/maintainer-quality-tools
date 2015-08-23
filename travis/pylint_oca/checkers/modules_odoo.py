@@ -9,7 +9,7 @@ from .. import settings, misc
 OCA_MSGS = {
     # C->convention R->refactor W->warning E->error F->fatal
 
-    # Visit odoo module
+    # Visit odoo module with settings.BASE_OMODULE_ID
     'C%d01' % settings.BASE_OMODULE_ID: (
         'Missing author required "%s"',
         'missing-required-author',
@@ -18,6 +18,11 @@ OCA_MSGS = {
     'C%d02' % settings.BASE_OMODULE_ID: (
         'Missing ./README.rst file. Template here: %s',
         'missing-readme',
+        'ToDo: Msg tmpl...'
+    ),
+    'C%d03' % settings.BASE_OMODULE_ID: (
+        'Missing required %s keys in manifest file',
+        'manifest-missing-key',
         'ToDo: Msg tmpl...'
     ),
     'E%d01' % settings.BASE_OMODULE_ID: (
@@ -29,8 +34,9 @@ OCA_MSGS = {
 
 
 DFTL_AUTHOR_REQUIRED = 'Odoo Community Association (OCA)'
-README_TMPL_URL = 'https://github.com/OCA/maintainer-tools' + \
+DFTL_README_TMPL_URL = 'https://github.com/OCA/maintainer-tools' + \
     '/blob/master/template/module/README.rst'
+DFTL_MANIFEST_REQUIRED_KEYS = ['license']
 
 
 class ModuleChecker(misc.WrapperModuleChecker):
@@ -45,8 +51,16 @@ class ModuleChecker(misc.WrapperModuleChecker):
         ('readme_template_url', {
             'type': 'string',
             'metavar': '<string>',
-            'default': README_TMPL_URL,
+            'default': DFTL_README_TMPL_URL,
             'help': 'URL of README.rst template file',
+        }),
+        ('manifest_required_keys', {
+            'type': 'csv',
+            'metavar': '<comma separated values>',
+            'default': DFLT_MANIFEST_REQUIRED_KEYS,
+            'help': 'List of keys required in manifest ' +
+                    'odoo file __openerp__.py, ' +
+                    'separated by a comma.'
         }),
     )
     msgs = OCA_MSGS
@@ -90,3 +104,14 @@ class ModuleChecker(misc.WrapperModuleChecker):
         '''
         self.msg_args = (self.config.readme_template_url,)
         return os.path.isfile(os.path.join(self.module_path, 'README.rst'))
+
+    def _check_manifest_missing_key(self):
+        '''Check if a required key is missing in manifest file
+        :return: False if key required is missing else True
+        '''
+        if not self.manifest_dict:
+            return True
+        required_keys = self.config.manifest_required_keys
+        self.msg_args = (required_keys,)
+        return set(required_keys).issubset(
+            set(self.manifest_dict.keys()))
