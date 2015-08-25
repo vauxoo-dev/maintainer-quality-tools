@@ -14,8 +14,6 @@ class WrapperModuleChecker(BaseChecker):
     __implements__ = IAstroidChecker
 
     node = None
-    manifest_file = None
-    manifest_dict = None
     module_path = None
     msg_args = None
     msg_code = None
@@ -32,19 +30,6 @@ class WrapperModuleChecker(BaseChecker):
                 if os.path.isfile(manifest_file):
                     return manifest_file
 
-    def get_manifest_dict(self):
-        '''Get manifest dict object
-        if self.manifest_file is assigned then read it and transform to dict
-        :return: Dict object with content of manifest file.
-        '''
-        if self.manifest_file:
-            with open(self.manifest_file, 'rb') as mfp:
-                try:
-                    manifest_dict = eval(mfp.read())
-                    return manifest_dict
-                except BaseException:  # Why can be any exception
-                    return None
-
     def wrapper_visit_module(self, node):
         '''Call methods named with name-key from self.msgs
         Method should be named with next standard:
@@ -58,7 +43,6 @@ class WrapperModuleChecker(BaseChecker):
         :return: None
         '''
         self.manifest_file = self.get_manifest_file(node.file)
-        self.manifest_dict = self.get_manifest_dict()
         self.node = node
         self.module_path = os.path.dirname(node.file)
         self.module = os.path.basename(self.module_path)

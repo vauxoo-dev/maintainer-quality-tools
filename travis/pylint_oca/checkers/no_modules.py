@@ -53,6 +53,9 @@ You can use:
 for more info visit pylint doc
 '''
 
+import ast
+import os
+
 from pylint.checkers import BaseChecker, utils
 from pylint.interfaces import IAstroidChecker
 
@@ -77,7 +80,27 @@ OCA_MSGS = {
         'copy-wo-api-one',
         settings.DESC_DFLT
     ),
+    'C%d01' % settings.BASE_NOMODULE_ID: (
+        'Missing author required "%s" in manifest file',
+        'manifest-required-author',
+        settings.DESC_DFLT
+    ),
+    'C%d02' % settings.BASE_NOMODULE_ID: (
+        'Missing required key "%s" in manifest file',
+        'manifest-required-key',
+        settings.DESC_DFLT
+    ),
+    'C%d03' % settings.BASE_NOMODULE_ID: (
+        'Deprecated key "%s" in manifest file',
+        'manifest-deprecated-key',
+        settings.DESC_DFLT
+    ),
+
 }
+
+DFTL_MANIFEST_REQUIRED_KEYS = ['license']
+DFTL_MANIFEST_REQUIRED_AUTHOR = 'Odoo Community Association (OCA)'
+DFTL_MANIFEST_DEPRECATED_KEYS = ['description']
 
 
 class NoModuleChecker(BaseChecker):
@@ -86,6 +109,56 @@ class NoModuleChecker(BaseChecker):
 
     name = settings.CFG_SECTION
     msgs = OCA_MSGS
+    options = (
+        ('manifest_required_author', {
+            'type': 'string',
+            'metavar': '<string>',
+            'default': DFTL_MANIFEST_REQUIRED_AUTHOR,
+            'help': 'Name of author required in manifest file.'
+        }),
+        ('manifest_required_keys', {
+            'type': 'csv',
+            'metavar': '<comma separated values>',
+            'default': DFTL_MANIFEST_REQUIRED_KEYS,
+            'help': 'List of keys required in manifest file, ' +
+                    'separated by a comma.'
+        }),
+        ('manifest_deprecated_keys', {
+            'type': 'csv',
+            'metavar': '<comma separated values>',
+            'default': DFTL_MANIFEST_DEPRECATED_KEYS,
+            'help': 'List of keys deprecated in manifest file, ' +
+                    'separated by a comma.'
+        }),
+    )
+
+    @utils.check_messages('manifest-required-author', 'manifest-required-key',
+                          'manifest-deprecated-key')
+    def visit_dict(self, node):
+        if os.path.basename(self.linter.current_file) in \
+                settings.MANIFEST_FILES:
+            manifest_dict = ast.listeral_eval(node.ast_string())
+
+            # Check author required
+            authors = manifest_dict.get('author', '').split(',')
+            required_author = self.config.manifest_required_author
+            if required_author not in authors:
+                self.add_message('manifest-required-author',
+                                 node=node, args=(required_author,))
+
+            # Check keys required
+            required_keys = self.config.manifest_required_keys
+            for required_key in required_keys:
+                if required_key not in manifest_dict:
+                    self.add_message('manifest-required-key',
+                                     node=node, args=(required_key,))
+
+            # Check keys deprecated
+            deprecated_keys = self.config.manifest_deprecated_keys
+            for deprecated_key in deprecated_keys:
+                if deprecated_key in manifest_dict:
+                    self.add_message('manifest-deprecated-key',
+                                     node=node, args=(deprecated_key,))
 
     @utils.check_messages('api-one-multi-together',
                           'copy-wo-api-one')
