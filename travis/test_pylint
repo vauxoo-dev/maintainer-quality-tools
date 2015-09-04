@@ -17,6 +17,8 @@ from getaddons import get_modules_changed
 def get_extra_params(odoo_version):
     '''
     Get extra pylint params by odoo version
+    Transform a seudo-pylint-conf to params,
+    it to overwrite base-pylint-conf values.
     :param version: String with name of version of odoo
     :return: List of extra pylint params
     '''
@@ -25,7 +27,7 @@ def get_extra_params(odoo_version):
     custom_cfg = os.path.join(
         os.path.dirname(os.path.realpath(__file__)),
         'cfg/travis_run_pylint_{odoo_version}.cfg'.format(
-        odoo_version=odoo_version))
+            odoo_version=odoo_version))
     if os.path.isfile(custom_cfg):
         config = ConfigParser.ConfigParser()
         config.readfp(open(custom_cfg))
