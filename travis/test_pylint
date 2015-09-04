@@ -44,7 +44,8 @@ if version:
     extra_params = get_extra_params(version)
     for extra_param in extra_params:
         extra_params_cmd.extend([
-        '--extra-params', extra_param])
+            '--extra-params', extra_param
+        ])
 
 
 pylint_rcfile = os.path.join(
@@ -53,7 +54,7 @@ pylint_rcfile = os.path.join(
     "travis_run_pylint.cfg")
 count_errors = run_pylint.main([
     "--config-file=" + pylint_rcfile,
-]  + extra_params_cmd, standalone_mode=False)
+    ] + extra_params_cmd, standalone_mode=False)
 
 
 pylint_rcfile_pr = os.path.join(

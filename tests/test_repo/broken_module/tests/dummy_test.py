@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # missing coding
-"""This file don't is add to main __init__
+"""This file is not added to main __init__
 We need to validate that check py errors"""
 
 try:
