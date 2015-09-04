@@ -9,5 +9,6 @@
     'data': ['model_view.xml'],
     'test': ['test.yml'],
     'installable': True,
-    'name': 'Duplicated value'
+    'name': 'Duplicated value',
+    'active': True,  # Deprecated active key
 }
