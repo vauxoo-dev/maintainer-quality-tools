@@ -100,6 +100,8 @@ if is_pull_request and branch_base and git_work_dir:
         git_work_dir,
         'origin/' + branch_base)
     if modules_changed and count_errors >= 0:
+        print(travis_helpers.green(
+            'Start lint check just in modules changed'))
         modules_changed_cmd = []
         for module_changed in modules_changed:
             modules_changed_cmd.extend([
@@ -109,11 +111,19 @@ if is_pull_request and branch_base and git_work_dir:
         pr_errors = run_pylint.main([
             "--config-file=" + pylint_rcfile_pr,
         ] + modules_changed_cmd + extra_params_cmd, standalone_mode=False)
+        print(travis_helpers.yellow(
+            "Found {pr_errors} errors".format(pr_errors=pr_errors) +
+            " in modules changed."
+            "\nThis is a beta version, then this checks "
+            "don't will change your build to red by now."
+            "\nBut you will need fix it ASAP."
+        ))
         pr_errors = 0  # beta version, then mute errors by now.
-        if pr_errors < 0:
-            count_errors = pr_errors
-        else:
-            count_errors += pr_errors
+        # TODO: Enable next code when change of beta to stable version
+        # if pr_errors < 0:
+        #      count_errors = pr_errors
+        # else:
+        #      count_errors += pr_errors
 else:
     # TODO: Add git hook case in other PR
     pass
