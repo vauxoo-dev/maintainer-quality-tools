@@ -15,10 +15,39 @@ from getaddons import get_modules_changed
 
 
 def get_extra_params(odoo_version):
-    '''
-    Get extra pylint params by odoo version
+    '''Get extra pylint params by odoo version
     Transform a seudo-pylint-conf to params,
     it to overwrite base-pylint-conf values.
+    Use a seudo-inherit of configuration file.
+    To avoid have a 2 config files (stable and pr-conf) by each odoo-version
+    Example:
+
+        pylint_master.conf
+        pylint_master_pr.conf
+        pylint_90.conf
+        pylint_90_pr.conf
+        pylint_80.conf
+        pylint_80_pr.conf
+        pylint_70.conf
+        pylint_70_pr.conf
+        pylint_61.conf
+        pylint_61_pr.conf
+        ... and new future versions.
+
+    If you need add a new conventions in all versions
+    you will need change all pr files or stables files.
+
+
+    With this method you can use:
+
+        pylint_lastest.conf
+        pylint_lastest_pr.conf
+        pylint_disabling_70.conf <- Overwrite params of pylint_lastest*.conf
+        pylint_disabling_61.conf <- Overwrite params of pylint_lastest*.conf
+
+    If you need add a new conventions in all versions you will need change just
+    pylint_lastest_pr.conf or pylint_lastest.conf, similar to inherit.
+
     :param version: String with name of version of odoo
     :return: List of extra pylint params
     '''
@@ -80,6 +109,7 @@ if is_pull_request and branch_base and git_work_dir:
         pr_errors = run_pylint.main([
             "--config-file=" + pylint_rcfile_pr,
         ] + modules_changed_cmd + extra_params_cmd, standalone_mode=False)
+        pr_errors = 0  # beta version, then mute errors by now.
         if pr_errors < 0:
             count_errors = pr_errors
         else:
