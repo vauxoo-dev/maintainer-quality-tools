@@ -51,15 +51,17 @@ pylint_rcfile = os.path.join(
     os.path.dirname(os.path.realpath(__file__)),
     'cfg',
     "travis_run_pylint.cfg")
+modules_cmd = []
 if os.environ.get('INCLUDE_LINT'):
     for path in os.environ.get('INCLUDE_LINT').split(' '):
-        extra_params_cmd.extend(['--path', path])
+        modules_cmd.extend(['--path', path])
 else:
-    extra_params_cmd.extend(["--path", os.environ.get('TRAVIS_BUILD_DIR')])
+    modules_cmd.extend(["--path", os.environ.get('TRAVIS_BUILD_DIR')])
 print "extra_params_cmd", extra_params_cmd
 count_errors = run_pylint.main([
     "--config-file=" + pylint_rcfile,
-    ] + extra_params_cmd, standalone_mode=False)
+    ] + modules_cmd + extra_params_cmd, standalone_mode=False)
+print "count_errors", count_errors
 
 pylint_rcfile_pr = os.path.join(
     os.path.dirname(os.path.realpath(__file__)),
@@ -86,6 +88,7 @@ if is_pull_request and branch_base and git_work_dir:
         pr_errors = run_pylint.main([
             "--config-file=" + pylint_rcfile_pr,
         ] + modules_changed_cmd + extra_params_cmd, standalone_mode=False)
+        print "pr count_errors", pr_errors
         if pr_errors < 0:
             count_errors = pr_errors
         else:
