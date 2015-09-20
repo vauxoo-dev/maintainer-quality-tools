@@ -193,7 +193,7 @@ def setup_server(db, odoo_unittest, tested_addons, server_path,
     print("\nCreating instance:")
     try:
         subprocess.check_call(["createdb", db])
-    except subprocess.CalledProcessError as process_error:
+    except subprocess.CalledProcessError:
         pass
     cmd_odoo = ["%s/openerp-server" % server_path,
                 "-d", db,
@@ -273,17 +273,20 @@ def main(argv=None):
     primary_modules = set(
         get_modules(travis_build_dir) + modules_other_projects) & \
         all_depends
-    secondary_addons_path_list = set(addons_path_list) - set([travis_build_dir] + test_other_projects)
+    secondary_addons_path_list = set(addons_path_list) - set(
+        [travis_build_dir] + test_other_projects)
     secondary_modules = []
     for secondary_addons_path in secondary_addons_path_list:
         secondary_modules.extend(get_modules(secondary_addons_path))
     secondary_modules = set(secondary_modules) & all_depends
     secondary_depends_primary = []
     for secondary_module in secondary_modules:
-        for secondary_depend in get_depends(addons_path_list, [secondary_module]):
+        for secondary_depend in get_depends(
+                addons_path_list, [secondary_module]):
             if secondary_depend in primary_modules:
                 secondary_depends_primary.append(secondary_module)
-    preinstall_modules = list(secondary_modules - set(secondary_depends_primary))
+    preinstall_modules = list(
+        secondary_modules - set(secondary_depends_primary))
 
     print("Modules to preinstall: %s" % preinstall_modules)
     setup_server(dbtemplate, odoo_unittest, tested_addons, server_path,
