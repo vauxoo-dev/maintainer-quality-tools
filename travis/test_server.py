@@ -6,7 +6,7 @@ import re
 import os
 import subprocess
 import sys
-from getaddons import get_addons, get_modules, is_module
+from getaddons import get_addons, get_depends, get_modules, is_module
 from travis_helpers import success_msg, fail_msg
 
 
@@ -129,6 +129,7 @@ def get_addons_path(travis_home, travis_build_dir, server_path):
     addons_path_list = get_addons(travis_home)
     addons_path_list.insert(0, travis_build_dir)
     addons_path_list.append(server_path + "/addons")
+    addons_path_list.append(server_path + "/openerp/addons")
     addons_path = ','.join(addons_path_list)
     return addons_path
 
@@ -190,7 +191,10 @@ def setup_server(db, odoo_unittest, tested_addons, server_path,
     if preinstall_modules is None:
         preinstall_modules = ['base']
     print("\nCreating instance:")
-    subprocess.check_call(["createdb", db])
+    try:
+        subprocess.check_call(["createdb", db])
+    except subprocess.CalledProcessError as process_error:
+        pass
     cmd_odoo = ["%s/openerp-server" % server_path,
                 "-d", db,
                 "--log-level=warn",
