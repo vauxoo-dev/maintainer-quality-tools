@@ -4,7 +4,6 @@ import os
 
 import coverage
 from coveralls import cli as coveralls_cli
-from lxml import etree
 
 
 if (os.environ.get('TESTS', '1') == '1' and
