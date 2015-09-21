@@ -282,11 +282,15 @@ def main(argv=None):
         for module in modules:
             if module in primary_modules:
                 primary_path_modules[module] = os.path.join(path, module)
-    coverage_data = open(".coveragerc", "r").read()
-    open(".coveragerc", "w").write(coverage_data.replace(
-        '    */build/*', '\t' +
-        '/*\n\t'.join(primary_path_modules.values()) + '/*'
-    ))
+    fname_coveragerc = ".coveragerc"
+    if os.path.exists(fname_coveragerc):
+        with open(fname_coveragerc) as fp_coveragerc:
+            coverage_data = fp_coveragerc.read()
+        with open(fname_coveragerc, "w") as fpw_coveragerc:
+            fpw_coveragerc.write(coverage_data.replace(
+                '    */build/*', '\t' +
+                '/*\n\t'.join(primary_path_modules.values()) + '/*'
+            ))
     secondary_addons_path_list = set(addons_path_list) - set(
         [travis_build_dir] + test_other_projects)
     secondary_modules = []
