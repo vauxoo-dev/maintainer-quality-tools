@@ -13,7 +13,9 @@ if (os.environ.get('TESTS', '1') == '1' and
 
     try:
         coverage.main(['xml'])
-        xml_file = "coverage.xml"
+        xml_file = "coverage.xml"i
+        if os.path.exists(xml_file):
+            print "Don't exists xml file", xml_file
         try:
             doc = etree.parse(open(xml_file))
         except etree.XMLSyntaxError as xmlsyntax_error_exception:
@@ -24,6 +26,6 @@ if (os.environ.get('TESTS', '1') == '1' and
             for uncover in class_node.xpath("lines/line[@hits='0']"):
                 files_uncovered.setdefault(filename,[]).append(int(uncover.get('number')))
         print "files_uncovered",files_uncovered
-    except BaseException:
-        print "Problem with covearge xml report"
+    except BaseException as coverage_error:
+        print "Problem with coverage xml report", coverage_error.message
     exit(coveralls_cli.main(argv=None))
