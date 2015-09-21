@@ -1,9 +1,29 @@
 #!/usr/bin/env python
 
 import os
+
+import coverage
 from coveralls import cli as coveralls_cli
+from lxml import etree
+
 
 if (os.environ.get('TESTS', '1') == '1' and
         not os.environ.get('LINT_CHECK') == '1'
         and os.environ.get('SHIPPABLE', False) != 'true'):
+
+    try:
+        coverage.main(['xml'])
+        xml_file = "coverage.xml"
+        try:
+            doc = etree.parse(open(xml_file))
+        except etree.XMLSyntaxError as xmlsyntax_error_exception:
+            raise xmlsyntax_error_exception.message
+        files_uncovered = {}
+        for class_node in doc.xpath("/coverage/packages/package/classes/class"):
+            filename = class_node.get('filename')
+            for uncover in class_node.xpath("lines/line[@hits='0']"):
+                files_uncovered.setdefault(filename,[]).append(int(uncover.get('number')))
+        print "files_uncovered",files_uncovered
+    except BaseException:
+        print "Problem with covearge xml report"
     exit(coveralls_cli.main(argv=None))
