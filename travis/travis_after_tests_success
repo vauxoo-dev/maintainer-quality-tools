@@ -6,7 +6,7 @@ import coverage
 from coveralls import cli as coveralls_cli
 from lxml import etree
 
-
+import pdb;pdb.set_trace()
 if (os.environ.get('TESTS', '1') == '1' and
         not os.environ.get('LINT_CHECK') == '1'
         and os.environ.get('SHIPPABLE', False) != 'true'):
@@ -17,7 +17,7 @@ if (os.environ.get('TESTS', '1') == '1' and
         try:
             doc = etree.parse(open(xml_file))
         except etree.XMLSyntaxError as xmlsyntax_error_exception:
-            raise xmlsyntax_error_exception.message
+            print "xmlsyntax_error_exception.message", xmlsyntax_error_exception.message
         files_uncovered = {}
         for class_node in doc.xpath("/coverage/packages/package/classes/class"):
             filename = class_node.get('filename')
