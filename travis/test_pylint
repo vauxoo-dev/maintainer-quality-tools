@@ -12,6 +12,7 @@ import run_pylint
 import travis_helpers
 
 from getaddons import get_modules_changed
+from git_run import GitRun
 
 
 def get_extra_params(odoo_version):
@@ -65,9 +66,16 @@ def get_extra_params(odoo_version):
                 params.extend(['--' + option, value])
     return params
 
+git_work_dir = os.environ.get('TRAVIS_BUILD_DIR', False)
 
 version = os.environ.get('VERSION', False)
 extra_params_cmd = []
+if not version:
+    if git_work_dir:
+        repo_path = os.path.join(git_work_dir, '.git')
+        branch_name = GitRun(repo_path).get_branch_name()
+        version = branch_name.replace('_', '-').split('-')[:1]
+
 if version:
     extra_params = get_extra_params(version)
     for extra_param in extra_params:
@@ -92,7 +100,6 @@ pylint_rcfile_pr = os.path.join(
 is_pull_request = os.environ.get(
     'TRAVIS_PULL_REQUEST', 'false') != 'false'
 branch_base = os.environ.get('TRAVIS_BRANCH', False)
-git_work_dir = os.environ.get('TRAVIS_BUILD_DIR', False)
 
 
 if is_pull_request and branch_base and git_work_dir:
