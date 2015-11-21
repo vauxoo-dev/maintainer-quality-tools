@@ -6,6 +6,7 @@ import re
 import os
 import subprocess
 import sys
+import time
 from getaddons import get_addons, get_modules, is_installable_module
 from travis_helpers import success_msg, fail_msg
 
@@ -204,6 +205,52 @@ def setup_server(db, odoo_unittest, tested_addons, server_path,
     return 0
 
 
+def docker_entrypoint(server_path):
+    if os.environ.get('TRAVIS', "false") == "true":
+        return True
+    # Fix postgres issue
+    cmd = [
+        'sudo', 'su', '-c',
+        "sudo mkdir -p /etc/ssl/private-copy; "
+        "sudo mkdir -p /etc/ssl/private; "
+        "sudo mv /etc/ssl/private/* /etc/ssl/private-copy/; "
+        "sudo rm -r /etc/ssl/private; "
+        "sudo mv /etc/ssl/private-copy /etc/ssl/private; "
+        "sudo chmod -R 0700 /etc/ssl/private; "
+        "sudo chown -R postgres /etc/ssl/private"
+    ]
+    subprocess.call(cmd)
+    # Patch to force start odoo with sudo
+    sub_cmd1 = [
+        'find', '-L', server_path, '-name', 'server.py',
+    ]
+    subp1 = subprocess.Popen(sub_cmd1, stdout=subprocess.PIPE)
+
+    sub_cmd2 = [
+        'xargs', 'sed', '-i', "s/== 'root'/== 'force_root'/g"
+    ]
+    subprocess.Popen(sub_cmd2, stdin=subp1.stdout, stdout=subprocess.PIPE)
+
+    # Start postgres services
+    cmd = [
+        'sudo', 'su', '-c',
+        'sudo -u postgres /usr/lib/postgresql/9.3/bin/postgres '
+        '-c "config_file=/etc/postgresql/9.3/main/postgresql.conf"'
+    ]
+    subprocess.Popen(cmd)
+    print("Waiting to start psql service...")
+    while True:
+        psql_subprocess = subprocess.Popen(
+            ["psql", '-l'], stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE)
+        psql_subprocess.wait()
+        if not bool(psql_subprocess.stderr.read()):
+            break
+        time.sleep(2)
+    print("...psql service started.")
+    return True
+
+
 def main(argv=None):
     if argv is None:
         argv = sys.argv
@@ -253,7 +300,7 @@ def main(argv=None):
         return 0
     else:
         print("Modules to test: %s" % tested_addons)
-
+    docker_entrypoint(server_path)
     # setup the base module without running the tests
     dbtemplate = "openerp_template"
     preinstall_modules = get_test_dependencies(addons_path,
