@@ -208,35 +208,37 @@ def setup_server(db, odoo_unittest, tested_addons, server_path,
 def docker_entrypoint(server_path):
     if os.environ.get('TRAVIS', "false") == "true":
         return True
-    # Fix postgres issue
-    cmd = [
-        'sudo', 'su', '-c',
-        "sudo mkdir -p /etc/ssl/private-copy; "
-        "sudo mkdir -p /etc/ssl/private; "
-        "sudo mv /etc/ssl/private/* /etc/ssl/private-copy/; "
-        "sudo rm -r /etc/ssl/private; "
-        "sudo mv /etc/ssl/private-copy /etc/ssl/private; "
-        "sudo chmod -R 0700 /etc/ssl/private; "
-        "sudo chown -R postgres /etc/ssl/private"
+    # Fix postgresql
+    #  https://github.com/docker/docker/issues/783
+    #   issuecomment-56013588
+    cmds = [
+        "sudo mkdir -p /etc/ssl/private-copy",
+        "sudo mkdir -p /etc/ssl/private",
+        "sudo mv /etc/ssl/private/* /etc/ssl/private-copy/",
+        "sudo rm -r /etc/ssl/private",
+        "sudo mv /etc/ssl/private-copy /etc/ssl/private",
+        "sudo chmod -R 0700 /etc/ssl/private",
+        "sudo chown -R postgres /etc/ssl/private",
     ]
-    subprocess.call(cmd)
-    # Patch to force start odoo with sudo
+    for cmd in cmds:
+        subprocess.call(cmd)
+
+    # Patch to force start odoo as root
     sub_cmd1 = [
         'find', '-L', server_path, '-name', 'server.py',
     ]
     subp1 = subprocess.Popen(sub_cmd1, stdout=subprocess.PIPE)
-
     sub_cmd2 = [
         'xargs', 'sed', '-i', "s/== 'root'/== 'force_root'/g"
     ]
     subprocess.Popen(sub_cmd2, stdin=subp1.stdout, stdout=subprocess.PIPE)
 
-    # Start postgres services
-    cmd = [
-        'sudo', 'su', '-c',
-        'sudo -u postgres /usr/lib/postgresql/9.3/bin/postgres '
-        '-c "config_file=/etc/postgresql/9.3/main/postgresql.conf"'
-    ]
+    # Start postgresql service
+    # cmd = [
+    #     'sudo -u postgres /usr/lib/postgresql/9.3/bin/postgres '
+    #     '-c "config_file=/etc/postgresql/9.3/main/postgresql.conf"'
+    # ]
+    cmd = ['sudo', '/etc/init.d/postgresql', 'start']
     subprocess.Popen(cmd)
     print("Waiting to start psql service...")
     while True:
