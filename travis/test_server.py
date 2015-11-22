@@ -266,6 +266,7 @@ def main(argv=None):
     odoo_version = os.environ.get("VERSION")
     instance_alive = str2bool(os.environ.get('INSTANCE_ALIVE'))
     is_runbot = str2bool(os.environ.get('RUNBOT'))
+    is_travis = str2bool(os.environ.get('TRAVIS'))
     if not odoo_version:
         # For backward compatibility, take version from parameter
         # if it's not globally set
