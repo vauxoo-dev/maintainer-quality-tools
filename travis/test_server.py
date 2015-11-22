@@ -209,7 +209,7 @@ def setup_server(db, odoo_unittest, tested_addons, server_path,
         subprocess.check_call(cmd_odoo)
     else:
         print("Using previous openerp_template database.")
-     return 0
+    return 0
 
 
 def docker_entrypoint(server_path):
