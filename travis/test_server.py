@@ -206,8 +206,6 @@ def setup_server(db, odoo_unittest, tested_addons, server_path,
 
 
 def docker_entrypoint(server_path):
-    if os.environ.get('TRAVIS', "false") == "true":
-        return True
     # Fix postgresql
     #  https://github.com/docker/docker/issues/783
     #   issuecomment-56013588
@@ -304,7 +302,8 @@ def main(argv=None):
         return 0
     else:
         print("Modules to test: %s" % tested_addons)
-    docker_entrypoint(server_path)
+    if not is_travis:
+        docker_entrypoint(server_path)
     # setup the base module without running the tests
     dbtemplate = "openerp_template"
     preinstall_modules = get_test_dependencies(addons_path,
