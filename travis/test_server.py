@@ -212,16 +212,16 @@ def docker_entrypoint(server_path):
     #  https://github.com/docker/docker/issues/783
     #   issuecomment-56013588
     cmds = [
-        "sudo mkdir -p /etc/ssl/private-copy",
-        "sudo mkdir -p /etc/ssl/private",
-        "sudo mv /etc/ssl/private/* /etc/ssl/private-copy/",
-        "sudo rm -r /etc/ssl/private",
-        "sudo mv /etc/ssl/private-copy /etc/ssl/private",
-        "sudo chmod -R 0700 /etc/ssl/private",
-        "sudo chown -R postgres /etc/ssl/private",
+        ["mkdir", "-p", "/etc/ssl/private-copy"],
+        ["mkdir", "-p", "/etc/ssl/private"],
+        ["mv", "/etc/ssl/private/*", "/etc/ssl/private-copy/"],
+        ["rm", "-r", "/etc/ssl/private"],
+        ["mv", "/etc/ssl/private-copy", "/etc/ssl/private"],
+        ["chmod", "-R", "0700", "/etc/ssl/private"],
+        ["chown", "-R", "postgres", "/etc/ssl/private"],
     ]
     for cmd in cmds:
-        subprocess.call(cmd)
+        subprocess.call(' '.join(cmd), shell=True)
 
     # Patch to force start odoo as root
     sub_cmd1 = [
