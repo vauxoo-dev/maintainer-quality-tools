@@ -192,17 +192,24 @@ def setup_server(db, odoo_unittest, tested_addons, server_path,
     if preinstall_modules is None:
         preinstall_modules = ['base']
     print("\nCreating instance:")
-    subprocess.check_call(["createdb", db])
-    cmd_odoo = ["%s/openerp-server" % server_path,
-                "-d", db,
-                "--log-level=warn",
-                "--stop-after-init",
-                "--addons-path", addons_path,
-                "--init", ','.join(preinstall_modules),
-                ] + install_options
-    print(" ".join(cmd_odoo))
-    subprocess.check_call(cmd_odoo)
-    return 0
+    db_tmpl_created = False
+    try:
+        subprocess.check_call(["createdb", db])
+    except subprocess.CalledProcessError:
+        db_tmpl_created = True
+    if not db_tmpl_created:
+        cmd_odoo = ["%s/openerp-server" % server_path,
+                    "-d", db,
+                    "--log-level=warn",
+                    "--stop-after-init",
+                    "--addons-path", addons_path,
+                    "--init", ','.join(preinstall_modules),
+                    ] + install_options
+        print(" ".join(cmd_odoo))
+        subprocess.check_call(cmd_odoo)
+    else:
+        print("Using previous openerp_template database.")
+     return 0
 
 
 def docker_entrypoint(server_path):
