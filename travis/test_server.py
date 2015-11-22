@@ -354,6 +354,8 @@ def main(argv=None):
             db_odoo_created = True
         for command, check_loaded in commands:
             if db_odoo_created and instance_alive:
+                # If exists database of odoo test
+                # then start server with regular command without tests params
                 command_start = commands[0][0]
                 rm_items = [
                     'coverage', 'run', '--stop-after-init',
