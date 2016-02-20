@@ -3,6 +3,7 @@
 
 import os
 import pstats
+import sys
 
 
 def print_stats(filter_fnames=None):
@@ -35,9 +36,11 @@ def print_stats(filter_fnames=None):
     stats_filter_sorted = sort_stats(stats_filter)
 
     for file_data, stats in stats_filter_sorted:
-        print "%f, %f, %f, %f" % stats,
-        print "%s:%s->%s" % file_data
+        print "{0:10d} {1:10d} {2:10.6f} {3:10.6f}".format(*stats),
+        print "%s:%s %s" % file_data
 
 
 if __name__ == '__main__':
-    print_stats()
+    if len(sys.argv) == 1:
+        sys.argv.append('.py')
+    print_stats(sys.argv[1:])
