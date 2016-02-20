@@ -54,5 +54,8 @@ if __name__ == '__main__':
     if len(sys.argv) == 1:
         sys.argv.append('.py')
     fnames_filter = sys.argv[1].split(',')
-    fnames_exclude = sys.argv[2].split(',')
+    if len(sys.argv) == 2:
+        fnames_exclude = None
+    else:
+        fnames_exclude = sys.argv[2].split(',')
     print_stats(fnames_filter, fnames_exclude)
