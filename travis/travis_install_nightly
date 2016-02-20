@@ -48,6 +48,10 @@ pip install -q QUnitSuite coveralls
 # Use reference .coveragerc
 cp ${HOME}/maintainer-quality-tools/cfg/.coveragerc .
 
+echo "Getting profiler module"
+git clone --single-branch --depth=1 git@github.com:Vauxoo/odoo-profiler.git -b ${VERSION} ${HOME}/dependencies/odoo-profiler \
+    && sed -i "s/'auto_install': False/'auto_install': True/g" ${HOME}/dependencies/odoo-profiler/profiler/__openerp__.py
+
 echo "Getting dependencies"
 clone_oca_dependencies
 
