@@ -4,7 +4,19 @@ import os
 
 from coverage.cmdline import main as coverage_main
 from coveralls import cli as coveralls_cli
+import get_profile_stats
+from test_server import get_server_path
+
+
+odoo_full = os.environ.get("ODOO_REPO", "odoo/odoo")
+odoo_version = os.environ.get("VERSION")
+travis_home = os.environ.get("HOME", "~/")
+server_path = get_server_path(odoo_full, odoo_version, travis_home)
 
 if os.environ.get('TESTS', '0') == '1':
+    get_profile_stats.print_stats(
+        [travis_home,],
+        [server_path, 'odoo-profiler']
+    )
     coverage_main(["report", "--show-missing"])
     exit(coveralls_cli.main(argv=None))
