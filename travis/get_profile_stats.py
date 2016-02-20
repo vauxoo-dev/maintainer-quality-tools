@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+#!/usr/bin/env python
+
 import os
 import pstats
 
@@ -35,3 +37,7 @@ def print_stats(filter_fnames=None):
     for file_data, stats in stats_filter_sorted:
         print "%f, %f, %f, %f" % stats,
         print "%s:%s->%s" % file_data
+
+
+if __name__ == '__main__':
+    print_stats()
