@@ -6,7 +6,15 @@ import pstats
 import sys
 
 
-def print_stats(filter_fnames=None, exclude_fnames=None):
+def print_stats(filter_fnames=None, exclude_fnames=None,
+                sort_index=0, limit=0):
+    """Print stats with a filter or exclude filenames, sort index and limit
+    :param filter_fnames: List of relative paths to filter and show them.
+    :param exclude_fnames: List of relative paths to avoid show them.
+    :param sort_index: Integer with `pstats tuple` index to sort the result.
+    :param limit: Integer to limit max result.
+    :return: Directly print of `pstats` summarize info.
+    """
     if filter_fnames is None:
         filter_fnames = ['.py']
     if exclude_fnames is None:
@@ -47,7 +55,9 @@ def print_stats(filter_fnames=None, exclude_fnames=None):
                       reverse=reverse)
 
     # fstats.sort_stats('cumulative')
-    stats_filter_sorted = sort_stats(stats_filter)
+    stats_filter_sorted = sort_stats(stats_filter, sort_index)
+    if limit:
+        stats_filter_sorted = stats_filter_sorted[:limit]
 
     for file_data, stats in stats_filter_sorted:
         print "{0:10d} {1:10d} {2:10.6f} {3:10.6f}".format(*stats),
