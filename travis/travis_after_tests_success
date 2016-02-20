@@ -14,9 +14,19 @@ travis_home = os.environ.get("HOME", "~/")
 server_path = get_server_path(odoo_full, odoo_version, travis_home)
 
 if os.environ.get('TESTS', '0') == '1':
+    print "Print cProfile sorted by index 0:"
     get_profile_stats.print_stats(
-        [travis_home,],
-        [server_path, 'odoo-profiler']
+        filter_fnames=[travis_home,],
+        exclude_fnames=[server_path, 'odoo-profiler'],
+        sort_index=0,
+        limit=30,
+    )
+    print "Print cProfile sorted by index 3:"
+    get_profile_stats.print_stats(
+        filter_fnames=[travis_home,],
+        exclude_fnames=[server_path, 'odoo-profiler'],
+        sort_index=3,
+        limit=30,
     )
     coverage_main(["report", "--show-missing"])
     exit(coveralls_cli.main(argv=None))
