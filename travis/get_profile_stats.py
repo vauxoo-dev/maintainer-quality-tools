@@ -11,7 +11,11 @@ def print_stats(filter_fnames=None, exclude_fnames=None):
         filter_fnames = ['.py']
     if exclude_fnames is None:
         exclude_fnames = []
+
     fname = os.path.expanduser('~/.openerp_server.stats')
+    if not os.path.isfile(fname):
+        print "No cProfile stats to report."
+        return False
     fstats = pstats.Stats(fname)
     stats = fstats.stats
 
@@ -48,7 +52,7 @@ def print_stats(filter_fnames=None, exclude_fnames=None):
     for file_data, stats in stats_filter_sorted:
         print "{0:10d} {1:10d} {2:10.6f} {3:10.6f}".format(*stats),
         print "%s:%s %s" % file_data
-
+    return True
 
 if __name__ == '__main__':
     if len(sys.argv) == 1:
