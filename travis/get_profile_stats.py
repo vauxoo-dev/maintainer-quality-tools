@@ -29,28 +29,35 @@ def print_stats(filter_fnames=None, exclude_fnames=None,
     except TypeError:
         print "No cProfile stats valid."
         return False
-    stats = fstats.stats
+
+    tuple_stats_list = [fstats.stats[stat][4].keys() for stat in fstats.stats]
+    def is_fname_match(fname, fmatch_list):
+        for fmatch in fmatch_list:
+            if fmatch in fname:
+                return True
+        return False
+
+    def is_exclude(fname, exclude_fnames):
+        for exclude_fname in exclude_fnames:
+            if exclude_fname in fname:
+                return True
+        return False
+
+    tuple_stats_list_filter = [
+        tuple_stats
+        for tuple_stats in tuple_stats_list
+        if is_fname_match(tuple_stats[0], filter_fnames) and not is_exclude(tuple_stats[0], exclude_fnames)
+    ]
 
     stats_filter = {}
-    for stat in stats:
-        for tuple_stats in stats[stat][4].keys():
-            for filter_fname in filter_fnames:
-                if filter_fname in tuple_stats[0]:
-                    exclude = False
-                    for exclude_fname in exclude_fnames:
-                        if exclude_fname in tuple_stats[0]:
-                            exclude = True
-                            break
-                    if exclude:
-                        break
-                    old_fstats = stats_filter.setdefault(
-                        tuple_stats, (0, 0, 0, 0))
-                    new_fstats = stats[stat][4][tuple_stats]
-                    sum_fstats = tuple([
-                        old_item + new_item
-                        for old_item, new_item in zip(old_fstats, new_fstats)])
-                    stats_filter[tuple_stats] = sum_fstats
-                    break
+    for tstats_filter in tuple_stats_list_filter:
+        old_fstats = stats_filter.setdefault(
+            tuple_stats, (0, 0, 0, 0))
+        new_fstats = stats[stat][4][tuple_stats]
+        sum_fstats = tuple([
+            old_item + new_item
+            for old_item, new_item in zip(old_fstats, new_fstats)])
+        stats_filter[tuple_stats] = sum_fstats
 
     def sort_stats(dict_stats, index=0, reverse=True):
         """param index: Index of tuple stats standard to sort
