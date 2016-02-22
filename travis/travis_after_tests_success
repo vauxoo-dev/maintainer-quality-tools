@@ -17,18 +17,36 @@ travis_py = '/home/travis/virtualenv/python2.7_with_system_site_packages'
 
 if os.environ.get('TESTS', '0') == '1':
     print "Print cProfile sorted by index 0:"
-    get_profile_stats.print_stats(
+    result = get_profile_stats.print_stats(
         filter_fnames=[travis_home,],
         exclude_fnames=[server_path, 'odoo-profiler', travis_py],
         sort_index=0,
         limit=30,
     )
-    print "Print cProfile sorted by index 3:"
-    get_profile_stats.print_stats(
+    if result:
+        print "Print cProfile sorted by index 3:"
+        get_profile_stats.print_stats(
+            filter_fnames=[travis_home,],
+            exclude_fnames=[server_path, 'odoo-profiler', travis_py],
+            sort_index=3,
+            limit=30,
+        )
+    print "Print cProfile orm_methods sorted by index 0:"
+    result = get_profile_stats.print_stats(
         filter_fnames=[travis_home,],
         exclude_fnames=[server_path, 'odoo-profiler', travis_py],
-        sort_index=3,
-        limit=30,
+        sort_index=0,
+        limit=30, fname="~/.openerp_server_orm_methods.stats",
     )
+    if result:
+        print "Print cProfile orm_methods sorted by index 3:"
+        get_profile_stats.print_stats(
+            filter_fnames=[travis_home,],
+            exclude_fnames=[server_path, 'odoo-profiler', travis_py],
+            sort_index=3,
+            limit=30, fname="~/.openerp_server_orm_methods.stats",
+        )
+
+
     coverage_main(["report", "--show-missing"])
     exit(coveralls_cli.main(argv=None))

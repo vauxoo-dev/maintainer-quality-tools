@@ -7,7 +7,7 @@ import sys
 
 
 def print_stats(filter_fnames=None, exclude_fnames=None,
-                sort_index=0, limit=0):
+                sort_index=0, limit=0, fname=None):
     """Print stats with a filter or exclude filenames, sort index and limit
     :param filter_fnames: List of relative paths to filter and show them.
     :param exclude_fnames: List of relative paths to avoid show them.
@@ -19,8 +19,10 @@ def print_stats(filter_fnames=None, exclude_fnames=None,
         filter_fnames = ['.py']
     if exclude_fnames is None:
         exclude_fnames = []
+    if fname is None:
+        fname = '~/.openerp_server.stats'
 
-    fname = os.path.expanduser('~/.openerp_server.stats')
+    fname = os.path.expanduser(fname)
     if not os.path.isfile(fname):
         print "No cProfile stats to report."
         return False
