@@ -90,7 +90,8 @@ git clone --single-branch --depth=1 https://github.com/OCA/web.git -b ${VERSION}
     && (cd ${HOME}/web-environment-ribbon-isolated; rm -rf $(ls | grep -v web_environment_ribbon$); mv web_environment_ribbon web_environment_ribbon_isolated )
 
 # Install profiler module
-git clone --single-branch --depth=1 https://github.com/Vauxoo/odoo-profiler.git -b ${VERSION} ${HOME}/odoo-profiler \
+# git clone --single-branch --depth=1 https://github.com/Vauxoo/odoo-profiler.git -b ${VERSION} ${HOME}/odoo-profiler \
+git clone --single-branch --depth=1 git@github.com:Vauxoo-dev/odoo-profiler.git -b 8.0-vx-double-profile-moy ${HOME}/odoo-profiler \
     && sed -i "s/'auto_install': False/'auto_install': True/g" ${HOME}/odoo-profiler/profiler/__openerp__.py \
     && sed -i "s/return new_api/with profiling(): return new_api/g" ${ODOO_PATH}/openerp/api.py \
     && sed -i "s/return old_api/with profiling(): return old_api/g" ${ODOO_PATH}/openerp/api.py \
