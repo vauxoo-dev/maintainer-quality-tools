@@ -71,12 +71,15 @@ def filter_lines(logfile, exclude_lines=None, fout=None):
     return fout
 
 
-def generate_pgbadger_html(logfile, fout=None):
+def generate_pgbadger_html(logfile, fout=None, extra_params=None):
     if fout is None:
         fout = logfile + '.html'
+    if extra_params is None:
+        extra_params = []
     cmd = [
-        'pgbadger', '-f', 'stderr', '-s', '10', '-T', "Runbot auto-created",
+        'pgbadger', '-f', 'stderr', '-T', "Runbot auto-created",
         '-o', fout,  logfile]
+    cmd.extend(extra_params)
     res = subprocess.call(cmd)
     return res == 0 and fout or False
 

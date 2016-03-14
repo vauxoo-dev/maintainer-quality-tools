@@ -38,9 +38,21 @@ def print_pstats(sort='cumulative'):
 
 def generate_pgbadger():
     fname_log = psql_log.get_current_log_path()
-    fout = os.path.join(os.path.expanduser("~"), '.openerp_server_psql.log')
-    psql_log.filter_lines(fname_log, fout=fout)
-    psql_log.generate_pgbadger_html(fout)
+    fname_log_filtered = os.path.join(
+        os.path.expanduser("~"), '.openerp_server_psql.log')
+    psql_log.filter_lines(fname_log, fout=fname_log_filtered)
+    pgbadger_out = fname_log_filtered + '.txt'
+    psql_log.generate_pgbadger_html(
+        fname_log_filtered, fout=pgbadger_out,
+        extra_params=['-t', '3', '-s', '3',
+                      '--disable-type', '--disable-error',
+                      '--disable-hourly', '--disable-session',
+                      '--disable-connection',
+                      ]
+    )
+    with open(pgbadger_out) as p_pgbadger_out:
+        print("*" * 50, "PGBADGER STATS \n",
+              p_pgbadger_out.read(), "\n", "*" * 50,)
     return True
 
 
