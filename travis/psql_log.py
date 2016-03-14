@@ -14,8 +14,7 @@ def get_psql_conf_files(psql_conf_path=None):
 def enable_psql_logs(psql_conf_path=None):
     """Enable psql logs.
     This change require receive from psql follow environment variables
-    to start log:
-        PGOPTIONS="-c client_min_messages=notice -c log_min_messages=warning -c log_min_error_statement=error -c log_min_duration_statement=0 -c log_connections=on -c log_disconnections=on -c log_duration=off -c log_error_verbosity=verbose -c log_lock_waits=on -c log_statement=none -c log_temp_files=0"  # noqa
+    to start log. More info in get_env_log() method.
     """
     for fname_conf in get_psql_conf_files():
         with open(fname_conf, "a+") as fconf:
@@ -32,6 +31,13 @@ log_checkpoints = on
 log_hostname = on
 log_line_prefix = '%t [%p]: [%l-1] db=%d,user=%u '""")
     subprocess.call("/etc/init.d/postgresql restart", shell=True)
+
+
+def get_env_log():
+    "Get environment variables to enable logs from client"
+    env = {}
+    env['PGOPTIONS'] = "-c client_min_messages=notice -c log_min_messages=warning -c log_min_error_statement=error -c log_min_duration_statement=0 -c log_connections=on -c log_disconnections=on -c log_duration=off -c log_error_verbosity=verbose -c log_lock_waits=on -c log_statement=none -c log_temp_files=0"  # noqa
+    return env
 
 
 if __name__ == '__main__':
