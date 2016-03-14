@@ -135,6 +135,6 @@ fi
 
 if [ "$PG_LOGS_ENABLE" == "1"]; then
     python $(dirname ${BASH_SOURCE[0]})/enable_psql_logs
-elif
+fi
 
 exit 0
