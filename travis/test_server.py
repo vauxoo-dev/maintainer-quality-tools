@@ -467,7 +467,7 @@ def main(argv=None):
                 command_call[db_index] = database
             print(' '.join(command_call))
             env = None
-            if pg_logs_enable:
+            if pg_logs_enable and '--test-enable' in command_call:
                 env = psql_log.get_env_log(os.environ)
                 psql_log.mv_backup_logfile()
             pipe = subprocess.Popen(command_call,
