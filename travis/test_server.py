@@ -10,6 +10,7 @@ import sys
 import time
 
 import db_run
+import psql_log
 from getaddons import get_addons, get_depends, get_modules, \
     is_installable_module
 from travis_helpers import success_msg, fail_msg
@@ -464,9 +465,10 @@ def main(argv=None):
                 db_index = command_call.index('-d') + 1
                 command_call[db_index] = database
             print(' '.join(command_call))
+            env = psql_log.get_env_log(os.environ)
             pipe = subprocess.Popen(command_call,
                                     stderr=subprocess.STDOUT,
-                                    stdout=subprocess.PIPE)
+                                    stdout=subprocess.PIPE, env=env)
             with open(stdout_log, 'w') as stdout:
                 for line in iter(pipe.stdout.readline, ''):
                     if hidden_line(line):

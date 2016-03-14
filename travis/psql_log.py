@@ -33,11 +33,15 @@ log_line_prefix = '%t [%p]: [%l-1] db=%d,user=%u '""")
     subprocess.call("/etc/init.d/postgresql restart", shell=True)
 
 
-def get_env_log():
+def get_env_log(env=None):
     "Get environment variables to enable logs from client"
-    env = {}
-    env['PGOPTIONS'] = "-c client_min_messages=notice -c log_min_messages=warning -c log_min_error_statement=error -c log_min_duration_statement=0 -c log_connections=on -c log_disconnections=on -c log_duration=off -c log_error_verbosity=verbose -c log_lock_waits=on -c log_statement=none -c log_temp_files=0"  # noqa
-    return env
+    if env is None:
+        env = {}
+    custom_env = env.copy()
+    custom_env.setdefault('PGOPTIONS', '')
+    custom_env['PGOPTIONS'] += " -c client_min_messages=notice -c log_min_messages=warning -c log_min_error_statement=error -c log_min_duration_statement=0 -c log_connections=on -c log_disconnections=on -c log_duration=off -c log_error_verbosity=verbose -c log_lock_waits=on -c log_statement=none -c log_temp_files=0"  # noqa
+    custom_env['PGOPTIONS'] = custom_env['PGOPTIONS'].strip(' ')
+    return custom_env
 
 
 if __name__ == '__main__':
