@@ -65,6 +65,16 @@ def filter_lines(logfile, exclude_lines=None, fout=None):
     return fout
 
 
+def generate_pgbadger_html(logfile, fout=None):
+    if fout is None:
+        fout = logfile + '.html'
+    cmd = [
+        'pgbadger', '-f', 'stderr', '-s', '10', '-T', "Runbot auto-created",
+        '-o', fout,  logfile]
+    res = subprocess.call(cmd)
+    return res == 0 and fout or False
+
+
 def get_default_params_log_server(extra_params=None):
     if extra_params is None:
         extra_params = []
