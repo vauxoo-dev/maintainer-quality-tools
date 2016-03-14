@@ -38,6 +38,9 @@ def print_pstats(sort='cumulative'):
 
 def generate_pgbadger():
     fname_log = psql_log.get_current_log_path()
+    if not fname_log:
+        print("postgresql log file don't exists.", fname_log)
+        return False
     fname_log_filtered = os.path.join(
         os.path.expanduser("~"), '.openerp_server_psql.log')
     psql_log.filter_lines(fname_log, fout=fname_log_filtered)

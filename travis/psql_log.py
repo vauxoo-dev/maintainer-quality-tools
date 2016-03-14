@@ -28,8 +28,8 @@ def get_default_log_path(directory=None, filename=None, root_path=None):
 
 def get_current_log_path():
     full_path, _, _, _ = get_default_log_path()
-    return list(get_psql_conf_files(full_path))[0]
-
+    log_paths = list(get_psql_conf_files(full_path))
+    return log_paths[0] if log_paths else None
 
 def mv_backup_logfile(suffix=None):
     if suffix is None:
