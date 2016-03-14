@@ -8,6 +8,7 @@ from coverage.cmdline import main as coverage_main
 from coveralls import cli as coveralls_cli
 
 import db_run
+import psql_log
 from pstats_print2list import get_pstats_print2list, print_pstats_list
 from test_server import get_server_path
 
@@ -35,6 +36,14 @@ def print_pstats(sort='cumulative'):
     return True
 
 
+def generate_pgbadger():
+    fname_log = psql_log.get_current_log_path()
+    fout = os.path.join(os.path.expanduser("~"), '.openerp_server_psql.log')
+    psql_log.filter_lines(fname_log, fout=fout)
+    psql_log.generate_pgbadger_html(fout)
+    return True
+
+
 if os.environ.get('TESTS', '0') == '1' and \
         os.environ.get('TEST_ENABLE', '1') == '1':
     if print_pstats('cumulative'):
@@ -46,5 +55,7 @@ if os.environ.get('TESTS', '0') == '1' and \
             print("Backup of database created successfully.")
         else:
             print("Error creating backup of database.")
+    if os.environ.get('PG_LOGS_ENABLE', False):
+        generate_pgbadger()
     coverage_main(["report", "--show-missing"])
     exit(coveralls_cli.main(argv=None))

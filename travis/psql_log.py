@@ -11,7 +11,8 @@ def get_psql_conf_files(psql_conf_path=None):
     if psql_conf_path is None:
         psql_conf_path = '/etc/postgresql/*/main*/postgresql.conf'
     for fname_conf in glob.glob(psql_conf_path):
-        yield fname_conf
+        if os.path.isfile(fname_conf):
+            yield fname_conf
 
 
 def get_default_log_path(directory=None, filename=None, root_path=None):
@@ -23,6 +24,11 @@ def get_default_log_path(directory=None, filename=None, root_path=None):
         root_path = '/var/lib/postgresql/*/main*'
     full_path = os.path.join(root_path, directory, filename)
     return [full_path, root_path, directory, filename]
+
+
+def get_current_log_path():
+    full_path, _, _, _ = get_default_log_path()
+    return list(get_psql_conf_files(full_path))[0]
 
 
 def mv_backup_logfile(suffix=None):
