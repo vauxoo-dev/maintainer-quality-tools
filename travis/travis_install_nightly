@@ -134,7 +134,7 @@ if [ "x${WITHOUT_DEPENDENCIES}" == "x" ] ; then
 fi
 
 if [ "$PG_LOGS_ENABLE" == "1"]; then
-    python $(dirname ${BASH_SOURCE[0]})/enable_psql_logs
+    python $(dirname ${BASH_SOURCE[0]})/psql_log.py
 fi
 
 exit 0
