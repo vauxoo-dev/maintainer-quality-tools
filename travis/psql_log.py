@@ -30,17 +30,18 @@ def mv_backup_logfile(suffix=None):
         # TODO: Add timestrftrime
         suffix = time.strftime('%Y-%m-%d_%H%M%S') + '.backup'
     fpath_log, _, _, _ = get_default_log_path()
+    fname_log_bkp = None
     for fname_log in get_psql_conf_files(fpath_log):
+        fname_log_bkp = fname_log + '_' + suffix
         if not os.path.isfile(fname_log):
             continue
-        fname_log_bkp = fname_log + suffix
         with open(fname_log) as flog, open(fname_log_bkp, "w") as flog_bkp:
             # postgresql don't support mv oldfile newfile
             flog_bkp.write(flog.read())
         # Delete original file
         with open(fname_log, "w"):
             pass
-    return True
+    return fname_log_bkp
 
 
 def get_default_params_log_server(extra_params=None):

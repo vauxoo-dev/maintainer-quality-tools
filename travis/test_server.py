@@ -469,6 +469,7 @@ def main(argv=None):
             env = None
             if pg_logs_enable:
                 env = psql_log.get_env_log(os.environ)
+                psql_log.mv_backup_logfile()
             pipe = subprocess.Popen(command_call,
                                     stderr=subprocess.STDOUT,
                                     stdout=subprocess.PIPE, env=env)
