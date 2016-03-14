@@ -44,6 +44,27 @@ def mv_backup_logfile(suffix=None):
     return fname_log_bkp
 
 
+def filter_lines(logfile, exclude_lines=None, fout=None):
+    if exclude_lines is None:
+        exclude_lines = [
+            "create index", "insert into analytics", "vacuum",
+            "create table", "statement: COMMIT", "alter table",
+            " FROM pg_",
+        ]
+    if fout is None:
+        fout = logfile + '.filtered'
+    with open(logfile) as plogfile, open(fout, "w") as pfout:
+        for line in plogfile:
+            excluded = False
+            for exclude_line in exclude_lines:
+                if exclude_line.lower() in line.lower():
+                    excluded = True
+                    break
+            if not excluded:
+                pfout.write(line)
+    return fout
+
+
 def get_default_params_log_server(extra_params=None):
     if extra_params is None:
         extra_params = []
