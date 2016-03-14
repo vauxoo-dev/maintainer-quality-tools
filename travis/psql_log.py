@@ -1,24 +1,57 @@
 from __future__ import print_function
 
 import glob
+import os
 import subprocess
+import time
 
 
 def get_psql_conf_files(psql_conf_path=None):
+    # TODO: Change method name to glob generic
     if psql_conf_path is None:
         psql_conf_path = '/etc/postgresql/*/main*/postgresql.conf'
     for fname_conf in glob.glob(psql_conf_path):
         yield fname_conf
 
 
+def get_default_log_path(directory=None, filename=None, root_path=None):
+    if directory is None:
+        directory = 'pg_log'
+    if filename is None:
+        filename = 'postgresql.log'
+    if root_path is None:
+        root_path = '/var/lib/postgresql/*/main*'
+    full_path = os.path.join(root_path, directory, filename)
+    return [full_path, root_path, directory, filename]
+
+
+def mv_backup_logfile(suffix=None):
+    if suffix is None:
+        # TODO: Add timestrftrime
+        suffix = time.strftime('%Y-%m-%d_%H%M%S') + '.backup'
+    fpath_log, _, _, _ = get_default_log_path()
+    for fname_log in get_psql_conf_files(fpath_log):
+        if not os.path.isfile(fname_log):
+            continue
+        fname_log_bkp = fname_log + suffix
+        with open(fname_log) as flog, open(fname_log_bkp, "w") as flog_bkp:
+            # postgresql don't support mv oldfile newfile
+            flog_bkp.write(flog.read())
+        # Delete original file
+        with open(fname_log, "w"):
+            pass
+    return True
+
+
 def get_default_params_log_server(extra_params=None):
     if extra_params is None:
         extra_params = []
+    _, _, directory, filename = get_default_log_path()
     params = [
         "logging_collector=on",
         "log_destination='stderr'",
-        "log_directory='pg_log'",
-        "log_filename='postgresql.log'",
+        "log_directory='%s'" % directory,
+        "log_filename='%s'" % filename,
         "log_rotation_age=0",
         "log_checkpoints=on",
         "log_hostname=on",
