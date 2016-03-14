@@ -133,6 +133,8 @@ if [ "x${WITHOUT_DEPENDENCIES}" == "x" ] ; then
     sudo cp /tmp/webkit_patched/webkit-patched /usr/bin/wkhtmltopdf
 fi
 
-python $(dirname ${BASH_SOURCE[0]})/enable_psql_logs
+if [ "$PG_LOGS_ENABLE" == "1"]; then
+    python $(dirname ${BASH_SOURCE[0]})/enable_psql_logs
+elif
 
 exit 0
