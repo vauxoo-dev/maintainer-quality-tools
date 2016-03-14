@@ -49,7 +49,7 @@ def filter_lines(logfile, exclude_lines=None, fout=None):
         exclude_lines = [
             "create index", "insert into analytics", "vacuum",
             "create table", "statement: COMMIT", "alter table",
-            " FROM pg_",
+            " FROM pg_", "pg_attribute", "conname AS constraint_name",
         ]
     if fout is None:
         fout = logfile + '.filtered'
