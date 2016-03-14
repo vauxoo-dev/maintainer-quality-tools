@@ -59,7 +59,8 @@ def enable_psql_logs(psql_conf_path=None):
             if param_list[0] + '\n' in fconf.readlines():
                 continue
             print("Enable logs to", fname_conf)
-            param_str = '\n'.join(param_list)
+            sep = '\n'
+            param_str = sep + sep.join(param_list)
             fconf.write(param_str)
     subprocess.call("/etc/init.d/postgresql restart", shell=True)
 
