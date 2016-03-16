@@ -56,6 +56,11 @@ def filter_lines(logfile, exclude_lines=None, fout=None):
             "create index", "insert into analytics", "vacuum",
             "create table", "statement: COMMIT", "alter table",
             " FROM pg_", "pg_attribute", "conname AS constraint_name",
+            "ir_model", "ir_translation", "ir_property",
+            "multi_company_default", "ir_model_data", "ir_ui_view",
+            "res_lang", "with currency_rate",
+            "res_users left join res_partner", "ir_module_module",
+            "tmp_ir_translation_import",
         ]
     if fout is None:
         fout = logfile + '.filtered'
@@ -63,7 +68,8 @@ def filter_lines(logfile, exclude_lines=None, fout=None):
         for line in plogfile:
             excluded = False
             for exclude_line in exclude_lines:
-                if exclude_line.lower() in line.lower():
+                if exclude_line.lower().replace('"', '') in \
+                        line.lower().replace('"', ''):
                     excluded = True
                     break
             if not excluded:
