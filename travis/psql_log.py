@@ -60,7 +60,7 @@ def filter_lines(logfile, exclude_lines=None, fout=None):
             "multi_company_default", "ir_model_data", "ir_ui_view",
             "res_lang", "with currency_rate",
             "res_users left join res_partner", "ir_module_module",
-            "tmp_ir_translation_import",
+            "tmp_ir_translation_import", "from wkf",
         ]
     if fout is None:
         fout = logfile + '.filtered'
