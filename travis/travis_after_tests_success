@@ -49,12 +49,14 @@ def generate_pgbadger():
             '--top', '10', '--sample', '1',
             '--exclude-query', "(v.model = 'res.lang')",
             '--exclude-query', "^(INSERT INTO|DELETE FROM|CREATE TEMP TABLE|DROP TABLE|drop table|update) tmp_ir_translation_import",
-            '--exclude-query', "^(INSERT INTO|UPDATE ONLY) ir_translation",
+            '--exclude-query', "^(INSERT INTO|UPDATE ONLY|insert into|update only) ir_translation",
             '--exclude-query', '^(SELECT \"res_lang\"\.id FROM \"res_lang\" WHERE )',
+            # '--begin', '2016-04-04 16:24:12',
+            # '--end', '2016-04-04 16:24:13',
             # '--begin', '2016-04-04 16:23:56',
             # '--end', '2016-04-04 16:23:57',
-            # '--disable-type', '--disable-error', '--disable-hourly',
-            # '--disable-session', '--disable-connection',
+            '--disable-type', '--disable-error', '--disable-hourly',
+            '--disable-session', '--disable-connection',
         ],
     )
     with open(pgbadger_out) as p_pgbadger_out:
