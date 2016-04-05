@@ -42,7 +42,7 @@ def generate_pgbadger():
         print("postgresql log file don't exists.", fname_log)
         return False
     pgbadger_out = os.path.join(
-        os.path.expanduser("~"), '.openerp_server_psql_filtered.pgbadger')
+        os.path.expanduser("~"), '.openerp_server.pgbadger')
     psql_log.generate_pgbadger_html(
         fname_log, fout=pgbadger_out,
         extra_params=[
@@ -57,9 +57,9 @@ def generate_pgbadger():
             # '--disable-connection',
         ],
     )
-    # with open(pgbadger_out) as p_pgbadger_out:
-    #     print("*" * 50, "PGBADGER STATS \n",
-    #           p_pgbadger_out.read(), "\n", "*" * 50,)
+    with open(pgbadger_out) as p_pgbadger_out:
+        print("*" * 50, "PGBADGER STATS \n",
+              p_pgbadger_out.read(), "\n", "*" * 50,)
     return True
 
 
