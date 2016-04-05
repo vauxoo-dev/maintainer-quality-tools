@@ -51,19 +51,22 @@ def mv_backup_logfile(suffix=None):
 
 
 def filter_lines(logfile, exclude_lines=None, fout=None):
+    exclude_lines = []
     if exclude_lines is None:
         exclude_lines = [
-            "create index", "insert into analytics", "vacuum",
-            "create table", "statement: COMMIT", "alter table",
-            " FROM pg_", "pg_attribute", "conname AS constraint_name",
-            "ir_model", "ir_translation", "ir_property",
-            "multi_company_default", "ir_model_data", "ir_ui_view",
-            "res_lang", "with currency_rate",
-            "res_users left join res_partner", "ir_module_module",
-            "tmp_ir_translation_import", "from wkf",
+            # "v.model = 'res.lang'",
+            # "create index", "insert into analytics", "vacuum",
+            # "create table", "statement: COMMIT", "alter table",
+            # " FROM pg_", "pg_attribute", "conname AS constraint_name",
+            # "ir_model", "ir_translation", "ir_property",
+            # "multi_company_default", "ir_model_data", "ir_ui_view",
+            # "res_lang", "with currency_rate",
+            # "res_users left join res_partner", "ir_module_module",
+            # "tmp_ir_translation_import", "from wkf", "res.lang", "res_lang",
+
         ]
     if fout is None:
-        fout = logfile + '.filtered'
+        fout = os.path.splitext(logfile)[0] + '.log_filtered'
     with open(logfile) as plogfile, open(fout, "w") as pfout:
         for line in plogfile:
             excluded = False
@@ -84,8 +87,8 @@ def generate_pgbadger_html(logfile, fout=None, extra_params=None):
         extra_params = []
     cmd = [
         'pgbadger', '-f', 'stderr', '-T', "Runbot auto-created",
-        '-o', fout,  logfile]
-    cmd.extend(extra_params)
+        '-o', fout] + extra_params + [logfile]
+    print("cmd: ", ' '.join(cmd))
     res = subprocess.call(cmd)
     return res == 0 and fout or False
 

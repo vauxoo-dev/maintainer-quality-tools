@@ -41,36 +41,40 @@ def generate_pgbadger():
     if not fname_log:
         print("postgresql log file don't exists.", fname_log)
         return False
-    fname_log_filtered = os.path.join(
-        os.path.expanduser("~"), '.openerp_server_psql.log')
-    psql_log.filter_lines(fname_log, fout=fname_log_filtered)
-    pgbadger_out = fname_log_filtered + '.txt'
+    pgbadger_out = os.path.join(
+        os.path.expanduser("~"), '.openerp_server_psql_filtered.pgbadger')
     psql_log.generate_pgbadger_html(
-        fname_log_filtered, fout=pgbadger_out,
-        extra_params=['-t', '3', '-s', '3',
-                      '--disable-type', '--disable-error',
-                      '--disable-hourly', '--disable-session',
-                      '--disable-connection',
-                      ]
+        fname_log, fout=pgbadger_out,
+        extra_params=[
+            '--top', '100', '--sample', '2',
+            # v.model = 'res.lang'
+            # '--exclude-query', "res.lang",
+            '--begin', '2016-04-04 05:36:35',
+            '--end', '2016-04-04 05:36:36',
+            # '--exclude-query', "",
+            # '--disable-type', '--disable-error',
+            # '--disable-hourly', '--disable-session',
+            # '--disable-connection',
+        ],
     )
-    with open(pgbadger_out) as p_pgbadger_out:
-        print("*" * 50, "PGBADGER STATS \n",
-              p_pgbadger_out.read(), "\n", "*" * 50,)
+    # with open(pgbadger_out) as p_pgbadger_out:
+    #     print("*" * 50, "PGBADGER STATS \n",
+    #           p_pgbadger_out.read(), "\n", "*" * 50,)
     return True
 
 
 if os.environ.get('TESTS', '0') == '1' and \
         os.environ.get('TEST_ENABLE', '1') == '1':
-    if print_pstats('cumulative'):
-        print_pstats('calls')
-        print_pstats('time')
-    if os.environ.get('DB_BACKUP', False):
-        backup_result = db_run.backup('openerp_template')
-        if backup_result:
-            print("Backup of database created successfully.")
-        else:
-            print("Error creating backup of database.")
+    # if print_pstats('cumulative'):
+    #     print_pstats('calls')
+        # print_pstats('time')
+    # if os.environ.get('DB_BACKUP', False):
+    #     backup_result = db_run.backup('openerp_template')
+    #     if backup_result:
+    #         print("Backup of database created successfully.")
+        # else:
+        #     print("Error creating backup of database.")
     if os.environ.get('PG_LOGS_ENABLE', False):
         generate_pgbadger()
-    coverage_main(["report", "--show-missing"])
-    exit(coveralls_cli.main(argv=None))
+    # coverage_main(["report", "--show-missing"])
+    # exit(coveralls_cli.main(argv=None))
