@@ -111,6 +111,21 @@ def get_default_params_log_server(extra_params=None):
     return params
 
 
+def get_default_params_non_durability(extra_params=None):
+    if extra_params is None:
+        extra_params = []
+    _, _, directory, filename = get_default_log_path()
+    params = [
+        "fsync=off",
+        "full_page_writes=off",
+        "checkpoint_segments=100",
+        "checkpoint_timeout=45min",
+        "synchronous_commit=off",
+    ]
+    params.extend(extra_params)
+    return params
+
+
 def get_default_params_log_client(extra_params=None):
     if extra_params is None:
         extra_params = []
@@ -139,6 +154,8 @@ def enable_psql_logs(psql_conf_path=None):
     for fname_conf in get_psql_conf_files():
         with open(fname_conf, "a+") as fconf:
             param_list = get_default_params_log_server()
+            if os.environ.get('PG_NON_DURABILITY', False) == "1":
+                param_list += get_default_params_non_durability()
             if param_list[0] + '\n' in fconf.readlines():
                 continue
             print("Enable logs to", fname_conf)
