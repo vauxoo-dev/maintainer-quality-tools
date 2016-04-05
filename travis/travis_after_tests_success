@@ -49,8 +49,8 @@ def generate_pgbadger():
             '--top', '100', '--sample', '2',
             # v.model = 'res.lang'
             # '--exclude-query', "res.lang",
-            '--begin', '2016-04-04 05:36:35',
-            '--end', '2016-04-04 05:36:36',
+            '--begin', '2016-04-04 16:23:56',
+            '--end', '2016-04-04 16:23:57',
             # '--exclude-query', "",
             # '--disable-type', '--disable-error',
             # '--disable-hourly', '--disable-session',
