@@ -7,7 +7,6 @@ import time
 
 
 def get_psql_conf_files(psql_conf_path=None):
-    # TODO: Change method name to glob generic
     if psql_conf_path is None:
         psql_conf_path = '/etc/postgresql/*/main*/postgresql.conf'
     for fname_conf in glob.glob(psql_conf_path):
@@ -30,54 +29,6 @@ def get_current_log_path():
     full_path, _, _, _ = get_default_log_path()
     log_paths = list(get_psql_conf_files(full_path))
     return log_paths[0] if log_paths else None
-
-def mv_backup_logfile(suffix=None):
-    if suffix is None:
-        # TODO: Add timestrftrime
-        suffix = time.strftime('%Y-%m-%d_%H%M%S') + '.backup'
-    fpath_log, _, _, _ = get_default_log_path()
-    fname_log_bkp = None
-    for fname_log in get_psql_conf_files(fpath_log):
-        fname_log_bkp = fname_log + '_' + suffix
-        if not os.path.isfile(fname_log):
-            continue
-        with open(fname_log) as flog, open(fname_log_bkp, "w") as flog_bkp:
-            # postgresql don't support mv oldfile newfile
-            flog_bkp.write(flog.read())
-        # Delete original file
-        with open(fname_log, "w"):
-            pass
-    return fname_log_bkp
-
-
-def filter_lines(logfile, exclude_lines=None, fout=None):
-    exclude_lines = []
-    if exclude_lines is None:
-        exclude_lines = [
-            # "v.model = 'res.lang'",
-            # "create index", "insert into analytics", "vacuum",
-            # "create table", "statement: COMMIT", "alter table",
-            # " FROM pg_", "pg_attribute", "conname AS constraint_name",
-            # "ir_model", "ir_translation", "ir_property",
-            # "multi_company_default", "ir_model_data", "ir_ui_view",
-            # "res_lang", "with currency_rate",
-            # "res_users left join res_partner", "ir_module_module",
-            # "tmp_ir_translation_import", "from wkf", "res.lang", "res_lang",
-
-        ]
-    if fout is None:
-        fout = os.path.splitext(logfile)[0] + '.log_filtered'
-    with open(logfile) as plogfile, open(fout, "w") as pfout:
-        for line in plogfile:
-            excluded = False
-            for exclude_line in exclude_lines:
-                if exclude_line.lower().replace('"', '') in \
-                        line.lower().replace('"', ''):
-                    excluded = True
-                    break
-            if not excluded:
-                pfout.write(line)
-    return fout
 
 
 def generate_pgbadger_html(logfile, fout=None, extra_params=None):

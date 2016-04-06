@@ -42,6 +42,7 @@ def list2param(param, items):
         params.extend([param, item])
     return params
 
+
 def generate_pgbadger(exclude_regex=None):
     # TODO: Receive the begin and end dates params
     if exclude_regex is None:
@@ -53,7 +54,6 @@ def generate_pgbadger(exclude_regex=None):
             r'^(UPDATE|SELECT|INSERT INTO)( \"ir_module_module\")',
             r'^(UPDATE|SELECT|INSERT INTO)( \"ir_model\")',
             r'^(SELECT "ir_ui_view".id FROM \"ir_model_data\" )',
-            # r'^(select|SELECT)( )(id|\*|wkf_id)( )(from|FROM)( wkf)(_|\w)*( )',
             r'(from|FROM|update|UPDATE)( wkf)(_|\w)*( )',
             r'^(COPY|COMMIT|SAVEPOINT|commit|copy|savepoint)',
             r'^(INSERT INTO \"ir_attachment\" )',
@@ -88,16 +88,16 @@ def generate_pgbadger(exclude_regex=None):
 
 if os.environ.get('TESTS', '0') == '1' and \
         os.environ.get('TEST_ENABLE', '1') == '1':
-    # if print_pstats('cumulative'):
-    #     print_pstats('calls')
-        # print_pstats('time')
-    # if os.environ.get('DB_BACKUP', False):
-    #     backup_result = db_run.backup('openerp_template')
-    #     if backup_result:
-    #         print("Backup of database created successfully.")
-        # else:
-        #     print("Error creating backup of database.")
+    if print_pstats('cumulative'):
+        print_pstats('calls')
+        print_pstats('time')
+    if os.environ.get('DB_BACKUP', False):
+        backup_result = db_run.backup('openerp_template')
+        if backup_result:
+            print("Backup of database created successfully.")
+        else:
+            print("Error creating backup of database.")
     if os.environ.get('PG_LOGS_ENABLE', False):
         generate_pgbadger()
-    # coverage_main(["report", "--show-missing"])
-    # exit(coveralls_cli.main(argv=None))
+    coverage_main(["report", "--show-missing"])
+    exit(coveralls_cli.main(argv=None))
