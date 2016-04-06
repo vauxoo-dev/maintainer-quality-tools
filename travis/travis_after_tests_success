@@ -43,6 +43,7 @@ def list2param(param, items):
     return params
 
 def generate_pgbadger(exclude_regex=None):
+    # TODO: Receive the begin and end dates params
     if exclude_regex is None:
         exclude_regex = [
             r"(v.model = 'res\.lang')",
@@ -54,6 +55,8 @@ def generate_pgbadger(exclude_regex=None):
             r'^(SELECT "ir_ui_view".id FROM \"ir_model_data\" )',
             # r'^(select|SELECT)( )(id|\*|wkf_id)( )(from|FROM)( wkf)(_|\w)*( )',
             r'(from|FROM|update|UPDATE)( wkf)(_|\w)*( )',
+            r'^(COPY|COMMIT|SAVEPOINT|commit|copy|savepoint)',
+            r'^(INSERT INTO \"ir_attachment\" )',
         ]
     fname_log = psql_log.get_current_log_path()
     if not fname_log:
@@ -64,7 +67,7 @@ def generate_pgbadger(exclude_regex=None):
     extra_params = list2param('--exclude-query', exclude_regex)
     # extra_params = []
     extra_params.extend([
-        '--top', '20', '--sample', '3',
+        '--top', '15', '--sample', '2',
         # '--begin', '2016-04-04 16:24:12',
         # '--end', '2016-04-04 16:24:13',
         # '--begin', '2016-04-04 16:23:56',
