@@ -36,29 +36,45 @@ def print_pstats(sort='cumulative'):
     return True
 
 
-def generate_pgbadger():
+def list2param(param, items):
+    params = []
+    for item in items:
+        params.extend([param, item])
+    return params
+
+def generate_pgbadger(exclude_regex=None):
+    if exclude_regex is None:
+        exclude_regex = [
+            r"(v.model = 'res\.lang')",
+            r"^(INSERT INTO|DELETE FROM|CREATE TEMP TABLE|DROP TABLE|drop table|update|UPDATE)( tmp_ir_translation_import)",  # noqa
+            r"^(INSERT INTO|UPDATE ONLY|insert into|update only)( ir_translation)",  # noqa
+            r'^(SELECT|select)( \"res_lang\".id FROM \"res_lang\" WHERE )',
+            r'^(UPDATE|SELECT|INSERT INTO)( \"ir_module_module\")',
+            r'^(UPDATE|SELECT|INSERT INTO)( \"ir_model\")',
+            r'^(SELECT "ir_ui_view".id FROM \"ir_model_data\" )',
+            # r'^(select|SELECT)( )(id|\*|wkf_id)( )(from|FROM)( wkf)(_|\w)*( )',
+            r'(from|FROM|update|UPDATE)( wkf)(_|\w)*( )',
+        ]
     fname_log = psql_log.get_current_log_path()
     if not fname_log:
         print("postgresql log file don't exists.", fname_log)
         return False
     pgbadger_out = os.path.join(
         os.path.expanduser("~"), '.openerp_server.pgbadger')
+    extra_params = list2param('--exclude-query', exclude_regex)
+    # extra_params = []
+    extra_params.extend([
+        '--top', '20', '--sample', '3',
+        # '--begin', '2016-04-04 16:24:12',
+        # '--end', '2016-04-04 16:24:13',
+        # '--begin', '2016-04-04 16:23:56',
+        # '--end', '2016-04-04 16:23:57',
+        '--disable-type', '--disable-error', '--disable-hourly',
+        '--disable-session', '--disable-connection', '--maxlength', '400',
+    ])
     psql_log.generate_pgbadger_html(
         fname_log, fout=pgbadger_out,
-        extra_params=[
-            '--top', '20', '--sample', '1',
-            '--exclude-line', "(v.model = 'res.lang')",
-            '--exclude-line', "^(INSERT INTO|DELETE FROM|CREATE TEMP TABLE|DROP TABLE|drop table|update) tmp_ir_translation_import",
-            '--exclude-line', "^(INSERT INTO|UPDATE ONLY|insert into|update only) ir_translation",
-            '--exclude-line', '^(SELECT \"res_lang\"\.id FROM \"res_lang\" WHERE )',
-            # '--begin', '2016-04-04 16:24:12',
-            # '--end', '2016-04-04 16:24:13',
-            # '--begin', '2016-04-04 16:23:56',
-            # '--end', '2016-04-04 16:23:57',
-            '--disable-type', '--disable-error', '--disable-hourly',
-            '--disable-session', '--disable-connection',
-            '--maxlength', '400',
-        ],
+        extra_params=extra_params,
     )
     with open(pgbadger_out) as p_pgbadger_out:
         print("*" * 50, "PGBADGER STATS \n",
