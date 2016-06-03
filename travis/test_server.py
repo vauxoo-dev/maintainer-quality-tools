@@ -326,7 +326,8 @@ def main(argv=None):
             test_loglevel = 'test'
         else:
             test_loglevel = 'info'
-            test_loghandler = 'openerp.tools.yaml_import:DEBUG'
+            test_loghandler = ['openerp.tools.yaml_import:DEBUG',
+                               'openerp.models.schema:DEBUG']
     odoo_full = os.environ.get("ODOO_REPO", "odoo/odoo")
     server_path = get_server_path(odoo_full, odoo_version, travis_home)
     addons_path = get_addons_path(travis_home, travis_build_dir, server_path)
@@ -415,7 +416,8 @@ def main(argv=None):
                      ]
 
     if test_loghandler is not None:
-        cmd_odoo_test += ['--log-handler', test_loghandler]
+        for lghd in test_loghandler:
+            cmd_odoo_test += ['--log-handler', lghd]
     cmd_odoo_test += options + ["--init", None]
 
     if odoo_unittest:
