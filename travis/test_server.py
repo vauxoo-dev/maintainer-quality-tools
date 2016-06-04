@@ -222,7 +222,12 @@ def setup_server(db, odoo_unittest, tested_addons, server_path,
                      "--init", ','.join(preinstall_modules),
                      ] + install_options
         print(" ".join(cmd_odoo))
-        subprocess.check_call(cmd_odoo)
+
+        pipe = subprocess.Popen(cmd_odoo,
+                                stderr=subprocess.STDOUT,
+                                stdout=subprocess.PIPE)
+        for line in iter(pipe.stdout.readline, ''):
+            print(line.strip())
     else:
         print("Using current openerp_template database.")
     return 0

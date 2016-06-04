@@ -104,8 +104,10 @@ git clone --single-branch --depth=1 https://github.com/Vauxoo/odoo-profiler.git 
 
 # Install odoolint module
 if [ "$VERSION" == "8.0"  ]; then
-    echo "Install odoo lint SQA"
-    git clone --single-branch --depth=1 https://github.com/vauxoo-dev/odoolintsqa-beta.git -b master ${HOME}/odoolintsqa
+    echo "Install odoo lint SQA isolated"
+    git clone --single-branch --depth=1 https://github.com/vauxoo-dev/server-tools.git -b 8.0-oca-add-runtime-lint-moy ${HOME}/odoolintsqa
+    (cd ${HOME}/odoolintsqa; rm -rf $(ls | grep -v odoolintsqa$); mv odoolint odoolint_isolated)
+    sed -i 's/"auto_install": False/"auto_install": True/g' ${HOME}/odoolintsqa/odoolint_isolated/__openerp__.py
 fi;
 
 # Workaround to force using system site packages (see https://github.com/Shippable/support/issues/241#issuecomment-57947925)
