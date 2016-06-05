@@ -184,7 +184,7 @@ def get_test_dependencies(addons_path, addons_list):
 
 def setup_server(db, odoo_unittest, tested_addons, server_path,
                  addons_path, install_options, preinstall_modules=None,
-                 unbuffer=True):
+                 unbuffer=True, test_loghandler=None):
     """
     Setup the base module before running the tests
     :param db: Template database name
@@ -215,6 +215,13 @@ def setup_server(db, odoo_unittest, tested_addons, server_path,
     if not db_tmpl_created:
         # unbuffer keeps output colors
         cmd_odoo = ["unbuffer"] if unbuffer else []
+        if test_loghandler is not None:
+            # For template db don't is necessary use the log-handler
+            # but I need see them to check if the app projects have a
+            # dependency that change database values.
+            for lghd in test_loghandler:
+                cmd_odoo += ['--log-handler', lghd]
+
         cmd_odoo += ["%s/openerp-server" % server_path,
                      "-d", db,
                      "--log-level=info",
@@ -418,7 +425,8 @@ def main(argv=None):
 
     print("Modules to preinstall: %s" % preinstall_modules)
     setup_server(dbtemplate, odoo_unittest, tested_addons, server_path,
-                 addons_path, install_options, preinstall_modules, unbuffer)
+                 addons_path, install_options, preinstall_modules, unbuffer,
+                 test_loghandler)
 
     # Running tests
     database = "openerp_test"

@@ -105,8 +105,8 @@ git clone --single-branch --depth=1 https://github.com/Vauxoo/odoo-profiler.git 
 # Install odoolint module
 if [ "$VERSION" == "8.0"  ]; then
     echo "Install odoo lint SQA isolated"
-    git clone --single-branch --depth=1 https://github.com/vauxoo-dev/server-tools.git -b 8.0-oca-add-runtime-lint-moy ${HOME}/odoolintsqa
-    (cd ${HOME}/odoolintsqa; rm -rf $(ls | grep -v odoolintsqa$); mv odoolint odoolint_isolated)
+    git clone --single-branch --depth=1 https://github.com/vauxoo/server-tools.git -b ${VERSION} ${HOME}/odoolintsqa
+    (cd ${HOME}/odoolintsqa; rm -rf $(ls | grep -v odoolint); mv odoolint odoolint_isolated)
     sed -i 's/"auto_install": False/"auto_install": True/g' ${HOME}/odoolintsqa/odoolint_isolated/__openerp__.py
 fi;
 
