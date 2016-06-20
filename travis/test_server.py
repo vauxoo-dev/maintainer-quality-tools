@@ -184,7 +184,7 @@ def get_test_dependencies(addons_path, addons_list):
 
 def setup_server(db, odoo_unittest, tested_addons, server_path,
                  addons_path, install_options, preinstall_modules=None,
-                 unbuffer=True, test_loghandler=None):
+                 unbuffer=True, test_loghandler=None, odoo_version=None):
     """
     Setup the base module before running the tests
     :param db: Template database name
@@ -224,6 +224,19 @@ def setup_server(db, odoo_unittest, tested_addons, server_path,
                      "--stop-after-init",
                      "--init", ','.join(preinstall_modules),
                      ] + install_options
+        worker_opt = [option for option in install_options
+                      if option.startswith('--workers')]
+        if odoo_version >= '8.0' and not worker_opt:
+            # 'master' is greater than '8.0'
+            # Add workers to install faster
+            # Minimal workers number based on
+            #  - 2 dedicated cores
+            #    https://docs.travis-ci.com/user/migrating-from-legacy
+            #        /#More-available-resources
+            #  - workers = 1 + cores * 2
+            #    http://www.slideshare.net/openobject/performance2014-35689113
+            #      Slide 15
+            cmd_odoo.append("--workers=5")
 
         # For template db don't is necessary use the log-handler
         # but I need see them to check if the app projects have a
@@ -460,7 +473,7 @@ def main(argv=None):
     print("Modules to preinstall: %s" % preinstall_modules)
     setup_server(dbtemplate, odoo_unittest, tested_addons, server_path,
                  addons_path, install_options, preinstall_modules, unbuffer,
-                 test_loghandler)
+                 test_loghandler, odoo_version)
 
     # Running tests
     database = "openerp_test"
