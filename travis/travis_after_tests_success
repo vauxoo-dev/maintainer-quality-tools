@@ -2,6 +2,7 @@
 
 from __future__ import print_function
 
+import re
 import os
 try:
     depends_error = False
@@ -75,6 +76,23 @@ def generate_pgbadger(exclude_regex=None):
               p_pgbadger_out.read(), "\n", "*" * 50,)
     return True
 
+_re_dt_log = re.compile(r'^\d{4}-\d\d-\d\d \d\d:\d\d:\d\d')
+from datetime import datetime
+def get_time_each_log(logfile):
+    dt_obj_new = None
+    dt_obj_old = None
+    with open(logfile) as f_log:
+        for line in f_log:
+            match = re.search(_re_dt_log, line)
+            if not match:
+                continue
+            dt_str = match.group(0)
+            print(dt_str)
+            dt_obj_new = datetime.strptime(dt_str, '%Y-%m-%d %H:%M:%S')
+            print(  (dt_obj_new - dt_obj_old).seconds if dt_obj_old else '')
+            dt_obj_old = dt_obj_new
+
+get_time_each_log('/Users/moylop260/Downloads/job_20_test_all.txt')
 
 if os.environ.get('TESTS', '0') == '1' and \
         os.environ.get('TEST_ENABLE', '1') == '1' and not depends_error:
