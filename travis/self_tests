@@ -7,6 +7,60 @@ import getaddons
 import travis_helpers
 from test_server import get_test_dependencies
 
+EXPECTED_ERRORS = {
+    'anomalous-backslash-in-string': 1,
+    'api-one-deprecated': 3,
+    'api-one-multi-together': 1,
+    'assignment-from-none': 1,
+    'attribute-deprecated': 4,
+    'bad-docstring-quotes': 1,
+    'class-camelcase': 1,
+    'copy-wo-api-one': 2,
+    'dangerous-default-value': 1,
+    'deprecated-module': 3,
+    'docstring-first-line-empty': 1,
+    'duplicate-id-csv': 1,
+    'duplicate-key': 2,
+    'duplicate-xml-fields': 1,
+    'duplicate-xml-record-id': 1,
+    'file-not-used': 2,
+    'incoherent-interpreter-exec-perm': 2,
+    'invalid-commit': 1,
+    'javascript-lint': 8,
+    'manifest-deprecated-key': 2,
+    'manifest-required-author': 5,
+    'manifest-required-key': 1,
+    'manifest-version-format': 1,
+    'method-required-super': 5,
+    'missing-newline-extrafiles': 3,
+    'missing-readme': 2,
+    'no-utf8-coding-comment': 1,
+    'no-method-argument': 5,
+    'openerp-exception-warning': 4,
+    'pointless-statement': 1,
+    'pointless-string-statement': 1,
+    'print-statement': 1,
+    'redundant-keyword-arg': 1,
+    'redundant-modulename-xml': 1,
+    'redefined-builtin': 2,
+    'reimported': 4,
+    'relative-import': 1,
+    'return-in-init': 1,
+    'rst-syntax-error': 2,
+    'sql-injection': 2,
+    'too-complex': 1,
+    'too-few-format-args': 1,
+    'translation-field': 2,
+    'translation-required': 1,
+    'unreachable': 1,
+    'use-vim-comment': 1,
+    'wrong-import-order': 4,
+    'wrong-tabs-instead-of-spaces': 2,
+    'xml-syntax-error': 1,
+}
+
+
+
 repo_dir = os.environ.get("TRAVIS_BUILD_DIR", "./tests/test_repo/")
 exclude = os.environ.get("EXCLUDE")
 
