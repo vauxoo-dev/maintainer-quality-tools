@@ -27,6 +27,12 @@ RUN apt-get install --allow-unauthenticated -q bzr \
     tmux \
     htop
 
+# Installing node
+RUN wget -qO- https://deb.nodesource.com/setup | sudo bash - \
+   && apt-get install nodejs \
+   && npm install -g less \
+   && npm install -g less-plugin-clean-css
+
 #  Add git config data to root user. (Required to use git command)
 RUN git config --global user.name oca_docker \
     && git config --global user.email hello@oca.com
