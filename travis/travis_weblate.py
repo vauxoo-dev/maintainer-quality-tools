@@ -5,15 +5,15 @@ from __future__ import print_function
 from __future__ import unicode_literals
 import os
 import sys
-import time
+# import time
 import subprocess
-from slumber import API, exceptions
+# from slumber import API, exceptions
 from odoo_connection import context_mapping, Odoo10Context
-from test_server import setup_server, get_addons_path, \
-    get_server_path, get_addons_to_check, create_server_conf, \
-    get_server_script, parse_list, get_depends
+from test_server import get_addons_path, \
+    get_server_path, get_addons_to_check, \
+    parse_list, get_depends
 from travis_helpers import yellow, yellow_light, red
-from txclib import utils, commands
+# from txclib import utils, commands
 
 
 def main(argv=None):
@@ -41,7 +41,7 @@ def main(argv=None):
 
     travis_home = os.environ.get("HOME", "~/")
     travis_build_dir = os.environ.get("TRAVIS_BUILD_DIR", "../..")
-    travis_repo_slug = os.environ.get("TRAVIS_REPO_SLUG")
+    # travis_repo_slug = os.environ.get("TRAVIS_REPO_SLUG")
     # travis_branch = os.environ.get("TRAVIS_BRANCH")
     # travis_repo_owner = travis_repo_slug.split("/")[0]
     # travis_repo_shortname = travis_repo_slug.split("/")[1]
@@ -168,6 +168,7 @@ def main(argv=None):
                 with open(po_file_path, 'w') as f_po:
                     f_po.write(odoo_context.get_pot_contents(module, lang))
                 # TODO: Skip without changes just change PO-Revision-Date
+                # Maybe removing header and checking if there is a difference
                 command = ['git', 'add', po_file_path]
                 subprocess.check_output(command)
         command = ['git', 'commit', '--no-verify',
