@@ -21,7 +21,11 @@ def weblate(url, payload=None):
     url_next = ''
     data = {'results': [], 'count': 0}
     while url_next is not None:
-        response = session.get(weblate_host + url + url_next)
+        full_url = "%s%s%s" % (weblate_host, url, url_next)
+        if payload:
+            response = session.post(full_url, data=payload)
+        else:
+            response = session.get(full_url)
         response.raise_for_status()
         res_j = response.json()
         data['results'].extend(res_j.pop('results', []))
@@ -32,8 +36,9 @@ def weblate(url, payload=None):
 
 
 # print weblate('projects')
-data = weblate('components')
+# data = weblate('components')
 # import pdb;pdb.set_trace()
-print "data", data
-# print weblate('lock')
+# print "data", data
+lock_url = 'components/Vauxoo-yoytec-8-0/yoytec_stock/lock/'
+print weblate(lock_url, {'lock': False})
 # weblate('https://weblate.vauxoo.com/api/components/Vauxoo-yoytec-8-0/yoytec_stock/lock/')
