@@ -5,19 +5,12 @@ import requests
 
 weblate_token = os.environ.get("WEBLATE_TOKEN")
 weblate_host = os.environ.get(
-    "WEBLATE_HOST", "https://weblate.vauxoo.com/api/").strip('/') + '/'
-
-
-def replace_host(server_url, data):
-    server_host = server_url[:server_url.find('/api/') + 5]
-    for key, value in data.items():
-        if isinstance(value, dict):
-            data[key] = replace_host(server_url, value)
-        elif isinstance(value, str) and value.startswith(server_host):
-            data[key] = value.replace(server_host, weblate_host)
+    "WEBLATE_HOST", "https://weblate.vauxoo.com/api/")
 
 
 def weblate(url, payload=None):
+    if url.startswith('http://weblate:8000/api/'):
+        url = url.replace('http://weblate:8000/api/', weblate_host)
     session = requests.Session()
     session.headers.update({
         'Accept': 'application/json',
@@ -35,15 +28,12 @@ def weblate(url, payload=None):
         data['count'] += res_j.pop('count', 0)
         data.update(res_j)
         url_next = (res_j.get('next') or '').split('/')[-1] or None
-    response = session.get(weblate_host)
-    response.raise_for_status()
-    main_info = response.json()
-    server_url = main_info['projects']
-    server_url = server_url[:server_url.find('/api/') + 5]
-    replace_host(server_url, data)
     return data
 
 
-print weblate('projects')
-# print weblate('components')
+# print weblate('projects')
+data = weblate('components')
+# import pdb;pdb.set_trace()
+print "data", data
 # print weblate('lock')
+# weblate('https://weblate.vauxoo.com/api/components/Vauxoo-yoytec-8-0/yoytec_stock/lock/')
