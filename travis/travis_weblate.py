@@ -151,15 +151,20 @@ def main(argv=None):
                 os.makedirs(os.path.dirname(source_filename))
             with open(source_filename, 'w') as f:
                 f.write(odoo_context.get_pot_contents(module))
-            # TODO: Merge POT to current PO or generate new PO
+
             # Put git add for letting known git which translations to update
             for po_file_name in os.listdir(i18n_folder):
                 if not po_file_name.endswith('.po'):
                     continue
-                if langs and os.path.splitext(po_file_name)[0] not in langs:
+                lang = os.path.splitext(po_file_name)[0]
+                if langs and lang not in langs:
                     # Limit just allowed languages if is defined
                     continue
                 po_file_path = os.path.join(i18n_folder, po_file_name)
+                with open(po_file_path, 'r') as f_po:
+                    odoo_context.load_po(f_po, lang)
+                with open(po_file_path, 'w') as f_po:
+                    f_po.write(odoo_context.get_pot_contents(module, lang))
                 # This converts to UTC the timestamp
                 command = ['git', 'add', po_file_path]
                 subprocess.check_output(command)
