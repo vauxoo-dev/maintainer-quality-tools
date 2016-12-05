@@ -42,30 +42,30 @@ def main(argv=None):
     travis_home = os.environ.get("HOME", "~/")
     travis_build_dir = os.environ.get("TRAVIS_BUILD_DIR", "../..")
     travis_repo_slug = os.environ.get("TRAVIS_REPO_SLUG")
-    travis_repo_owner = travis_repo_slug.split("/")[0]
-    travis_repo_shortname = travis_repo_slug.split("/")[1]
-    odoo_unittest = False
+    # travis_repo_owner = travis_repo_slug.split("/")[0]
+    # travis_repo_shortname = travis_repo_slug.split("/")[1]
+    # odoo_unittest = False
     odoo_exclude = os.environ.get("EXCLUDE")
     odoo_include = os.environ.get("INCLUDE")
-    install_options = os.environ.get("INSTALL_OPTIONS", "").split()
+    # install_options = os.environ.get("INSTALL_OPTIONS", "").split()
     odoo_version = os.environ.get("VERSION")
     langs = parse_list(os.environ.get("LANG_ALLOWED", ""))
 
-    if not odoo_version:
-        # For backward compatibility, take version from parameter
-        # if it's not globally set
-        odoo_version = argv[1]
-        print(yellow_light("WARNING: no env variable set for VERSION. "
-              "Using '%s'" % odoo_version))
+    # if not odoo_version:
+    #     # For backward compatibility, take version from parameter
+    #     # if it's not globally set
+    #     odoo_version = argv[1]
+    #     print(yellow_light("WARNING: no env variable set for VERSION. "
+    #           "Using '%s'" % odoo_version))
 
-    default_project_slug = "%s-%s" % (travis_repo_slug.replace('/', '-'),
-                                      odoo_version.replace('.', '-'))
-    weblate_project_slug = os.environ.get("weblate_PROJECT_SLUG",
-                                            default_project_slug)
-    weblate_project_name = "%s (%s)" % (travis_repo_shortname, odoo_version)
-    weblate_organization = os.environ.get("weblate_ORGANIZATION",
-                                            travis_repo_owner)
-    repository_url = "https://github.com/%s" % travis_repo_slug
+    # default_project_slug = "%s-%s" % (travis_repo_slug.replace('/', '-'),
+    #                                   odoo_version.replace('.', '-'))
+    # weblate_project_slug = os.environ.get("weblate_PROJECT_SLUG",
+    #                                         default_project_slug)
+    # weblate_project_name = "%s (%s)" % (travis_repo_shortname, odoo_version)
+    # weblate_organization = os.environ.get("weblate_ORGANIZATION",
+    #                                         travis_repo_owner)
+    # repository_url = "https://github.com/%s" % travis_repo_slug
 
     odoo_full = os.environ.get("ODOO_REPO", "odoo/odoo")
     server_path = get_server_path(odoo_full, odoo_version, travis_home)
@@ -77,65 +77,65 @@ def main(argv=None):
     main_modules = set(os.listdir(travis_build_dir))
     main_depends = main_modules & all_depends
     addons_list = list(main_depends)
-    addons = ','.join(addons_list)
-    create_server_conf({'addons_path': addons_path}, odoo_version)
+    # addons = ','.join(addons_list)
+    # create_server_conf({'addons_path': addons_path}, odoo_version)
 
-    print("\nWorking in %s" % travis_build_dir)
-    print("Using repo %s and addons path %s" % (odoo_full, addons_path))
+    # print("\nWorking in %s" % travis_build_dir)
+    # print("Using repo %s and addons path %s" % (odoo_full, addons_path))
 
-    if not addons:
-        print(yellow_light("WARNING! Nothing to translate- exiting early."))
-        return 0
+    # if not addons:
+    #     print(yellow_light("WARNING! Nothing to translate- exiting early."))
+    #     return 0
 
-    # Create weblate project if it doesn't exist
-    print()
-    print(yellow("Creating weblate project if it doesn't exist"))
-    auth = (weblate_user, weblate_password)
-    api_url = "https://www.weblate.com/api/2/"
-    api = API(api_url, auth=auth)
-    project_data = {"slug": weblate_project_slug,
-                    "name": weblate_project_name,
-                    "source_language_code": "en",
-                    "description": weblate_project_name,
-                    "repository_url": repository_url,
-                    "organization": weblate_organization,
-                    "license": "permissive_open_source",
-                    "fill_up_resources": weblate_fill_up_resources,
-                    "team": weblate_team,
-                    }
-    try:
-        api.project(weblate_project_slug).get()
-        print('This weblate project already exists.')
-    except exceptions.HttpClientError:
-        try:
-            api.projects.post(project_data)
-            print('weblate project has been successfully created.')
-        except exceptions.HttpClientError:
-            print('weblate organization: %s' % weblate_organization)
-            print('weblate username: %s' % weblate_user)
-            print('weblate project slug: %s' % weblate_project_slug)
-            print(red('Error: Authentication failed. Please verify that '
-                      'weblate organization, user and password are '
-                      'correct. You can change these variables in your '
-                      '.travis.yml file.'))
-            raise
+    # # Create weblate project if it doesn't exist
+    # print()
+    # print(yellow("Creating weblate project if it doesn't exist"))
+    # auth = (weblate_user, weblate_password)
+    # api_url = "https://www.weblate.com/api/2/"
+    # api = API(api_url, auth=auth)
+    # project_data = {"slug": weblate_project_slug,
+    #                 "name": weblate_project_name,
+    #                 "source_language_code": "en",
+    #                 "description": weblate_project_name,
+    #                 "repository_url": repository_url,
+    #                 "organization": weblate_organization,
+    #                 "license": "permissive_open_source",
+    #                 "fill_up_resources": weblate_fill_up_resources,
+    #                 "team": weblate_team,
+    #                 }
+    # try:
+    #     api.project(weblate_project_slug).get()
+    #     print('This weblate project already exists.')
+    # except exceptions.HttpClientError:
+    #     try:
+    #         api.projects.post(project_data)
+    #         print('weblate project has been successfully created.')
+    #     except exceptions.HttpClientError:
+    #         print('weblate organization: %s' % weblate_organization)
+    #         print('weblate username: %s' % weblate_user)
+    #         print('weblate project slug: %s' % weblate_project_slug)
+    #         print(red('Error: Authentication failed. Please verify that '
+    #                   'weblate organization, user and password are '
+    #                   'correct. You can change these variables in your '
+    #                   '.travis.yml file.'))
+    #         raise
 
-    print("\nModules to translate: %s" % addons)
+    # print("\nModules to translate: %s" % addons)
 
     # Install the modules on the database
     database = "openerp_test"
-    script_name = get_server_script(odoo_version)
-    setup_server(database, odoo_unittest, addons, server_path, script_name,
-                 addons_path, install_options, addons_list)
+    # script_name = get_server_script(odoo_version)
+    # setup_server(database, odoo_unittest, addons, server_path, script_name,
+    #              addons_path, install_options, addons_list)
 
     # Initialize weblate project
-    print()
-    print(yellow('Initializing weblate project'))
-    init_args = ['--host=https://www.weblate.com',
-                 '--user=%s' % weblate_user,
-                 '--pass=%s' % weblate_password]
-    commands.cmd_init(init_args, path_to_tx=None)
-    path_to_tx = utils.find_dot_tx()
+    # print()
+    # print(yellow('Initializing weblate project'))
+    # init_args = ['--host=https://www.weblate.com',
+    #              '--user=%s' % weblate_user,
+    #              '--pass=%s' % weblate_password]
+    # commands.cmd_init(init_args, path_to_tx=None)
+    # path_to_tx = utils.find_dot_tx()
 
     # Use by default version 10 connection context
     connection_context = context_mapping.get(odoo_version, Odoo10Context)
