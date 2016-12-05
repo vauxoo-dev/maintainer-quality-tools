@@ -32,13 +32,13 @@ def weblate(url, payload=None):
         data['count'] += res_j.pop('count', 0)
         data.update(res_j)
         url_next = (res_j.get('next') or '').split('/')[-1] or None
-    return data
+    return data.pop('results', None) or data
 
 
 # print weblate('projects')
 # data = weblate('components')
 # import pdb;pdb.set_trace()
 # print "data", data
-lock_url = 'components/Vauxoo-yoytec-8-0/yoytec_stock/lock/'
-print weblate(lock_url, {'lock': False})
+# lock_url = 'components/Vauxoo-yoytec-8-0/yoytec_stock/lock/'
+# print weblate(lock_url, {'lock': False})
 # weblate('https://weblate.vauxoo.com/api/components/Vauxoo-yoytec-8-0/yoytec_stock/lock/')
