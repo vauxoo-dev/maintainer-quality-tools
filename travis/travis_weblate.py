@@ -190,11 +190,12 @@ def main(argv=None):
                 # Maybe removing header and checking if there is a difference
                 command = ['git', 'add', po_file_path]
                 subprocess.check_output(command)
-        command = ['git', 'diff', '--cached']
+        command = ['git', 'diff', '--cached', '--name-only']
         diff = subprocess.check_output(command).strip('\n ')
         if not diff:
             print(yellow("No changes for languages %s" % langs))
             return 0
+        print(yellow("Changing %s" % diff))
         command = ['git', 'commit', '--no-verify',
                    '-m', 'Updating translation terms']
         subprocess.check_output(command)
