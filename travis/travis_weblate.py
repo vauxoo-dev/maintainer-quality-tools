@@ -168,6 +168,9 @@ def main(argv=None):
                 # This converts to UTC the timestamp
                 command = ['git', 'add', po_file_path]
                 subprocess.check_output(command)
+        # command = ['git', 'commit', '-m', 'msg']
+        # subprocess.check_output(command)
+        # TODO: Add git push
         return 0
 
 
