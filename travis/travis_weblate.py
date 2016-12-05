@@ -151,23 +151,18 @@ def main(argv=None):
                 os.makedirs(os.path.dirname(source_filename))
             with open(source_filename, 'w') as f:
                 f.write(odoo_context.get_pot_contents(module))
-            # Put the correct timestamp for letting known tx client which
-            # translations to update
+            # TODO: Merge POT to current PO or generate new PO
+            # Put git add for letting known git which translations to update
             for po_file_name in os.listdir(i18n_folder):
                 if not po_file_name.endswith('.po'):
                     continue
                 if langs and os.path.splitext(po_file_name)[0] not in langs:
                     # Limit just allowed languages if is defined
-                    # TODO: Don't delete better revert from git
-                    os.remove(os.path.join(i18n_folder, po_file_name))
                     continue
-                po_file_name = os.path.join(i18n_folder, po_file_name)
-                command = ['git', 'log', '--pretty=format:%cd', '-n1',
-                           '--date=raw', po_file_name]
-                timestamp = float(subprocess.check_output(command).split()[0])
+                po_file_path = os.path.join(i18n_folder, po_file_name)
                 # This converts to UTC the timestamp
-                timestamp = time.mktime(time.gmtime(timestamp))
-                os.utime(po_file_name, (timestamp, timestamp))
+                command = ['git', 'add', po_file_path]
+                subprocess.check_output(command)
         return 0
 
 
