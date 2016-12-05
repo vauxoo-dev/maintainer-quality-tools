@@ -93,7 +93,5 @@ if __name__ == '__main__':
         # Re-use database of TESTS=1 except if UNIT_TEST is enabled.
         tests.append(['travis_weblate.py'])
 
-    tests.remove(['test_server.py'])
-
     if tests:
         exit(main(tests))
