@@ -42,6 +42,7 @@ def main(argv=None):
     travis_home = os.environ.get("HOME", "~/")
     travis_build_dir = os.environ.get("TRAVIS_BUILD_DIR", "../..")
     travis_repo_slug = os.environ.get("TRAVIS_REPO_SLUG")
+    # travis_branch = os.environ.get("TRAVIS_BRANCH")
     # travis_repo_owner = travis_repo_slug.split("/")[0]
     # travis_repo_shortname = travis_repo_slug.split("/")[1]
     # odoo_unittest = False
@@ -145,12 +146,13 @@ def main(argv=None):
             print()
             print(yellow("Obtaining POT file for %s" % module))
             i18n_folder = os.path.join(travis_build_dir, module, 'i18n')
-            source_filename = os.path.join(i18n_folder, module + ".pot")
-            # Create i18n/ directory if doesn't exist
-            if not os.path.exists(os.path.dirname(source_filename)):
-                os.makedirs(os.path.dirname(source_filename))
-            with open(source_filename, 'w') as f:
-                f.write(odoo_context.get_pot_contents(module))
+            # # TODO: Add empty es.po files if non exists
+            # source_filename = os.path.join(i18n_folder, module + ".pot")
+            # # Create i18n/ directory if doesn't exist
+            # if not os.path.exists(os.path.dirname(source_filename)):
+            #     os.makedirs(os.path.dirname(source_filename))
+            # with open(source_filename, 'w') as f:
+            #     f.write(odoo_context.get_pot_contents(module))
 
             # Put git add for letting known git which translations to update
             for po_file_name in os.listdir(i18n_folder):
@@ -165,12 +167,15 @@ def main(argv=None):
                     odoo_context.load_po(f_po, lang)
                 with open(po_file_path, 'w') as f_po:
                     f_po.write(odoo_context.get_pot_contents(module, lang))
-                # This converts to UTC the timestamp
+                # TODO: Skip without changes just change PO-Revision-Date
                 command = ['git', 'add', po_file_path]
                 subprocess.check_output(command)
-        # command = ['git', 'commit', '-m', 'msg']
-        # subprocess.check_output(command)
-        # TODO: Add git push
+        command = ['git', 'commit', '--no-verify',
+                   '-m', 'Updating translation terms']
+        subprocess.check_output(command)
+        command = ['git', 'branch']
+        current_branch = subprocess.check_output(command).strip('\n *')
+        subprocess.check_output(['git', 'push', 'origin', current_branch])
         return 0
 
 
