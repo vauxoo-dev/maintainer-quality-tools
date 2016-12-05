@@ -2,7 +2,6 @@
 # coding: utf-8
 
 from __future__ import print_function
-from __future__ import unicode_literals
 import os
 import sys
 # import time
@@ -14,6 +13,20 @@ from test_server import get_addons_path, \
     parse_list, get_depends
 from travis_helpers import yellow, yellow_light, red
 # from txclib import utils, commands
+
+
+def po_rm_header(po_content):
+    is_header = True
+    rm_header = str()
+    header = str()
+    for line in po_content.splitlines():
+        if line.startswith('#.'):
+            is_header = False
+        if is_header:
+            header += line + '\n'
+            continue
+        rm_header += line + '\n'
+    return header, rm_header
 
 
 def main(argv=None):
@@ -164,13 +177,24 @@ def main(argv=None):
                     continue
                 po_file_path = os.path.join(i18n_folder, po_file_name)
                 with open(po_file_path, 'r') as f_po:
+                    current_content = f_po.read()
                     odoo_context.load_po(f_po, lang)
-                with open(po_file_path, 'w') as f_po:
-                    f_po.write(odoo_context.get_pot_contents(module, lang))
-                # TODO: Skip without changes just change PO-Revision-Date
+                new_content = odoo_context.get_pot_contents(module, lang)
+                current_header, current_content = po_rm_header(current_content)
+                _, new_content = po_rm_header(new_content)
+                if current_content == new_content:
+                    # Skip unchanged po file (Removing headers)
+                    continue
+                with open(po_file_path, 'wb') as f_po:
+                    f_po.write(current_header + new_content)
                 # Maybe removing header and checking if there is a difference
                 command = ['git', 'add', po_file_path]
                 subprocess.check_output(command)
+        command = ['git', 'diff', '--cached']
+        diff = subprocess.check_output(command).strip('\n ')
+        if not diff:
+            print(yellow("No changes for languages %s" % langs))
+            return 0
         command = ['git', 'commit', '--no-verify',
                    '-m', 'Updating translation terms']
         subprocess.check_output(command)
