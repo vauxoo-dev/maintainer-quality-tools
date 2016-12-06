@@ -1,6 +1,8 @@
 import os
 from contextlib import contextmanager
+from urllib import urlencode
 
+import simplejson
 import requests
 
 from travis_helpers import yellow
@@ -23,9 +25,13 @@ def weblate(url, payload=None):
     url_next = ''
     data = {'results': [], 'count': 0}
     while url_next is not None:
-        full_url = "%s%s" % (url, url_next)
+        full_url = ("%s%s" % (url, url_next)).encode('UTF-8')
         if payload:
-            response = session.post(full_url, json=payload)
+            # payload_json = urlencode(payload).encode('UTF-8')
+            payload_json = simplejson.dumps(payload).encode('UTF-8')
+            # import pdb;pdb.set_trace()
+            response = session.post(
+                full_url, json=simplejson.loads(payload_json), data=payload)
         else:
             response = session.get(full_url)
         response.raise_for_status()
@@ -56,22 +62,38 @@ def get_projects(project=None, branch=None):
         yield wlproject
 
 
+def wl_push(project):
+    if weblate(project['repository_url'])['needs_push']:
+        print(yellow("Weblate push %s" % project['repository_url']))
+        weblate(project['repository_url'], {'operation': 'commit'})
+        return weblate(project['repository_url'], {'operation': 'push'})
+    print(yellow("Don't needs weblate push %s" % project['repository_url']))
+    return None
+
+
+def wl_pull(project):
+    print(yellow("Weblate pull %s" % project['repository_url']))
+    return weblate(project['repository_url'], {'operation': 'pull'})
+
+
 @contextmanager
 def lock(project, filter_modules=None):
     components = [component['lock_url']
                   for component in get_components(project, filter_modules)]
     try:
         for component in components:
-            res = weblate(component, {'lock': True})
-            if not res['locked']:
-                raise ValueError("Project not locked %s token **%s" % (
-                    component, weblate_token[-4:]))
             print(yellow("Lock %s" % component))
+            res = weblate(component, {'lock': True})
+            print("..%s" % res)
+            if not res['locked']:
+                raise ValueError("Project not locked %s token **%s. %s" % (
+                    component, weblate_token[-4:], res))
         yield
     finally:
         for component in components:
-            print(yellow("Unlock %s" % component))
-            weblate(component, {'lock': False})
+            print(yellow("unlock %s" % component))
+            res = weblate(component, {'lock': False})
+            print("..%s" % res)
 
 
 if __name__ == '__main__':

@@ -11,7 +11,7 @@ from odoo_connection import Odoo10Context, context_mapping
 from test_server import (get_addons_path, get_addons_to_check, get_depends,
                          get_server_path, parse_list)
 from travis_helpers import red, yellow, yellow_light
-from weblate_client import lock, get_projects
+from weblate_client import lock, get_projects, wl_push, wl_pull
 
 
 def po_rm_header(po_content):
@@ -54,6 +54,7 @@ def main(argv=None):
     travis_home = os.environ.get("HOME", "~/")
     travis_build_dir = os.environ.get("TRAVIS_BUILD_DIR", "../..")
     travis_repo_slug = os.environ.get("TRAVIS_REPO_SLUG")
+    gh_token = os.environ.get("GH_TOKEN")
     travis_branch = os.environ.get("TRAVIS_BRANCH")
     travis_repo_owner = travis_repo_slug.split("/")[0]
     travis_repo_shortname = travis_repo_slug.split("/")[1]
@@ -99,6 +100,13 @@ def main(argv=None):
     wlproject = wlprojects.next()
     with connection_context(server_path, addons_path, database) \
             as odoo_context, lock(wlproject, addons_list):
+        if wl_push(wlproject):
+            command = ['git', 'pull', 'origin', current_branch]
+            res = subprocess.check_output(command).strip('\n ')
+            command = ['git', 'log', '-r', '-1', '--oneline']
+            sha = subprocess.check_output(command).strip('\n ')
+            print(yellow("git pull result: %s with sha %s" % (res, sha)))
+
         for module in addons_list:
             print("\n", yellow("Obtaining POT file for %s" % module))
             i18n_folder = os.path.join(travis_build_dir, module, 'i18n')
@@ -133,16 +141,21 @@ def main(argv=None):
                 # Maybe removing header and checking if there is a difference
                 command = ['git', 'add', po_file_path]
                 subprocess.check_output(command)
-        command = ['git', 'diff', '--cached', '--name-only']
-        diff = subprocess.check_output(command).strip('\n ')
-        if not diff:
+        command = ['git', 'diff', '--cached', '--exit-code']
+        try:
+            subprocess.check_output(command)
+        except subprocess.CalledProcessError:
             print(yellow("No changes for languages %s" % langs))
             return 0
-        print(yellow("Changing %s" % diff))
         command = ['git', 'commit', '--no-verify',
-                   '-m', 'Updating translation terms']
+                   '-m', '[REF] i18n: Updating translation terms [ci skip]']
         subprocess.check_output(command)
-        subprocess.check_output(['git', 'push', 'origin', current_branch])
+        subprocess.check_output([
+            'git', 'remote', 'add', 'travis'
+            'https://%(GH_TOKEN)s@github.com/%(REPO_SLUG)s' % dict(
+                GH_TOKEN=gh_token, REPO_SLUG=travis_repo_slug)])
+        subprocess.check_output(['git', 'push', 'travis', current_branch])
+        wl_pull(wlproject)
         return 0
 
 
