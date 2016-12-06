@@ -100,12 +100,22 @@ def main(argv=None):
     wlproject = wlprojects.next()
     with connection_context(server_path, addons_path, database) \
             as odoo_context, lock(wlproject, addons_list):
+        try:
+            subprocess.check_output([
+                'git', 'remote', 'add', 'travis',
+                'https://%(GH_TOKEN)s@github.com/%(REPO_SLUG)s' % dict(
+                    GH_TOKEN=gh_token, REPO_SLUG=travis_repo_slug)])
+        except subprocess.CalledProcessError:
+            # Remote created previously
+            pass
         if wl_push(wlproject):
-            command = ['git', 'pull', 'origin', current_branch]
+            command = ['git', 'pull', 'travis', current_branch]
             res = subprocess.check_output(command).strip('\n ')
-            command = ['git', 'log', '-r', '-1', '--oneline']
-            sha = subprocess.check_output(command).strip('\n ')
-            print(yellow("git pull result: %s with sha %s" % (res, sha)))
+            print(yellow("git pull result: %s" % res))
+
+        command = ['git', 'log', '-r', '-1', '--oneline']
+        sha = subprocess.check_output(command).strip('\n ')
+        print(yellow("Current sha %s" % (sha)))
 
         for module in addons_list:
             print("\n", yellow("Obtaining POT file for %s" % module))
@@ -144,16 +154,14 @@ def main(argv=None):
         command = ['git', 'diff', '--cached', '--exit-code']
         try:
             subprocess.check_output(command)
-        except subprocess.CalledProcessError:
             print(yellow("No changes for languages %s" % langs))
             return 0
+        except subprocess.CalledProcessError:
+            # There are changes
+            pass
         command = ['git', 'commit', '--no-verify',
                    '-m', '[REF] i18n: Updating translation terms [ci skip]']
         subprocess.check_output(command)
-        subprocess.check_output([
-            'git', 'remote', 'add', 'travis'
-            'https://%(GH_TOKEN)s@github.com/%(REPO_SLUG)s' % dict(
-                GH_TOKEN=gh_token, REPO_SLUG=travis_repo_slug)])
         subprocess.check_output(['git', 'push', 'travis', current_branch])
         wl_pull(wlproject)
         return 0

@@ -1,8 +1,6 @@
 import os
 from contextlib import contextmanager
-from urllib import urlencode
 
-import simplejson
 import requests
 
 from travis_helpers import yellow
@@ -27,11 +25,12 @@ def weblate(url, payload=None):
     while url_next is not None:
         full_url = ("%s%s" % (url, url_next)).encode('UTF-8')
         if payload:
-            # payload_json = urlencode(payload).encode('UTF-8')
-            payload_json = simplejson.dumps(payload).encode('UTF-8')
-            # import pdb;pdb.set_trace()
-            response = session.post(
-                full_url, json=simplejson.loads(payload_json), data=payload)
+            # payload_json = simplejson.dumps(payload).encode('UTF-8')
+            # response = session.post(
+            #     full_url, json=simplejson.loads(payload_json), data=payload)
+            # We need 2 post to confirm it
+            response = session.post(full_url, data=payload)
+            response = session.post(full_url, data=payload)
         else:
             response = session.get(full_url)
         response.raise_for_status()
@@ -63,12 +62,15 @@ def get_projects(project=None, branch=None):
 
 
 def wl_push(project):
-    if weblate(project['repository_url'])['needs_push']:
-        print(yellow("Weblate push %s" % project['repository_url']))
+    res = weblate(project['repository_url'])
+    if res['needs_push'] or res['needs_commit']:
+        print(yellow("Weblate commit %s" % project['repository_url']))
         weblate(project['repository_url'], {'operation': 'commit'})
-        return weblate(project['repository_url'], {'operation': 'push'})
+        print(yellow("Weblate push %s" % project['repository_url']))
+        weblate(project['repository_url'], {'operation': 'push'})
+        return True
     print(yellow("Don't needs weblate push %s" % project['repository_url']))
-    return None
+    return False
 
 
 def wl_pull(project):
