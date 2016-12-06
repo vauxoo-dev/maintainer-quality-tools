@@ -94,10 +94,11 @@ def main(argv=None):
     connection_context = context_mapping.get(odoo_version, Odoo10Context)
     command = ['git', 'branch']
     current_branch = subprocess.check_output(command).strip('\n *')
-    import pdb;pdb.set_trace()
-    projects = get_projects(travis_repo_shortname, current_branch)
+    wlprojects = get_projects(travis_repo_shortname, current_branch)
+    # first project found
+    wlproject = wlprojects.next()
     with connection_context(server_path, addons_path, database) \
-            as odoo_context:
+            as odoo_context, lock(wlproject, addons_list):
         for module in addons_list:
             print("\n", yellow("Obtaining POT file for %s" % module))
             i18n_folder = os.path.join(travis_build_dir, module, 'i18n')
