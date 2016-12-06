@@ -114,6 +114,9 @@ def main(argv=None):
         except subprocess.CalledProcessError:
             # Remote created previously
             pass
+        subprocess.check_output(['git', 'config', 'user.name', "Travis CI"])
+        subprocess.check_output([
+            'git', 'config', 'user.email', "moylop260@vauxoo.com"])
         if wl_push(wlproject):
             command = ['git', 'pull', 'travis', current_branch]
             res = subprocess.check_output(command).strip('\n ')
