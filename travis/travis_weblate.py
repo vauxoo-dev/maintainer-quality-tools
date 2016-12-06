@@ -25,7 +25,7 @@ def po_rm_header(po_content):
             header += line + '\n'
             continue
         rm_header += line + '\n'
-    return header, rm_header
+    return header, rm_header.rstrip('\n') + '\n'
 
 
 def main(argv=None):
