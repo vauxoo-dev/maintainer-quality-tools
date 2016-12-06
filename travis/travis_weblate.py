@@ -93,11 +93,17 @@ def main(argv=None):
     database = "openerp_test"
     # Use by default version 10 connection context
     connection_context = context_mapping.get(odoo_version, Odoo10Context)
-    command = ['git', 'branch']
-    current_branch = subprocess.check_output(command).strip('\n *')
+    current_branch = travis_branch
+    # command = ['git', 'branch']
+    # current_branch = subprocess.check_output(command).strip('\n *')
     wlprojects = get_projects(travis_repo_shortname, current_branch)
     # first project found
-    wlproject = wlprojects.next()
+    try:
+        wlproject = wlprojects.next()
+    except StopIteration as sie:
+        print(red("Project Weblate %s not found for branch %s" % (
+            travis_repo_shortname, current_branch)))
+        raise sie
     with connection_context(server_path, addons_path, database) \
             as odoo_context, lock(wlproject, addons_list):
         try:
