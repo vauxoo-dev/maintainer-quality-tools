@@ -175,7 +175,7 @@ def main(argv=None):
         print("... %s" % res)
         print(yellow("git push"))
         res = subprocess.check_output([
-            'git', 'push', 'travis', current_branch])
+            'git', 'push', 'travis', 'HEAD:' + current_branch])
         print("... %s" % res)
         wl_pull(wlproject)
         return 0
