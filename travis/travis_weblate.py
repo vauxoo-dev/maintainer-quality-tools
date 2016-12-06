@@ -170,8 +170,13 @@ def main(argv=None):
             pass
         command = ['git', 'commit', '--no-verify',
                    '-m', '[REF] i18n: Updating translation terms [ci skip]']
-        subprocess.check_output(command)
-        subprocess.check_output(['git', 'push', 'travis', current_branch])
+        print(yellow("git commit"))
+        res = subprocess.check_output(command)
+        print("... %s" % res)
+        print(yellow("git push"))
+        res = subprocess.check_output([
+            'git', 'push', 'travis', current_branch])
+        print("... %s" % res)
         wl_pull(wlproject)
         return 0
 
