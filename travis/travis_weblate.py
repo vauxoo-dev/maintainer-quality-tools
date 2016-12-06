@@ -2,17 +2,15 @@
 # coding: utf-8
 
 from __future__ import print_function
+
 import os
-import sys
-# import time
 import subprocess
-# from slumber import API, exceptions
-from odoo_connection import context_mapping, Odoo10Context
-from test_server import get_addons_path, \
-    get_server_path, get_addons_to_check, \
-    parse_list, get_depends
-from travis_helpers import yellow, yellow_light, red
-# from txclib import utils, commands
+import sys
+
+from odoo_connection import Odoo10Context, context_mapping
+from test_server import (get_addons_path, get_addons_to_check, get_depends,
+                         get_server_path, parse_list)
+from travis_helpers import red, yellow, yellow_light
 
 
 def po_rm_header(po_content):
@@ -91,66 +89,7 @@ def main(argv=None):
     main_modules = set(os.listdir(travis_build_dir))
     main_depends = main_modules & all_depends
     addons_list = list(main_depends)
-    # addons = ','.join(addons_list)
-    # create_server_conf({'addons_path': addons_path}, odoo_version)
-
-    # print("\nWorking in %s" % travis_build_dir)
-    # print("Using repo %s and addons path %s" % (odoo_full, addons_path))
-
-    # if not addons:
-    #     print(yellow_light("WARNING! Nothing to translate- exiting early."))
-    #     return 0
-
-    # # Create weblate project if it doesn't exist
-    # print()
-    # print(yellow("Creating weblate project if it doesn't exist"))
-    # auth = (weblate_user, weblate_password)
-    # api_url = "https://www.weblate.com/api/2/"
-    # api = API(api_url, auth=auth)
-    # project_data = {"slug": weblate_project_slug,
-    #                 "name": weblate_project_name,
-    #                 "source_language_code": "en",
-    #                 "description": weblate_project_name,
-    #                 "repository_url": repository_url,
-    #                 "organization": weblate_organization,
-    #                 "license": "permissive_open_source",
-    #                 "fill_up_resources": weblate_fill_up_resources,
-    #                 "team": weblate_team,
-    #                 }
-    # try:
-    #     api.project(weblate_project_slug).get()
-    #     print('This weblate project already exists.')
-    # except exceptions.HttpClientError:
-    #     try:
-    #         api.projects.post(project_data)
-    #         print('weblate project has been successfully created.')
-    #     except exceptions.HttpClientError:
-    #         print('weblate organization: %s' % weblate_organization)
-    #         print('weblate username: %s' % weblate_user)
-    #         print('weblate project slug: %s' % weblate_project_slug)
-    #         print(red('Error: Authentication failed. Please verify that '
-    #                   'weblate organization, user and password are '
-    #                   'correct. You can change these variables in your '
-    #                   '.travis.yml file.'))
-    #         raise
-
-    # print("\nModules to translate: %s" % addons)
-
-    # Install the modules on the database
     database = "openerp_test"
-    # script_name = get_server_script(odoo_version)
-    # setup_server(database, odoo_unittest, addons, server_path, script_name,
-    #              addons_path, install_options, addons_list)
-
-    # Initialize weblate project
-    # print()
-    # print(yellow('Initializing weblate project'))
-    # init_args = ['--host=https://www.weblate.com',
-    #              '--user=%s' % weblate_user,
-    #              '--pass=%s' % weblate_password]
-    # commands.cmd_init(init_args, path_to_tx=None)
-    # path_to_tx = utils.find_dot_tx()
-
     # Use by default version 10 connection context
     connection_context = context_mapping.get(odoo_version, Odoo10Context)
     with connection_context(server_path, addons_path, database) \
