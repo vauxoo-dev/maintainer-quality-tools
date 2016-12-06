@@ -45,15 +45,15 @@ def get_components(wlproject, filter_modules=None):
 
 
 def get_projects(project=None, branch=None):
-    for project in weblate('projects'):
+    for wlproject in weblate('projects'):
         # Using standard name: project-name (branch.version)
-        project_name = project['name'].split('(')[0].strip()
-        branch_name = project['name'].split('(')[1].strip(' )')
-        if filter_project and project_name != filter_project:
+        project_name = wlproject['name'].split('(')[0].strip()
+        if project and project_name != project:
             continue
-        if filter_branch and filter_branch != branch_name:
+        branch_name = wlproject['name'].split('(')[1].strip(' )')
+        if branch and branch != branch_name:
             continue
-        yield project
+        yield wlproject
 
 
 @contextmanager
@@ -75,14 +75,14 @@ def lock(project, filter_modules=None):
 
 
 if __name__ == '__main__':
-    filter_project = 'openacademy-project'
-    filter_branch = 'master'
-    filter_modules = ['openacademy']
+    project = 'openacademy-project'
+    branch = 'master'
+    modules = ['openacademy']
 
-    projects = get_projects(filter_project, 'master')
+    projects = get_projects(project, branch)
     # first project
     project = projects.next()
-    with lock(project, filter_modules):
+    with lock(project, modules):
         pass
         # weblate('push', {'project': project})
         # git pull

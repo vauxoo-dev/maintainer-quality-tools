@@ -11,6 +11,7 @@ from odoo_connection import Odoo10Context, context_mapping
 from test_server import (get_addons_path, get_addons_to_check, get_depends,
                          get_server_path, parse_list)
 from travis_helpers import red, yellow, yellow_light
+from weblate_client import lock, get_projects
 
 
 def po_rm_header(po_content):
@@ -52,11 +53,10 @@ def main(argv=None):
 
     travis_home = os.environ.get("HOME", "~/")
     travis_build_dir = os.environ.get("TRAVIS_BUILD_DIR", "../..")
-    # travis_repo_slug = os.environ.get("TRAVIS_REPO_SLUG")
-    # travis_branch = os.environ.get("TRAVIS_BRANCH")
-    # travis_repo_owner = travis_repo_slug.split("/")[0]
-    # travis_repo_shortname = travis_repo_slug.split("/")[1]
-    # odoo_unittest = False
+    travis_repo_slug = os.environ.get("TRAVIS_REPO_SLUG")
+    travis_branch = os.environ.get("TRAVIS_BRANCH")
+    travis_repo_owner = travis_repo_slug.split("/")[0]
+    travis_repo_shortname = travis_repo_slug.split("/")[1]
     odoo_exclude = os.environ.get("EXCLUDE")
     odoo_include = os.environ.get("INCLUDE")
     # install_options = os.environ.get("INSTALL_OPTIONS", "").split()
@@ -92,6 +92,10 @@ def main(argv=None):
     database = "openerp_test"
     # Use by default version 10 connection context
     connection_context = context_mapping.get(odoo_version, Odoo10Context)
+    command = ['git', 'branch']
+    current_branch = subprocess.check_output(command).strip('\n *')
+    import pdb;pdb.set_trace()
+    projects = get_projects(travis_repo_shortname, current_branch)
     with connection_context(server_path, addons_path, database) \
             as odoo_context:
         for module in addons_list:
@@ -137,8 +141,6 @@ def main(argv=None):
         command = ['git', 'commit', '--no-verify',
                    '-m', 'Updating translation terms']
         subprocess.check_output(command)
-        command = ['git', 'branch']
-        current_branch = subprocess.check_output(command).strip('\n *')
         subprocess.check_output(['git', 'push', 'origin', current_branch])
         return 0
 
