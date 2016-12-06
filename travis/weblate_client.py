@@ -1,7 +1,9 @@
 import os
+from contextlib import contextmanager
 
 import requests
 
+from travis_helpers import yellow
 
 weblate_token = os.environ.get("WEBLATE_TOKEN")
 weblate_host = os.environ.get(
@@ -9,8 +11,8 @@ weblate_host = os.environ.get(
 
 
 def weblate(url, payload=None):
-    if url.startswith('http://weblate:8000/api/'):
-        url = url.replace('http://weblate:8000/api/', weblate_host)
+    if not url.startswith('http'):
+        url = weblate_host + url
     session = requests.Session()
     session.headers.update({
         'Accept': 'application/json',
@@ -21,9 +23,9 @@ def weblate(url, payload=None):
     url_next = ''
     data = {'results': [], 'count': 0}
     while url_next is not None:
-        full_url = "%s%s%s" % (weblate_host, url, url_next)
+        full_url = "%s%s" % (url, url_next)
         if payload:
-            response = session.post(full_url, data=payload)
+            response = session.post(full_url, json=payload)
         else:
             response = session.get(full_url)
         response.raise_for_status()
@@ -31,9 +33,63 @@ def weblate(url, payload=None):
         data['results'].extend(res_j.pop('results', []))
         data['count'] += res_j.pop('count', 0)
         data.update(res_j)
-        url_next = (res_j.get('next') or '').split('/')[-1] or None
+        url_next = res_j.get('next')
     return data.pop('results', None) or data
 
+
+def get_components(wlproject, filter_modules=None):
+    for component in weblate(wlproject['components_list_url']):
+        if filter_modules and component['name'] not in filter_modules:
+            continue
+        yield component
+
+
+def get_projects(project=None, branch=None):
+    for project in weblate('projects'):
+        # Using standard name: project-name (branch.version)
+        project_name = project['name'].split('(')[0].strip()
+        branch_name = project['name'].split('(')[1].strip(' )')
+        if filter_project and project_name != filter_project:
+            continue
+        if filter_branch and filter_branch != branch_name:
+            continue
+        yield project
+
+
+@contextmanager
+def lock(project, filter_modules=None):
+    components = [component['lock_url']
+                  for component in get_components(project, filter_modules)]
+    try:
+        for component in components:
+            res = weblate(component, {'lock': True})
+            if not res['locked']:
+                raise ValueError("Project not locked %s token **%s" % (
+                    component, weblate_token[-4:]))
+            print(yellow("Lock %s" % component))
+        yield
+    finally:
+        for component in components:
+            print(yellow("Unlock %s" % component))
+            weblate(component, {'lock': False})
+
+
+if __name__ == '__main__':
+    filter_project = 'openacademy-project'
+    filter_branch = 'master'
+    filter_modules = ['openacademy']
+
+    projects = get_projects(filter_project, 'master')
+    # first project
+    project = projects.next()
+    with lock(project, filter_modules):
+        pass
+        # weblate('push', {'project': project})
+        # git pull
+        # regenerate po
+        # git commit
+        # git push
+        ### optional: wlc(['pull', component])
 
 # print weblate('projects')
 # data = weblate('components')

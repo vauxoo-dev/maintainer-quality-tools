@@ -95,8 +95,7 @@ def main(argv=None):
     with connection_context(server_path, addons_path, database) \
             as odoo_context:
         for module in addons_list:
-            print()
-            print(yellow("Obtaining POT file for %s" % module))
+            print("\n", yellow("Obtaining POT file for %s" % module))
             i18n_folder = os.path.join(travis_build_dir, module, 'i18n')
             # # TODO: Add empty es.po files if non exists
             # source_filename = os.path.join(i18n_folder, module + ".pot")
