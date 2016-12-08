@@ -54,7 +54,7 @@ def generate_pgbadger(exclude_regex=None):
             r'^(INSERT INTO \"ir_attachment\" )',
             r'^(select \"res_company\"\.id from \"res_company\" )',
             r'^(select id from ir_model_fields where)',
-            r'^(select \"res_users\"\.\"id\",\"res_users\"\.\"company_id\" from)',
+            r'^(select \"res_users\"\.\"id\",\"res_users\"\.\"company_id\" from)',  # noqa
             r'^(select \"ir_config_parameter\"\.id)',
             r'ir_module_module_dependency',
         ]
@@ -109,7 +109,7 @@ if os.environ.get('TESTS', '0') == '1' and \
         generate_pgbadger()
     coverage_main(["report", "--show-missing"])
     try:
-        coveralls_cli.main(argv=None))
+        coveralls_cli.main(argv=None)
     except Exception as e:
         print(e)
 
