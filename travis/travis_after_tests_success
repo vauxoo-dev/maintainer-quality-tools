@@ -4,6 +4,10 @@ from __future__ import print_function
 
 import os
 from travis_run_tests import main
+
+# allow import_lib from travis_run_tests
+import travis_weblate  # noqa
+
 try:
     depends_error = False
     from coverage.cmdline import main as coverage_main
