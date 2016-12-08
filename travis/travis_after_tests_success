@@ -3,6 +3,7 @@
 from __future__ import print_function
 
 import os
+from travis_run_tests import main
 try:
     depends_error = False
     from coverage.cmdline import main as coverage_main
@@ -91,7 +92,7 @@ if os.environ.get('TESTS', '0') == '1' and \
     travis_py = '/home/travis/virtualenv/python2.7_with_system_site_packages'
     fname_pstats = os.environ.get("FNAME_PSTATS", '~/.openerp_server.stats')
     is_pull_request = os.environ.get('TRAVIS_PULL_REQUEST') != 'false'
-    unit_test_enabled = os.environ.get('UNIT_TEST') != '1'
+    unit_test_enabled = os.environ.get('UNIT_TEST') == '1'
     weblate_enabled = os.environ.get('WEBLATE') == '1'
     tests_enabled = os.environ.get('TESTS') == '1'
     instance_alive_enabled = os.environ.get('INSTANCE_ALIVE') == '1'
@@ -110,14 +111,11 @@ if os.environ.get('TESTS', '0') == '1' and \
     coverage_main(["report", "--show-missing"])
     try:
         coveralls_cli.main(argv=None)
-    except Exception as e:
+    except BaseException as e:
         print(e)
 
     is_valid_weblate = (
         not is_pull_request and not unit_test_enabled and
         not instance_alive_enabled and tests_enabled)
     if is_valid_weblate and weblate_enabled:
-        try:
-            res = __import__("travis_weblate").main()
-        except Exception as e:
-            print(e)
+        main([['travis_weblate.py']])
