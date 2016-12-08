@@ -6,7 +6,7 @@ import os
 from travis_run_tests import main
 
 # allow import_lib from travis_run_tests
-import travis_weblate  # noqa
+import travis_weblate  # noqa  pylint: disable=unused-import
 
 try:
     depends_error = False
