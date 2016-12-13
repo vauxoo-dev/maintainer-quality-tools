@@ -40,7 +40,9 @@ def main(argv=None):
 
     weblate_token = os.environ.get("WEBLATE_TOKEN")
     weblate_host = os.environ.get(
-        "WEBLATE_HOST", "https://weblate.vauxoo.com/api/")
+        "WEBLATE_HOST", "https://weblate.vauxoo.com/")
+    weblate_ssh_port = os.environ.get(
+        "WEBLATE_SSH_PORT", "2200")
 
     if not weblate_token:
         print(yellow_light("WARNING! Weblate token not defined- "
@@ -77,6 +79,7 @@ def main(argv=None):
     # Use by default version 10 connection context
     connection_context = context_mapping.get(odoo_version, Odoo10Context)
     current_branch = travis_branch
+    # TODO: get project without search, directly using the link
     wlprojects = get_projects(travis_repo_shortname, current_branch)
     try:
         # first project found
@@ -87,10 +90,13 @@ def main(argv=None):
         raise sie
     with connection_context(server_path, addons_path, database) \
             as odoo_context, lock(wlproject, addons_list):
+        # TODO: if the project is locked previously then finish
         try:
             subprocess.check_output([
-                'git', 'remote', 'add', 'travis',
-                'https://%(GH_TOKEN)s@github.com/%(REPO_SLUG)s' % dict(
+                'git', 'remote', 'add', 'weblate',
+                ssh://weblate@weblate.vauxoo.com:2200/app/data/vcs/yoytec-8-0/yoytec_stock/.git
+                'ssh://weblate@%(WEBLATE_HOST)s:%(WEBLATE_SSH_PORT)s/app/data/vcs/wlproject' % dict(
+                    WEBLATE_HOST=weblate_host, weblate_ssh_port,
                     GH_TOKEN=gh_token, REPO_SLUG=travis_repo_slug)])
         except subprocess.CalledProcessError:
             # Remote created previously
@@ -98,17 +104,17 @@ def main(argv=None):
         subprocess.check_output(['git', 'config', 'user.name', "Travis CI"])
         subprocess.check_output([
             'git', 'config', 'user.email', "moylop260@vauxoo.com"])
-        if wl_push(wlproject):
-            command = ['git', 'pull', 'travis', current_branch]
-            res = subprocess.check_output(command).strip('\n ')
-            print(yellow("git pull result: %s" % res))
+        # if wl_push(wlproject):
+        #     command = ['git', 'pull', 'travis', current_branch]
+        #     res = subprocess.check_output(command).strip('\n ')
+        #     print(yellow("git pull result: %s" % res))
 
-        command = ['git', 'log', '-r', '-1', '--oneline']
-        sha = subprocess.check_output(command).strip('\n ')
-        print(yellow("Current sha %s" % (sha)))
+        # command = ['git', 'log', '-r', '-1', '--oneline']
+        # sha = subprocess.check_output(command).strip('\n ')
+        # print(yellow("Current sha %s" % (sha)))
 
         for module in addons_list:
-            print("\n", yellow("Obtaining POT file for %s" % module))
+            print("\n", yellow("Obtaining PO file for %s" % module))
             i18n_folder = os.path.join(travis_build_dir, module, 'i18n')
             # # TODO: Add empty es.po files if non exists
             # source_filename = os.path.join(i18n_folder, module + ".pot")
@@ -120,10 +126,8 @@ def main(argv=None):
 
             # Put git add for letting known git which translations to update
             for po_file_name in os.listdir(i18n_folder):
-                if not po_file_name.endswith('.po'):
-                    continue
-                lang = os.path.splitext(po_file_name)[0]
-                if langs and lang not in langs:
+                lang, fext = os.path.splitext(po_file_name)[0]
+                if fext != '.po' or langs and lang not in langs:
                     # Limit just allowed languages if is defined
                     continue
                 po_file_path = os.path.join(i18n_folder, po_file_name)
