@@ -73,8 +73,10 @@ class Odoo10Context(_OdooBaseContext):
         from odoo import netsvc, api
         from odoo.modules.registry import RegistryManager
         from odoo.tools import trans_export, config, trans_load_data
+        from openerp.service.db import exp_create_database
         self.trans_export = trans_export
         self.trans_load_data = trans_load_data
+        self.exp_create_database = exp_create_database
         sys.path.pop()
         netsvc.init_logger()
         config['addons_path'] = (
@@ -113,8 +115,10 @@ class Odoo8Context(_OdooBaseContext):
         from openerp import netsvc, api
         from openerp.modules.registry import RegistryManager
         from openerp.tools import trans_export, config, trans_load_data
+        from openerp.service.db import exp_create_database
         self.trans_export = trans_export
         self.trans_load_data = trans_load_data
+        self.exp_create_database = exp_create_database
         sys.path.pop()
         netsvc.init_logger()
         config['addons_path'] = (
@@ -153,8 +157,10 @@ class Odoo7Context(_OdooBaseContext):
         from openerp import netsvc
         from openerp.tools import trans_export, config, trans_load_data
         from openerp.pooler import get_db
+        from openerp.service.db import exp_create_database
         self.trans_export = trans_export
         self.trans_load_data = trans_load_data
+        self.exp_create_database = exp_create_database
         sys.path.pop()
         netsvc.init_logger()
         config['addons_path'] = str(
