@@ -461,6 +461,7 @@ def main(argv=None):
                 secondary_depends_primary.append(secondary_module)
     preinstall_modules = list(
         secondary_modules - set(secondary_depends_primary))
+    preinstall_modules.append('rico_country_code')
     if phantomjs_test:
         # If you explicitly define this environ variable is because you want
         # run just phantomjs without normal unit-test.
