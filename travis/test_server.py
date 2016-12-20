@@ -13,6 +13,7 @@ import psql_log
 from getaddons import find_module, get_addons, get_depends, get_modules, \
     is_installable_module
 from travis_helpers import success_msg, fail_msg
+from odoo_connection import context_mapping, Odoo10Context
 
 
 def has_test_errors(fname, dbname, odoo_version, check_loaded=True):
@@ -191,7 +192,8 @@ def get_test_dependencies(addons_path, addons_list):
 
 def setup_server(db, odoo_unittest, tested_addons, server_path, script_name,
                  addons_path, install_options, preinstall_modules=None,
-                 unbuffer=True, server_options=None, test_loghandler=None):
+                 unbuffer=True, server_options=None, test_loghandler=None,
+                 odoo_version=None, country=None):
     """
     Setup the base module before running the tests
     :param db: Template database name
@@ -209,13 +211,21 @@ def setup_server(db, odoo_unittest, tested_addons, server_path, script_name,
         server_options = []
     if test_loghandler is None:
         test_loghandler = []
+    sys.path.append(server_path)
+    try:
+        import openerp as odoo
+    except ImportError:
+        import odoo
+    finally:
+        sys.path.pop()
+    odoo.netsvc.init_logger()
     print("\nCreating instance:")
     db_tmpl_created = False
+    import pdb;pdb.set_trace()
     try:
-        db_tmpl_created = subprocess.check_call(["createdb", db])
-    except subprocess.CalledProcessError:
+        odoo.service.db.exp_create_database(db, lang=None, demo=True, country_code='MX')
+    except odoo.service.db.DatabaseExists:
         db_tmpl_created = True
-
     if not db_tmpl_created:
         print("Try restore database from file backup.")
         db_tmpl_created = db_run.restore(db)
@@ -472,7 +482,8 @@ def main(argv=None):
     print("Modules to preinstall: %s" % preinstall_modules)
     setup_server(dbtemplate, odoo_unittest, tested_addons, server_path,
                  script_name, addons_path, install_options, preinstall_modules,
-                 unbuffer, server_options, test_loghandler)
+                 unbuffer, server_options, test_loghandler,
+                 odoo_version, country='MX')
 
     # Running tests
     database = "openerp_test"
