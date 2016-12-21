@@ -1,77 +1,380 @@
 #!/usr/bin/env python
+# coding: utf-8
 
 import os
 import subprocess
+import unittest
+
 
 import getaddons
+import run_pylint
 import travis_helpers
 from test_server import get_test_dependencies
 
-repo_dir = os.environ.get("TRAVIS_BUILD_DIR", "./tests/test_repo/")
-exclude = os.environ.get("EXCLUDE")
-
-addons_list = ['test_module', 'second_module']
-to_preinstall = get_test_dependencies(repo_dir, addons_list)
-
-assert not [x for x in to_preinstall if x in addons_list], \
-    "Should not preinstall modules to test!"
-
-# Testing getaddons
-assert getaddons.main() == 1
-getaddons.main(["getaddons.py", repo_dir])
-getaddons.main(["getaddons.py", "-m", repo_dir])
-getaddons.main(["getaddons.py", "-m",
-                repo_dir + "/" if repo_dir[-1] == '/' else repo_dir])
-if exclude:
-    getaddons.main(["getaddons.py", "-m", repo_dir, "-e", exclude])
-    getaddons.main(["getaddons.py", "-e", exclude, repo_dir])
-
-# Testing travis helpers
-assert travis_helpers.red(u'test') == u"\033[1;31mtest\033[0;m"
-assert travis_helpers.green(u'test') == u"\033[1;32mtest\033[0;m"
-assert travis_helpers.yellow(u'test') == u"\033[1;33mtest\033[0;m"
-assert travis_helpers.yellow_light(u'test') == u"\033[33mtest\033[0;m"
-
-
-assert travis_helpers.red(u'\ntest\nnewline') == u"\033[1;31m\033[0;m\n\033[1;31mtest\033[0;m\n\033[1;31mnewline\033[0;m"
-assert travis_helpers.green(u'\ntest\nnewline') == u"\033[1;32m\033[0;m\n\033[1;32mtest\033[0;m\n\033[1;32mnewline\033[0;m"
-assert travis_helpers.yellow(u'\ntest\nnewline') == u"\033[1;33m\033[0;m\n\033[1;33mtest\033[0;m\n\033[1;33mnewline\033[0;m"
-assert travis_helpers.yellow_light(u'\ntest\nnewline') == u"\033[33m\033[0;m\n\033[33mtest\033[0;m\n\033[33mnewline\033[0;m"
-
-
-# Testing empty paths and pylint_run fix of:
-# https://www.mail-archive.com/code-quality@python.org/msg00294.html
-if os.environ.get('LINT_CHECK', 0) == '1':
-    import run_pylint
-    pylint_rcfile = os.path.join(
-        os.path.dirname(os.path.realpath(__file__)),
-        'cfg',
-        "travis_run_pylint.cfg")
-    count_errors = run_pylint.main([
-        "--config-file=" + pylint_rcfile,
-        "--extra-params", "-d", "--extra-params", "all",
-        "--extra-params", "-e", "--extra-params", "F0010,duplicate-key",
-        "--path", repo_dir], standalone_mode=False)
-    assert 2 == count_errors
-
-    empty_path = os.path.join(repo_dir, 'empty_path')
-    if not os.path.exists(empty_path):
-        os.mkdir(empty_path)
-    count_errors = run_pylint.main([
-        "--config-file=" + pylint_rcfile,
-        "--path", empty_path], standalone_mode=False)
-    assert -1 == count_errors
-
-    if os.environ.get('TRAVIS_PULL_REQUEST', 'false') != 'false':
-        git_script_path = os.path.join(os.path.dirname(
-            os.path.dirname(os.path.realpath(__file__))), 'git')
-        pre_commit_returned = subprocess.call(os.path.join(
-            git_script_path, 'pre-commit'))
-        assert pre_commit_returned == 0, \
-            "Git pre-commit script returned value != 0"
-
-# Testing git get branch
+EXPECTED_ERRORS = {
+    'relative-import': 1,
+    'no-method-argument': 5,
+    'print-statement': 1,
+    'reimported': 4,
+    'assignment-from-none': 1,
+    'anomalous-backslash-in-string': 1,
+    'pointless-string-statement': 1,
+    'unreachable': 1,
+    'dangerous-default-value': 1,
+    'deprecated-module': 3,
+    'redundant-keyword-arg': 1,
+    'redefined-builtin': 2,
+    'pointless-statement': 1,
+    'return-in-init': 1,
+    'duplicate-key': 2,
+    'too-few-format-args': 1}
+EXPECTED_ERRORS_PR = {
+    'openerp-exception-warning': 4,
+    'redundant-modulename-xml': 1,
+    'attribute-deprecated': 4,
+    'api-one-multi-together': 1,
+    'except-pass': 2,
+    'translation-field': 2,
+    'sql-injection': 1,
+    'wrong-tabs-instead-of-spaces': 1,
+    'xml-syntax-error': 1,
+    'wrong-import-order': 4,
+    'manifest-required-key': 1,
+    'too-complex': 1,
+    'missing-manifest-dependency': 2,
+    'missing-newline-extrafiles': 3,
+    'incoherent-interpreter-exec-perm': 2,
+    'no-utf8-coding-comment': 1,
+    'duplicate-xml-record-id': 1,
+    'missing-readme': 2,
+    'missing-import-error': 2,
+    'rst-syntax-error': 1,
+    'use-vim-comment': 1,
+    'translation-required': 1,
+    'api-one-deprecated': 3,
+    'invalid-commit': 1,
+    'docstring-first-line-empty': 1,
+    'class-camelcase': 1,
+    'duplicate-xml-fields': 1,
+    'manifest-deprecated-key': 2,
+    'file-not-used': 2,
+    'method-required-super': 5,
+    'duplicate-id-csv': 1,
+    'copy-wo-api-one': 2,
+    'manifest-version-format': 1,
+    'manifest-required-author': 5,
+}
 
 
-# Testing git run from getaddons
-getaddons.get_modules_changed(repo_dir)
+class MainTest(unittest.TestCase):
+    """PYLINT TEST CASES """
+    def setUp(self):
+        super(MainTest, self).setUp()
+        os.environ['PYLINT_EXPECTED_ERRORS'] = "91"
+        self.repo_dir = os.environ.get(
+            "TRAVIS_BUILD_DIR", "./tests/test_repo/")
+        self.exclude = os.environ.get("EXCLUDE")
+        self.addons_list = ['test_module', 'second_module']
+        self.to_preinstall = get_test_dependencies(
+            self.repo_dir, self.addons_list)
+
+        self.git_work_dir = os.environ.get('TRAVIS_BUILD_DIR', False)
+        self.pylint_rcfile = os.path.join(
+            os.path.dirname(os.path.realpath(__file__)),
+            'cfg', "travis_run_pylint.cfg")
+        self.pylint_rcfile_pr = os.path.join(
+            os.path.dirname(os.path.realpath(__file__)),
+            'cfg', "travis_run_pylint_pr.cfg")
+        self.modules_cmd = run_pylint.get_modules_cmd(self.git_work_dir)
+        self.beta_msgs = run_pylint.get_beta_msgs()
+
+    def test_modules_to_preinstall(self):
+        """Testing modules to preinstall"""
+        res = [x for x in self.to_preinstall if x in self.addons_list]
+        self.assertFalse(res, "Should not preinstall modules to test!")
+
+    def test_get_addons(self):
+        """Testing getaddons"""
+        self.assertEquals(getaddons.main(), 1)
+        self.assertEquals(
+            getaddons.main(["getaddons.py", self.repo_dir]),
+            self.repo_dir)
+
+        self.assertIsNotNone(
+            getaddons.main(["getaddons.py", "-m", self.repo_dir]))
+
+        self.assertIsNotNone(
+            getaddons.main(
+                ["getaddons.py", "-m",
+                 self.repo_dir + "/" if
+                 self.repo_dir[-1] == '/' else self.repo_dir]))
+
+    @unittest.skipIf(os.environ.get("EXCLUDE", False) is False, "Set EXCLUDE")
+    def test_get_addons_exclude(self):
+        """Testing getaddons"""
+        self.assertIsNotNone(
+            getaddons.main(
+                ["getaddons.py", "-m", self.repo_dir, "-e", self.exclude]))
+        self.assertIsNotNone(
+            getaddons.main(
+                ["getaddons.py", "-e", self.exclude, self.repo_dir]))
+
+    def test_travis_helpers(self):
+        """Testing travis helpers"""
+        self.assertEqual(travis_helpers.red(u'test'),
+                         u"\033[1;31mtest\033[0;m")
+        self.assertEqual(travis_helpers.green(u'test'),
+                         u"\033[1;32mtest\033[0;m")
+        self.assertEqual(travis_helpers.yellow(u'test'),
+                         u"\033[1;33mtest\033[0;m")
+        self.assertEqual(travis_helpers.yellow_light(u'test'),
+                         u"\033[33mtest\033[0;m")
+
+        self.assertEqual(
+            travis_helpers.red(u'\ntest\nnewline'),
+            u"\033[1;31m\033[0;m\n\033[1;31mtest\033"
+            "[0;m\n\033[1;31mnewline\033[0;m")
+        self.assertEqual(
+            travis_helpers.green(u'\ntest\nnewline'),
+            u"\033[1;32m\033[0;m\n\033[1;32mtest\033"
+            "[0;m\n\033[1;32mnewline\033[0;m")
+        self.assertEqual(
+            travis_helpers.yellow(u'\ntest\nnewline'),
+            u"\033[1;33m\033[0;m\n\033[1;33mtest\033"
+            "[0;m\n\033[1;33mnewline\033[0;m")
+        self.assertEqual(
+            travis_helpers.yellow_light(u'\ntest\nnewline'),
+            u"\033[33m\033[0;m\n\033[33mtest\033"
+            "[0;m\n\033[33mnewline\033[0;m")
+
+    @unittest.skipIf(os.environ.get('LINT_CHECK', 0) != '1', "Set LINT_CHECK")
+    def test_pylint_check(self):
+        """Testing empty paths and pylint_run fix of:
+           https://www.mail-archive.com/code-quality@python.org/msg00294.html
+        """
+        pylint_rcfile = os.path.join(
+            os.path.dirname(os.path.realpath(__file__)),
+            'cfg', "travis_run_pylint.cfg")
+        stats = run_pylint.main([
+            "--config-file=" + pylint_rcfile,
+            "--extra-params", "-d", "--extra-params",
+            "all", "--extra-params", "-e",
+            "--extra-params", "F0010,duplicate-key",
+            "--path", self.repo_dir], standalone_mode=False)
+        count_errors = run_pylint.get_count_fails(stats, list())
+        self.assertEqual(2, count_errors)
+        empty_path = os.path.join(self.repo_dir, 'empty_path')
+        if not os.path.exists(empty_path):
+            os.mkdir(empty_path)
+        count_errors = run_pylint.main([
+            "--config-file=" + pylint_rcfile,
+            "--path", empty_path], standalone_mode=False)
+        self.assertEqual(False, bool(count_errors))
+        if os.environ.get('TRAVIS_PULL_REQUEST', 'false') == 'true':
+            git_script_path = os.path.join(os.path.dirname(
+                os.path.dirname(os.path.realpath(__file__))), 'git')
+            pre_commit_returned = subprocess.call(os.path.join(
+                git_script_path, 'pre-commit'))
+            assert pre_commit_returned == 0, \
+                "Git pre-commit script returned value != 0"
+
+    def test_get_modules_changed(self):
+        """Testing git run from getaddons"""
+        self.assertIsNotNone(
+            getaddons.get_modules_changed(self.repo_dir))
+
+    @unittest.skipIf(os.environ.get('LINT_CHECK', 0) != '1', "Set LINT_CHECK")
+    def test_check_vmaster(self):
+        """PYLINT_EXPECTED_ERRORS="89"
+           VERSION="master"
+        """
+        print "VERSION=MASTER"
+        # IS PR True
+        errors_dict = EXPECTED_ERRORS.copy()
+        errors_dict.update(EXPECTED_ERRORS_PR)
+        expected_errors = 91
+
+        result = run_pylint.pylint_run(
+            is_pr=True, version="master", dir=self.git_work_dir)
+        count_errors = sum(result.values())
+        # expected_errors = int(os.environ.get('PYLINT_EXPECTED_ERRORS', 0))
+        self.assertNotEqual(count_errors, -1,
+                            travis_helpers.yellow('Python modules not found'))
+        self.assertEqual(
+            count_errors, expected_errors,
+            travis_helpers.red("pylint expected errors %s, found %s!" % (
+                expected_errors, count_errors)))
+        # Expected vs found errors
+        self.assertEqual(result, errors_dict)
+        sum_fails_found = sum(result.values())
+        sum_fails_expected = sum(errors_dict.values())
+        self.assertEqual(sum_fails_found, sum_fails_expected)
+
+        # IS PR FALSE
+        errors_dict = EXPECTED_ERRORS.copy()
+        expected_errors = 27
+
+        result = run_pylint.pylint_run(
+            is_pr=False, version="master", dir=self.git_work_dir)
+        count_errors = sum(result.values())
+        # expected_errors = int(os.environ.get('PYLINT_EXPECTED_ERRORS', 0))
+        self.assertNotEqual(count_errors, -1,
+                            travis_helpers.yellow('Python modules not found'))
+        self.assertEqual(
+            count_errors, expected_errors,
+            travis_helpers.red("pylint expected errors %s, found %s!" % (
+                expected_errors, count_errors)))
+
+        # Expected vs found errors
+        self.assertEqual(result, errors_dict)
+        sum_fails_found = sum(result.values())
+        sum_fails_expected = sum(errors_dict.values())
+        self.assertEqual(sum_fails_found, sum_fails_expected)
+
+    @unittest.skipIf(os.environ.get('LINT_CHECK', 0) != '1', "Set LINT_CHECK")
+    def test_check_v7(self):
+        """PYLINT_EXPECTED_ERRORS="84"
+           VERSION="7.0"
+        """
+        print "VERSION=7.0"
+        # IS PR True
+        errors_dict = EXPECTED_ERRORS.copy()
+        errors_dict.update(EXPECTED_ERRORS_PR)
+        errors_dict.pop('openerp-exception-warning')
+        errors_dict.pop('missing-readme')
+        errors_dict.pop('class-camelcase')
+        errors_dict.pop('manifest-deprecated-key')
+        errors_dict.pop('copy-wo-api-one')
+        errors_dict['manifest-version-format'] = 5
+        expected_errors = 84
+
+        result = run_pylint.pylint_run(
+            is_pr=True, version="7.0", dir=self.git_work_dir)
+        count_errors = sum(result.values())
+        # expected_errors = int(os.environ.get('PYLINT_EXPECTED_ERRORS', 0))
+        self.assertNotEqual(count_errors, -1,
+                            travis_helpers.yellow('Python modules not found'))
+        self.assertEqual(
+            count_errors, expected_errors,
+            travis_helpers.red("pylint expected errors %s, found %s!" % (
+                expected_errors, count_errors)))
+        # Expected vs found errors
+        self.assertEqual(result, errors_dict)
+        sum_fails_found = sum(result.values())
+        sum_fails_expected = sum(errors_dict.values())
+        self.assertEqual(sum_fails_found, sum_fails_expected)
+
+        # IS PR FALSE
+        errors_dict = EXPECTED_ERRORS.copy()
+        expected_errors = 27
+
+        result = run_pylint.pylint_run(
+            is_pr=False, version="7.0", dir=self.git_work_dir)
+        count_errors = sum(result.values())
+        # expected_errors = int(os.environ.get('PYLINT_EXPECTED_ERRORS', 0))
+        self.assertNotEqual(count_errors, -1,
+                            travis_helpers.yellow('Python modules not found'))
+        self.assertEqual(
+            count_errors, expected_errors,
+            travis_helpers.red("pylint expected errors %s, found %s!" % (
+                expected_errors, count_errors)))
+        # Expected vs found errors
+        self.assertEqual(result, errors_dict)
+        sum_fails_found = sum(result.values())
+        sum_fails_expected = sum(errors_dict.values())
+        self.assertEqual(sum_fails_found, sum_fails_expected)
+
+    @unittest.skipIf(os.environ.get('LINT_CHECK', 0) != '1', "Set LINT_CHECK")
+    def test_check_v8(self):
+        print "VERSION=8.0"
+        # IS PR True
+        errors_dict = EXPECTED_ERRORS.copy()
+        errors_dict.update(EXPECTED_ERRORS_PR)
+        expected_errors = 91
+
+        result = run_pylint.pylint_run(
+            is_pr=True, version="8.0", dir=self.git_work_dir)
+        count_errors = sum(result.values())
+        # expected_errors = int(os.environ.get('PYLINT_EXPECTED_ERRORS', 0))
+        self.assertNotEqual(count_errors, -1,
+                            travis_helpers.yellow('Python modules not found'))
+        self.assertEqual(
+            count_errors, expected_errors,
+            travis_helpers.red("pylint expected errors %s, found %s!" % (
+                expected_errors, count_errors)))
+        # Expected vs found errors
+        self.assertEqual(result, errors_dict)
+        sum_fails_found = sum(result.values())
+        sum_fails_expected = sum(errors_dict.values())
+        self.assertEqual(sum_fails_found, sum_fails_expected)
+
+        # IS PR FALSE
+        errors_dict = EXPECTED_ERRORS.copy()
+        expected_errors = 27
+
+        result = run_pylint.pylint_run(
+            is_pr=False, version="8.0", dir=self.git_work_dir)
+        count_errors = sum(result.values())
+        # expected_errors = int(os.environ.get('PYLINT_EXPECTED_ERRORS', 0))
+        self.assertNotEqual(count_errors, -1,
+                            travis_helpers.yellow('Python modules not found'))
+        self.assertEqual(
+            count_errors, expected_errors,
+            travis_helpers.red("pylint expected errors %s, found %s!" % (
+                expected_errors, count_errors)))
+        # Expected vs found errors
+        self.assertEqual(result, errors_dict)
+        sum_fails_found = sum(result.values())
+        sum_fails_expected = sum(errors_dict.values())
+        self.assertEqual(sum_fails_found, sum_fails_expected)
+
+    @unittest.skipIf(os.environ.get('LINT_CHECK', 0) != '1', "Set LINT_CHECK")
+    def test_check_without_version(self):
+        """PYLINT_EXPECTED_ERRORS="27"
+           VERSION=""
+        """
+        print "VERSION=''"
+        # IS PR True
+        errors_dict = EXPECTED_ERRORS.copy()
+        errors_dict.update(EXPECTED_ERRORS_PR)
+        expected_errors = 91
+
+        result = run_pylint.pylint_run(
+            is_pr=True, version="", dir=self.git_work_dir)
+        count_errors = sum(result.values())
+        # expected_errors = int(os.environ.get('PYLINT_EXPECTED_ERRORS', 0))
+        self.assertNotEqual(count_errors, -1,
+                            travis_helpers.yellow('Python modules not found'))
+        self.assertEqual(
+            count_errors, expected_errors,
+            travis_helpers.red("pylint expected errors %s, found %s!" % (
+                expected_errors, count_errors)))
+        # Expected vs found errors
+        self.assertEqual(result, errors_dict)
+        sum_fails_found = sum(result.values())
+        sum_fails_expected = sum(errors_dict.values())
+        self.assertEqual(sum_fails_found, sum_fails_expected)
+
+        # IS PR FALSE
+        errors_dict = EXPECTED_ERRORS.copy()
+        expected_errors = 27
+        result = run_pylint.pylint_run(
+            is_pr=False, version="", dir=self.git_work_dir)
+        count_errors = sum(result.values())
+        # expected_errors = int(os.environ.get('PYLINT_EXPECTED_ERRORS', 0))
+        self.assertNotEqual(count_errors, -1,
+                            travis_helpers.yellow('Python modules not found'))
+        self.assertEqual(
+            count_errors, expected_errors,
+            travis_helpers.red("pylint expected errors %s, found %s!" % (
+                expected_errors, count_errors)))
+
+        # Expected vs found errors
+        self.assertEqual(result, errors_dict)
+        sum_fails_found = sum(result.values())
+        sum_fails_expected = sum(errors_dict.values())
+        self.assertEqual(sum_fails_found, sum_fails_expected)
+
+
+if __name__ == '__main__':
+    unittest.main()

@@ -44,156 +44,20 @@ Use the following types of pylint configuration files:
 
 
 import os
-import re
-import ConfigParser
 
 import run_pylint
 import travis_helpers
 
-from getaddons import get_modules_changed
-from git_run import GitRun
-
-
-def get_extra_params(odoo_version):
-    '''
-    Get extra pylint params by odoo version
-    Transform a seudo-pylint-conf to params,
-    it to overwrite base-pylint-conf values.
-    :param version: String with name of version of odoo
-    :return: List of extra pylint params
-    '''
-    odoo_version = odoo_version.replace('.', '')
-    version_cfg = os.path.join(
-        os.path.dirname(os.path.realpath(__file__)),
-        'cfg/travis_run_pylint_exclude_{odoo_version}.cfg'.format(
-            odoo_version=odoo_version))
-    params = []
-    if os.path.isfile(version_cfg):
-        config = ConfigParser.ConfigParser()
-        config.readfp(open(version_cfg))
-        for section in config.sections():
-            for option, value in config.items(section):
-                params.extend(['--' + option, value])
-    return params
 
 git_work_dir = os.environ.get('TRAVIS_BUILD_DIR', False)
 is_pull_request = os.environ.get(
     'TRAVIS_PULL_REQUEST', 'false') != 'false'
-branch_base = os.environ.get('TRAVIS_BRANCH', False)
-
-extra_params_cmd = [
-    '--extra-params', '--load-plugins=pylint_odoo',
-]
-
-def get_beta_msgs():
-    '''Get beta msgs from beta.cfg file
-    :return: List of strings with beta message names'''
-    beta_cfg = os.path.join(
-        os.path.dirname(os.path.realpath(__file__)),
-        'cfg/travis_run_pylint_beta.cfg')
-    if not os.path.isfile(beta_cfg):
-        return []
-    config = ConfigParser.ConfigParser()
-    config.readfp(open(beta_cfg))
-    return [
-        msg.strip()
-        for msg in config.get('MESSAGES CONTROL', 'enabled2beta').split(',')
-        if msg.strip()]
-
-
 version = os.environ.get('VERSION', False)
-
-if not version:
-    if git_work_dir:
-        repo_path = os.path.join(git_work_dir, '.git')
-        branch_name = GitRun(repo_path).get_branch_name()
-        version = branch_name.replace('_', '-').split('-')[:1] \
-            if branch_name else False
-        version = version[0] if version and len(version) else None
-
-if version:
-    extra_params = get_extra_params(version)
-    for extra_param in extra_params:
-        extra_params_cmd.extend([
-            '--extra-params', extra_param
-        ])
-    is_version_number = re.match(r'\d+\.\d+', version)
-    if is_version_number:
-        extra_params_cmd.extend([
-            '--extra-params', '--valid_odoo_versions=%s' % version])
-else:
-    print(travis_helpers.yellow('Undefined environment variable `VERSION`.'
-          '\nSet `VERSION` for compatibility with guidelines by version.'))
-
-
-beta_msgs = get_beta_msgs()
-[extra_params_cmd.extend(['--msgs-no-count', beta_msg])
- for beta_msg in beta_msgs]
-
-
-pylint_rcfile = os.path.join(
-    os.path.dirname(os.path.realpath(__file__)),
-    'cfg',
-    "travis_run_pylint.cfg")
-modules_cmd = []
-if os.environ.get('INCLUDE_LINT'):
-    for path in os.environ.get('INCLUDE_LINT', '').split(' '):
-        modules_cmd.extend(['--path', path])
-else:
-    modules_cmd.extend(["--path", os.environ.get('TRAVIS_BUILD_DIR')])
-if os.environ.get('EXCLUDE_LINT'):
-    modules_cmd.extend(['--ignore=%s' % path for path in
-                        os.environ.get('EXCLUDE_LINT', '').split(',') if path])
-
-print "modules_cmd", modules_cmd
-print "extra_params_cmd", extra_params_cmd
-count_errors = 0
-if modules_cmd:
-    count_errors = run_pylint.main([
-        "--config-file=" + pylint_rcfile,
-        ] + modules_cmd + extra_params_cmd, standalone_mode=False)
-else:
-    print "no included modules"
-print "count_errors", count_errors
-
-pylint_rcfile_pr = os.path.join(
-    os.path.dirname(os.path.realpath(__file__)),
-    'cfg',
-    "travis_run_pylint_pr.cfg")
-
-
-if is_pull_request and branch_base and git_work_dir:
-    if branch_base != 'HEAD':
-        branch_base = 'origin/' + branch_base
-    modules_changed = get_modules_changed(
-        git_work_dir,
-        branch_base)
-    if modules_changed and count_errors >= 0:
-        modules_changed_cmd = []
-        for module_changed in modules_changed:
-            modules_changed_cmd.extend([
-                '--path',
-                module_changed,
-            ])
-        pr_errors = run_pylint.main([
-            "--config-file=" + pylint_rcfile_pr,
-        ] + modules_changed_cmd + extra_params_cmd, standalone_mode=False)
-        if pr_errors:
-            print(travis_helpers.yellow(
-                "Found {pr_errors} errors".format(pr_errors=pr_errors) +
-                " in modules changed."
-            ))
-            if pr_errors < 0:
-                count_errors = pr_errors
-            else:
-                count_errors += pr_errors
-else:
-    # TODO: Add git hook case in other PR
-    pass
-expected_errors = int(
-    os.environ.get('PYLINT_EXPECTED_ERRORS', 0))
-
+beta_msgs = run_pylint.get_beta_msgs()
+expected_errors = int(os.environ.get('PYLINT_EXPECTED_ERRORS', 0))
 exit_status = 0
+result = run_pylint.pylint_run(is_pull_request, version, git_work_dir)
+count_errors = sum(result.values())
 if count_errors == -1:
     print(travis_helpers.yellow('Python modules not found'))
 elif count_errors != expected_errors:
