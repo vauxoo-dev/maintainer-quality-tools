@@ -216,22 +216,6 @@ def setup_server(db, odoo_unittest, tested_addons, server_path, script_name,
     with connection_context(server_path, addons_path, None) as odoo_context:
         db_tmpl_created = odoo_context.create_db(db, lang=None, demo=True,
                                                  country_code=country)
-     #sys.path.append(server_path)
-    # try:
-    #     import openerp as odoo
-    # except ImportError:
-    #     import odoo
-    # finally:
-    #     sys.path.pop()
-    # odoo.netsvc.init_logger()
-    # print("\nCreating instance:")
-    # db_tmpl_created = False
-    # import pdb;pdb.set_trace()
-    # with odoo.api.Environment.manage() as env:
-    #     try:
-    #         odoo.service.db.exp_create_database(db, lang=None, demo=True, country_code='MX')
-    #     except odoo.service.db.DatabaseExists:
-    #         db_tmpl_created = True
     if not db_tmpl_created:
         print("Try restore database from file backup.")
         db_tmpl_created = db_run.restore(db)
@@ -370,6 +354,7 @@ def main(argv=None):
     test_other_projects = parse_list(os.environ.get("TEST_OTHER_PROJECTS", ''))
     instance_alive = str2bool(os.environ.get('INSTANCE_ALIVE'))
     unbuffer = str2bool(os.environ.get('UNBUFFER', True))
+    country = os.environ.get("COUNTRY")
     # is_runbot = str2bool(os.environ.get('RUNBOT'))
     data_dir = os.environ.get("DATA_DIR", '~/data_dir')
     test_enable = str2bool(os.environ.get('TEST_ENABLE', True))
@@ -489,7 +474,7 @@ def main(argv=None):
     setup_server(dbtemplate, odoo_unittest, tested_addons, server_path,
                  script_name, addons_path, install_options, preinstall_modules,
                  unbuffer, server_options, test_loghandler,
-                 odoo_version, country='MX')
+                 odoo_version, country=country)
 
     # Running tests
     database = "openerp_test"
