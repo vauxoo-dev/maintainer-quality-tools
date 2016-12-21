@@ -211,21 +211,27 @@ def setup_server(db, odoo_unittest, tested_addons, server_path, script_name,
         server_options = []
     if test_loghandler is None:
         test_loghandler = []
-    sys.path.append(server_path)
-    try:
-        import openerp as odoo
-    except ImportError:
-        import odoo
-    finally:
-        sys.path.pop()
-    odoo.netsvc.init_logger()
     print("\nCreating instance:")
-    db_tmpl_created = False
-    import pdb;pdb.set_trace()
-    try:
-        odoo.service.db.exp_create_database(db, lang=None, demo=True, country_code='MX')
-    except odoo.service.db.DatabaseExists:
-        db_tmpl_created = True
+    connection_context = context_mapping.get(odoo_version, Odoo10Context)
+    with connection_context(server_path, addons_path, None) as odoo_context:
+        db_tmpl_created = odoo_context.create_db(db, lang=None, demo=True,
+                                                 country_code=country)
+     #sys.path.append(server_path)
+    # try:
+    #     import openerp as odoo
+    # except ImportError:
+    #     import odoo
+    # finally:
+    #     sys.path.pop()
+    # odoo.netsvc.init_logger()
+    # print("\nCreating instance:")
+    # db_tmpl_created = False
+    # import pdb;pdb.set_trace()
+    # with odoo.api.Environment.manage() as env:
+    #     try:
+    #         odoo.service.db.exp_create_database(db, lang=None, demo=True, country_code='MX')
+    #     except odoo.service.db.DatabaseExists:
+    #         db_tmpl_created = True
     if not db_tmpl_created:
         print("Try restore database from file backup.")
         db_tmpl_created = db_run.restore(db)

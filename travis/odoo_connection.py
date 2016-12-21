@@ -29,6 +29,7 @@ class _OdooBaseContext(object):
         self.server_path = server_path
         self.addons_path = addons_path
         self.dbname = dbname
+        self.cr = None
 
     def __enter__(self):
         raise NotImplementedError("The class %s is an abstract class which"
@@ -39,7 +40,8 @@ class _OdooBaseContext(object):
         """
         Cleanly close cursor
         """
-        self.cr.close()
+        if self.cr is not None:
+            self.cr.close()
 
     def get_pot_contents(self, addon, lang=None):
         """
@@ -53,6 +55,15 @@ class _OdooBaseContext(object):
 
     def load_po(self, po, lang):
         self.trans_load_data(self.cr, po, 'po', lang)
+
+    def create_db(self, db_name, demo, lang, user_password='admin',
+                  login='admin', country_code=None):
+        try:
+            self.exp_create_database(db_name, demo, lang, user_password,
+                                     login, country_code)
+            return False
+        except self.DatabaseExists:
+            return True
 
 
 class Odoo10Context(_OdooBaseContext):
@@ -73,19 +84,21 @@ class Odoo10Context(_OdooBaseContext):
         from odoo import netsvc, api
         from odoo.modules.registry import RegistryManager
         from odoo.tools import trans_export, config, trans_load_data
-        from openerp.service.db import exp_create_database
+        from openerp.service.db import exp_create_database, DatabaseExists
         self.trans_export = trans_export
         self.trans_load_data = trans_load_data
         self.exp_create_database = exp_create_database
+        self.DatabaseExists = DatabaseExists
         sys.path.pop()
         netsvc.init_logger()
         config['addons_path'] = (
             config.get('addons_path') + ',' + self.addons_path
         )
-        registry = RegistryManager.new(self.dbname)
+        if self.dbname:
+            registry = RegistryManager.new(self.dbname)
+            self.cr = registry.cursor()
         self.environment_manage = api.Environment.manage()
         self.environment_manage.__enter__()
-        self.cr = registry.cursor()
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
@@ -115,19 +128,21 @@ class Odoo8Context(_OdooBaseContext):
         from openerp import netsvc, api
         from openerp.modules.registry import RegistryManager
         from openerp.tools import trans_export, config, trans_load_data
-        from openerp.service.db import exp_create_database
+        from openerp.service.db import exp_create_database, DatabaseExists
         self.trans_export = trans_export
         self.trans_load_data = trans_load_data
         self.exp_create_database = exp_create_database
+        self.DatabaseExists = DatabaseExists
         sys.path.pop()
         netsvc.init_logger()
         config['addons_path'] = (
             config.get('addons_path') + ',' + self.addons_path
         )
-        registry = RegistryManager.new(self.dbname)
+        if self.dbname:
+            registry = RegistryManager.new(self.dbname)
+            self.cr = registry.cursor()
         self.environment_manage = api.Environment.manage()
         self.environment_manage.__enter__()
-        self.cr = registry.cursor()
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
@@ -157,16 +172,18 @@ class Odoo7Context(_OdooBaseContext):
         from openerp import netsvc
         from openerp.tools import trans_export, config, trans_load_data
         from openerp.pooler import get_db
-        from openerp.service.db import exp_create_database
+        from openerp.service.db import exp_create_database, DatabaseExists
         self.trans_export = trans_export
         self.trans_load_data = trans_load_data
         self.exp_create_database = exp_create_database
+        self.DatabaseExists = DatabaseExists
         sys.path.pop()
         netsvc.init_logger()
         config['addons_path'] = str(
             config.get('addons_path') + ',' + self.addons_path
         )
-        self.cr = get_db(self.dbname).cursor()
+        if self.dbname:
+            self.cr = get_db(self.dbname).cursor()
         return self
 
 
