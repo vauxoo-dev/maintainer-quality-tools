@@ -11,6 +11,8 @@ import sys
 from contextlib import closing
 from cStringIO import StringIO
 
+import psycopg2
+
 
 class _OdooBaseContext(object):
     """
@@ -80,7 +82,11 @@ class _OdooBaseContext(object):
             return True
 
     def duplicate_db(self, db_original_name, db_name):
-        self.exp_duplicate_database(db_original_name, db_name)
+        try:
+            self.exp_duplicate_database(db_original_name, db_name)
+            return False
+        except psycopg2.ProgrammingError:
+            return True
 
 
 class Odoo10Context(_OdooBaseContext):
