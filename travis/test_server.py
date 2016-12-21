@@ -4,7 +4,6 @@ from __future__ import print_function
 
 import re
 import os
-import shutil
 import subprocess
 import sys
 
@@ -310,15 +309,6 @@ def create_server_conf(data, version=None):
     print("Configuration file generated.")
 
 
-def copy_attachments(dbtemplate, dbdest, data_dir):
-    attach_dir = os.path.join(os.path.expanduser(data_dir), 'filestore')
-    attach_tmpl_dir = os.path.join(attach_dir, dbtemplate)
-    attach_dest_dir = os.path.join(attach_dir, dbdest)
-    if os.path.isdir(attach_tmpl_dir) and not os.path.isdir(attach_dest_dir):
-        print("copy", attach_tmpl_dir, attach_dest_dir)
-        shutil.copytree(attach_tmpl_dir, attach_dest_dir)
-
-
 def run_from_env_var(env_name_startswith, environ):
     '''Method to run a script defined from a environment variable
     :param env_name_startswith: String with name of first letter of
@@ -521,13 +511,10 @@ def main(argv=None):
             stdout_log += '_' + database + stdout_ext
 
         print("\nTesting %s:" % to_test)
-        db_odoo_created = False
-        try:
-            db_odoo_created = subprocess.call(
-                ["createdb", "-T", dbtemplate, database])
-            copy_attachments(dbtemplate, database, data_dir)
-        except subprocess.CalledProcessError:
-            db_odoo_created = True
+        connection_context = context_mapping.get(odoo_version, Odoo10Context)
+        with connection_context(server_path, addons_path, None
+                                ) as odoo_context:
+            db_odoo_created = odoo_context.duplicate_db(dbtemplate, database)
         for command, check_loaded in commands:
             if db_odoo_created and instance_alive:
                 command_start = commands[0][0]

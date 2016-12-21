@@ -79,6 +79,9 @@ class _OdooBaseContext(object):
         except self.DatabaseExists:
             return True
 
+    def duplicate_db(self, db_original_name, db_name):
+        self.exp_duplicate_database(db_original_name, db_name)
+
 
 class Odoo10Context(_OdooBaseContext):
     """A context for connecting to a odoo 10 server with function to export
@@ -98,9 +101,11 @@ class Odoo10Context(_OdooBaseContext):
         from odoo import netsvc, api
         from odoo.modules.registry import RegistryManager
         from odoo.tools import trans_export, config, trans_load_data
-        from openerp.service.db import exp_create_database, DatabaseExists
+        from openerp.service.db import (exp_create_database, DatabaseExists,
+                                        exp_duplicate_database)
         self.trans_export = trans_export
         self.trans_load_data = trans_load_data
+        self.exp_duplicate_database = exp_duplicate_database
         self.exp_create_database = exp_create_database
         self.DatabaseExists = DatabaseExists
         sys.path.pop()
@@ -142,10 +147,12 @@ class Odoo8Context(_OdooBaseContext):
         from openerp import netsvc, api
         from openerp.modules.registry import RegistryManager
         from openerp.tools import trans_export, config, trans_load_data
-        from openerp.service.db import exp_create_database, DatabaseExists
+        from openerp.service.db import (exp_create_database, DatabaseExists,
+                                        exp_duplicate_database)
         self.trans_export = trans_export
         self.trans_load_data = trans_load_data
         self.exp_create_database = exp_create_database
+        self.exp_duplicate_database = exp_duplicate_database
         self.DatabaseExists = DatabaseExists
         sys.path.pop()
         netsvc.init_logger()
@@ -191,6 +198,7 @@ class Odoo7Context(_OdooBaseContext):
         self.trans_load_data = trans_load_data
         db_obj = db(self.dbname)
         self.exp_create_database = db_obj.exp_create_database
+        self.exp_duplicate_database = db_obj.exp_duplicate_database
         self.DatabaseExists = BaseException
         sys.path.pop()
         netsvc.init_logger()
