@@ -186,11 +186,12 @@ class Odoo7Context(_OdooBaseContext):
         from openerp import netsvc
         from openerp.tools import trans_export, config, trans_load_data
         from openerp.pooler import get_db
-        from openerp.service.db import exp_create_database, DatabaseExists
+        from openerp.service.web_services import db
         self.trans_export = trans_export
         self.trans_load_data = trans_load_data
-        self.exp_create_database = exp_create_database
-        self.DatabaseExists = DatabaseExists
+        db_obj = db(self.dbname)
+        self.exp_create_database = db_obj.exp_create_database
+        self.DatabaseExists = BaseException
         sys.path.pop()
         netsvc.init_logger()
         config['addons_path'] = str(
