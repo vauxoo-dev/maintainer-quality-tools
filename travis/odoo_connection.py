@@ -6,6 +6,7 @@ To add a new version, create a subclass of _OdooBaseContext with name
 OdooXContext, implement __enter__ and add to context_mapping.
 """
 
+import inspect
 import sys
 from contextlib import closing
 from cStringIO import StringIO
@@ -56,11 +57,24 @@ class _OdooBaseContext(object):
     def load_po(self, po, lang):
         self.trans_load_data(self.cr, po, 'po', lang)
 
-    def create_db(self, db_name, demo, lang, user_password='admin',
-                  login='admin', country_code=None):
+    def create_db(self, db_name, demo, lang, country_code=None):
+        """Wrapper method of odoo.service.db
+        8.0 - exp_create_database(db_name, demo, lang, user_password='admin')
+        9.0 - exp_create_database(db_name, demo, lang, user_password='admin',
+                                  login='admin', country_code=None)
+        10.0 - exp_create_database(db_name, demo, lang, user_password='admin',
+                                   login='admin', country_code=None)
+        """
+        extra_kwargs = {
+            'db_name': db_name,
+            'demo': demo,
+            'lang': lang,
+        }
+        if 'country_code' in inspect.getargs(self.exp_create_database.func_code
+                                             ).args:
+            extra_kwargs['country_code'] = country_code
         try:
-            self.exp_create_database(db_name, demo, lang, user_password,
-                                     login, country_code)
+            self.exp_create_database(**extra_kwargs)
             return False
         except self.DatabaseExists:
             return True
