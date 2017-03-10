@@ -83,6 +83,8 @@ else
             && git checkout ${BRANCH}-${REMOTE} \
         ;
     fi
+    echo "Run git gc for compress git folder"
+    git gc --aggressive
 fi
 
 echo "x${PHANTOMJS_TESTS}"
