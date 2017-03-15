@@ -70,7 +70,7 @@ class MainTest(unittest.TestCase):
     """PYLINT TEST CASES """
     def setUp(self):
         super(MainTest, self).setUp()
-        os.environ['PYLINT_EXPECTED_ERRORS'] = "91"
+        # os.environ['PYLINT_EXPECTED_ERRORS'] = "91"
         self.repo_dir = os.environ.get(
             "TRAVIS_BUILD_DIR", "./tests/test_repo/")
         self.exclude = os.environ.get("EXCLUDE")
@@ -197,7 +197,6 @@ class MainTest(unittest.TestCase):
         result = run_pylint.pylint_run(
             is_pr=True, version="master", dir=self.git_work_dir)
         count_errors = sum(result.values())
-        # expected_errors = int(os.environ.get('PYLINT_EXPECTED_ERRORS', 0))
         self.assertNotEqual(count_errors, -1,
                             travis_helpers.yellow('Python modules not found'))
         self.assertEqual(
@@ -217,7 +216,6 @@ class MainTest(unittest.TestCase):
         result = run_pylint.pylint_run(
             is_pr=False, version="master", dir=self.git_work_dir)
         count_errors = sum(result.values())
-        # expected_errors = int(os.environ.get('PYLINT_EXPECTED_ERRORS', 0))
         self.assertNotEqual(count_errors, -1,
                             travis_helpers.yellow('Python modules not found'))
         self.assertEqual(
@@ -251,7 +249,6 @@ class MainTest(unittest.TestCase):
         result = run_pylint.pylint_run(
             is_pr=True, version="7.0", dir=self.git_work_dir)
         count_errors = sum(result.values())
-        # expected_errors = int(os.environ.get('PYLINT_EXPECTED_ERRORS', 0))
         self.assertNotEqual(count_errors, -1,
                             travis_helpers.yellow('Python modules not found'))
         self.assertEqual(
@@ -271,7 +268,6 @@ class MainTest(unittest.TestCase):
         result = run_pylint.pylint_run(
             is_pr=False, version="7.0", dir=self.git_work_dir)
         count_errors = sum(result.values())
-        # expected_errors = int(os.environ.get('PYLINT_EXPECTED_ERRORS', 0))
         self.assertNotEqual(count_errors, -1,
                             travis_helpers.yellow('Python modules not found'))
         self.assertEqual(
@@ -295,7 +291,6 @@ class MainTest(unittest.TestCase):
         result = run_pylint.pylint_run(
             is_pr=True, version="8.0", dir=self.git_work_dir)
         count_errors = sum(result.values())
-        # expected_errors = int(os.environ.get('PYLINT_EXPECTED_ERRORS', 0))
         self.assertNotEqual(count_errors, -1,
                             travis_helpers.yellow('Python modules not found'))
         self.assertEqual(
@@ -315,7 +310,6 @@ class MainTest(unittest.TestCase):
         result = run_pylint.pylint_run(
             is_pr=False, version="8.0", dir=self.git_work_dir)
         count_errors = sum(result.values())
-        # expected_errors = int(os.environ.get('PYLINT_EXPECTED_ERRORS', 0))
         self.assertNotEqual(count_errors, -1,
                             travis_helpers.yellow('Python modules not found'))
         self.assertEqual(
@@ -342,7 +336,6 @@ class MainTest(unittest.TestCase):
         result = run_pylint.pylint_run(
             is_pr=True, version="", dir=self.git_work_dir)
         count_errors = sum(result.values())
-        # expected_errors = int(os.environ.get('PYLINT_EXPECTED_ERRORS', 0))
         self.assertNotEqual(count_errors, -1,
                             travis_helpers.yellow('Python modules not found'))
         self.assertEqual(
@@ -361,7 +354,6 @@ class MainTest(unittest.TestCase):
         result = run_pylint.pylint_run(
             is_pr=False, version="", dir=self.git_work_dir)
         count_errors = sum(result.values())
-        # expected_errors = int(os.environ.get('PYLINT_EXPECTED_ERRORS', 0))
         self.assertNotEqual(count_errors, -1,
                             travis_helpers.yellow('Python modules not found'))
         self.assertEqual(
