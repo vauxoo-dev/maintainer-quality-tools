@@ -8,7 +8,7 @@ import subprocess
 import sys
 
 from odoo_connection import Odoo10Context, context_mapping
-from test_server import (get_addons_path, get_addons_to_check, get_depends,
+from test_server import (get_test_dependencies as get_depends, get_addons_path, get_addons_to_check,
                          get_server_path, parse_list)
 from travis_helpers import red, yellow, yellow_light
 from weblate_client import get_projects, lock, wl_pull, wl_push
@@ -69,10 +69,9 @@ def main(argv=None):
     addons_path = get_addons_path(travis_home, travis_build_dir, server_path)
     addons_list = get_addons_to_check(travis_build_dir, odoo_include,
                                       odoo_exclude)
-    addons_path_list = parse_list(addons_path)
-    all_depends = get_depends(addons_path_list, addons_list)
+    all_depends = get_depends(addons_path, addons_list)
     main_modules = set(os.listdir(travis_build_dir))
-    main_depends = main_modules & all_depends
+    main_depends = main_modules & set(all_depends)
     addons_list = list(main_depends)
     database = "openerp_test"
     # Use by default version 10 connection context
