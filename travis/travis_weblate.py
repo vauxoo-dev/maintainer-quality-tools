@@ -1,165 +1,122 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-from __future__ import print_function
-
 import os
+import glob
 import subprocess
-import sys
 
 from odoo_connection import Odoo10Context, context_mapping
-from test_server import (get_test_dependencies as get_depends, get_addons_path, get_addons_to_check,
-                         get_server_path, parse_list)
-from travis_helpers import red, yellow, yellow_light
-from weblate_client import get_projects, lock, wl_pull, wl_push
+from test_server import (get_test_dependencies as get_depends, get_addons_path,
+                         get_addons_to_check, get_server_path, parse_list)
+from weblate_api import WeblateApi
+from travis_helpers import yellow
 
 
-def po_rm_header(po_content):
-    is_header = True
-    rm_header = str()
-    header = str()
-    for line in po_content.splitlines():
-        if line.startswith('#.'):
-            is_header = False
-        if is_header:
-            header += line + '\n'
-            continue
-        rm_header += line + '\n'
-    # Weblate don't use final newline. Strip to avoid a dummy change
-    rm_header = rm_header.rstrip('\n')
-    return header, rm_header
+class TravisWeblateUpdate(object):
 
+    def __init__(self):
+        self.repo_slug = os.environ.get("TRAVIS_REPO_SLUG")
+        self.api = WeblateApi()
+        self.api.load_project(self.repo_slug)
+        self._travis_home = os.environ.get("HOME", "~/")
+        self._travis_build_dir = os.environ.get("TRAVIS_BUILD_DIR", "../..")
+        self._odoo_exclude = os.environ.get("EXCLUDE")
+        self._odoo_include = os.environ.get("INCLUDE")
+        self._odoo_version = os.environ.get("VERSION")
+        self._langs = parse_list(os.environ.get("LANG_ALLOWED", ""))
+        self._odoo_full = os.environ.get("ODOO_REPO", "odoo/odoo")
+        self._server_path = get_server_path(self._odoo_full,
+                                            self._odoo_version,
+                                            self._travis_home)
+        self._addons_path = get_addons_path(self._travis_home,
+                                            self._travis_build_dir,
+                                            self._server_path)
+        self._addons_list = get_addons_to_check(self._travis_build_dir,
+                                                self._odoo_include,
+                                                self._odoo_exclude)
+        self._all_depends = (
+            get_depends(self._addons_path, self._addons_list) +
+            self._addons_list)
+        self._main_modules = set(os.listdir(self._travis_build_dir))
+        self._main_depends = self._main_modules & set(self._all_depends)
+        self._addons_list = list(self._main_depends)
+        #TODO calcular bien el contexto para ver si el sistema el 8,9 o 10
+        self._connection_context = context_mapping.get(
+            self._odoo_version, Odoo10Context)
 
-def main(argv=None):
-    """
-    Export translation files and push them to weblate
-    The weblate token should be encrypted in .travis.yml
-    If not, export exits early.
-    """
-    if argv is None:
-        argv = sys.argv
+    def _get_po_models(self, po_content):
+        po_models = []
+        for line in po_content.splitlines():
+            if line.startswith('#:'):
+                po_models.append(line)
+        return po_models
 
-    weblate_token = os.environ.get("WEBLATE_TOKEN")
-    weblate_host = os.environ.get(
-        "WEBLATE_HOST", "https://weblate.vauxoo.com/api/")
+    def _generate_odoo_po_files(self):
+        with self._connection_context(self._server_path, self._addons_path,
+                                      "openerp_test") as odoo_context:
+            for module in self._addons_list:
+                print("\n", yellow("Obtaining POT file for %s" % module))
+                i18n_folder = os.path.join(self._travis_build_dir, module,
+                                           'i18n')
+                if not os.path.isdir(i18n_folder):
+                    os.makedirs(i18n_folder)
+                # Put git add for letting known git which translations to update
+                po_files = glob.glob(os.path.join(i18n_folder, '*.po'))
+                for lang in self._langs:
+                    if os.path.isfile(os.path.join(i18n_folder, lang + '.po')):
+                        continue
+                    with open(os.path.join(i18n_folder, lang + '.po'), 'wb') \
+                            as f_po:
+                        f_po.write(odoo_context.get_pot_contents(module, lang))
+                for po_file_name in po_files:
+                    lang = os.path.basename(os.path.splitext(po_file_name)[0])
+                    if self._langs and lang not in self._langs:
+                        # Limit just allowed languages if is defined
+                        continue
+                    po_file_path = os.path.join(i18n_folder, po_file_name)
+                    with open(po_file_path, 'r') as f_po:
+                        current_content = f_po.read()
+                        odoo_context.load_po(f_po, lang)
+                    new_content = odoo_context.get_pot_contents(module, lang)
+                    if (self._get_po_models(current_content) ==
+                            self._get_po_models(new_content)):
+                        continue
+                    with open(po_file_path, 'wb') as f_po:
+                        f_po.write(new_content)
 
-    if not weblate_token:
-        print(yellow_light("WARNING! Weblate token not defined- "
-              "exiting early."))
-        return 1
-
-    if not weblate_host:
-        print(yellow_light("WARNING! Weblate host not recognized- "
-              "exiting early."))
-        return 1
-
-    travis_home = os.environ.get("HOME", "~/")
-    travis_build_dir = os.environ.get("TRAVIS_BUILD_DIR", "../..")
-    travis_repo_slug = os.environ.get("TRAVIS_REPO_SLUG")
-    gh_token = os.environ.get("GH_TOKEN")
-    travis_branch = os.environ.get("TRAVIS_BRANCH")
-    travis_repo_shortname = travis_repo_slug.split("/")[1]
-    odoo_exclude = os.environ.get("EXCLUDE")
-    odoo_include = os.environ.get("INCLUDE")
-    odoo_version = os.environ.get("VERSION")
-    langs = parse_list(os.environ.get("LANG_ALLOWED", ""))
-
-    odoo_full = os.environ.get("ODOO_REPO", "odoo/odoo")
-    server_path = get_server_path(odoo_full, odoo_version, travis_home)
-    addons_path = get_addons_path(travis_home, travis_build_dir, server_path)
-    addons_list = get_addons_to_check(travis_build_dir, odoo_include,
-                                      odoo_exclude)
-    all_depends = get_depends(addons_path, addons_list)
-    main_modules = set(os.listdir(travis_build_dir))
-    main_depends = main_modules & set(all_depends)
-    addons_list = list(main_depends)
-    database = "openerp_test"
-    # Use by default version 10 connection context
-    connection_context = context_mapping.get(odoo_version, Odoo10Context)
-    current_branch = travis_branch
-    wlprojects = get_projects(travis_repo_shortname, current_branch)
-    try:
-        # first project found
-        wlproject = wlprojects.next()
-    except StopIteration as sie:
-        print(red("Project Weblate %s not found for branch %s" % (
-            travis_repo_shortname, current_branch)))
-        raise sie
-    with connection_context(server_path, addons_path, database) \
-            as odoo_context, lock(wlproject, addons_list):
-        try:
-            subprocess.check_output([
-                'git', 'remote', 'add', 'travis',
-                'https://%(GH_TOKEN)s@github.com/%(REPO_SLUG)s' % dict(
-                    GH_TOKEN=gh_token, REPO_SLUG=travis_repo_slug)])
-        except subprocess.CalledProcessError:
-            # Remote created previously
-            pass
-        subprocess.check_output(['git', 'config', 'user.name', "Travis CI"])
-        subprocess.check_output([
-            'git', 'config', 'user.email', "moylop260@vauxoo.com"])
-        if wl_push(wlproject):
-            command = ['git', 'pull', 'travis', current_branch]
-            res = subprocess.check_output(command).strip('\n ')
-            print(yellow("git pull result: %s" % res))
-
-        command = ['git', 'log', '-r', '-1', '--oneline']
-        sha = subprocess.check_output(command).strip('\n ')
-        print(yellow("Current sha %s" % (sha)))
-
-        for module in addons_list:
-            print("\n", yellow("Obtaining POT file for %s" % module))
-            i18n_folder = os.path.join(travis_build_dir, module, 'i18n')
-            # # TODO: Add empty es.po files if non exists
-            # source_filename = os.path.join(i18n_folder, module + ".pot")
-            # # Create i18n/ directory if doesn't exist
-            if not os.path.isdir(i18n_folder):
-                os.makedirs(i18n_folder)
-            # with open(source_filename, 'w') as f:
-            #     f.write(odoo_context.get_pot_contents(module))
-
-            # Put git add for letting known git which translations to update
-            for po_file_name in os.listdir(i18n_folder):
-                if not po_file_name.endswith('.po'):
-                    continue
-                lang = os.path.splitext(po_file_name)[0]
-                if langs and lang not in langs:
-                    # Limit just allowed languages if is defined
-                    continue
-                po_file_path = os.path.join(i18n_folder, po_file_name)
-                with open(po_file_path, 'r') as f_po:
-                    current_content = f_po.read()
-                    odoo_context.load_po(f_po, lang)
-                new_content = odoo_context.get_pot_contents(module, lang)
-                current_header, current_content = po_rm_header(current_content)
-                _, new_content = po_rm_header(new_content)
-                if current_content == new_content:
-                    # Skip unchanged po file (without headers)
-                    continue
-                with open(po_file_path, 'wb') as f_po:
-                    f_po.write(current_header + new_content)
-                command = ['git', 'add', po_file_path]
-                subprocess.check_output(command)
-        command = ['git', 'diff', '--cached', '--exit-code']
-        try:
-            subprocess.check_output(command)
-            print(yellow("No changes for languages %s" % langs))
-            return 0
-        except subprocess.CalledProcessError:
-            # There are changes
-            pass
-        command = ['git', 'commit', '--no-verify',
-                   '-m', '[REF] i18n: Updating translation terms [ci skip]']
-        print(yellow("git commit"))
-        res = subprocess.check_output(command)
-        print("... %s" % res)
-        print(yellow("git push"))
-        res = subprocess.check_output([
-            'git', 'push', 'travis', 'HEAD:' + current_branch])
-        print("... %s" % res)
-        wl_pull(wlproject)
+    def update(self):
+        self.api.pull()
+        for component in self.api.components:
+            if component['vcs'] == 'git':
+                name = 'wl_%s' % component['branch']
+                remote = (self.api.host.replace('api', 'git') + '/' +
+                          self.api.project['slug'] + '/' + component['slug'])
+                self.api.component_unlock(component)
+                self.api.component_lock(component)
+                self.api.component_repository(component, 'pull')
+                subprocess.call(["git", "remote", "remove", name])
+                subprocess.call(["git", "remote", "add", name, remote])
+                subprocess.call(["git", "fetch", "--all"])
+                subprocess.call(["git", "reset", "--hard"])
+                subprocess.call(["git", "checkout", "-b", component['branch'],
+                                 "origin/%s" % component['branch']])
+                self._generate_odoo_po_files()
+                po_files = glob.glob(os.path.join(self._travis_build_dir,
+                                                  component['filemask']))
+                #TODO Que se debe hacer si da conflicto
+                subprocess.call(["git", "merge", "--squash",
+                                 "%s/%s" % (name, component['branch'])])
+                subprocess.call(["git", "add"] + po_files)
+                #TODO Calcular el correo de la configuracion
+                subprocess.call(["git", "commit", "--no-verify",
+                                 "--author='Weblate bot <weblate@bot>'",
+                                 "-m", "[REF] i18n: Updating translation"
+                                 "terms from weblate [ci skip]"])
+                subprocess.call(["git", "push", "origin", component['branch']])
+                self.api.component_repository(component, 'reset')
+                self.api.component_unlock(component)
         return 0
 
 
 if __name__ == "__main__":
-    exit(main())
+    exit(TravisWeblateUpdate().update())
