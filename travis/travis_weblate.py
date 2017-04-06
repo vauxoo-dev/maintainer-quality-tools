@@ -118,5 +118,9 @@ class TravisWeblateUpdate(object):
         return 0
 
 
+def main(argv=None):
+    exit(TravisWeblateUpdate().update())
+
+
 if __name__ == "__main__":
     exit(TravisWeblateUpdate().update())
