@@ -23,7 +23,8 @@ class TravisWeblateUpdate(object):
         self._odoo_exclude = os.environ.get("EXCLUDE")
         self._odoo_include = os.environ.get("INCLUDE")
         self._odoo_version = os.environ.get("VERSION")
-        self._langs = parse_list(os.environ.get("LANG_ALLOWED", ""))
+        self._langs = (parse_list(os.environ.get("LANG_ALLOWED")) if
+                       os.environ.get("LANG_ALLOWED", False) else [])
         self._odoo_full = os.environ.get("ODOO_REPO", "odoo/odoo")
         self._server_path = get_server_path(self._odoo_full,
                                             self._odoo_version,
@@ -40,7 +41,7 @@ class TravisWeblateUpdate(object):
         self._main_modules = set(os.listdir(self._travis_build_dir))
         self._main_depends = self._main_modules & set(self._all_depends)
         self._addons_list = list(self._main_depends)
-        #TODO calcular bien el contexto para ver si el sistema el 8,9 o 10
+        #TODO Calculated another context
         self._connection_context = context_mapping.get(
             self._odoo_version, Odoo10Context)
 
@@ -103,11 +104,10 @@ class TravisWeblateUpdate(object):
                 self._generate_odoo_po_files()
                 po_files = glob.glob(os.path.join(self._travis_build_dir,
                                                   component['filemask']))
-                #TODO Que se debe hacer si da conflicto
+                #TODO Define when exist one conflict
                 subprocess.call(["git", "merge", "--squash",
                                  "%s/%s" % (name, component['branch'])])
                 subprocess.call(["git", "add"] + po_files)
-                #TODO Calcular el correo de la configuracion
                 subprocess.call(["git", "commit", "--no-verify",
                                  "--author='Weblate bot <weblate@bot>'",
                                  "-m", "[REF] i18n: Updating translation"
