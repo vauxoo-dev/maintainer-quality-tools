@@ -2,27 +2,21 @@
 
 import os
 import tempfile
-import shutil
 import time
 import requests
+import json
 
 from travis_helpers import red, yellow, yellow_light
 
 
-class WeblateApi(object):
+class Request(object):
 
     def __init__(self):
-        self.repo_slug = None
-        self._token = os.environ.get("WEBLATE_TOKEN")
-        self.host = os.environ.get(
-            "WEBLATE_HOST", "https://weblate.vauxoo.com/api")
         self.session = requests.Session()
-        self.tempdir = os.path.join(tempfile.gettempdir(), 'weblate_api')
-        self._check()
 
     def _check(self):
         if not self._token:
-            print(yellow_light("WARNING! Weblate token not defined- "
+            print(yellow_light("WARNING! Token not defined- "
                                "exiting early."))
             exit(1)
         self.session.headers.update({
@@ -31,6 +25,30 @@ class WeblateApi(object):
             'Authorization': 'Token %s' % self._token
         })
         self._request(self.host)
+
+    def _request(self, url, payload=None, is_json=True, files={}):
+        try:
+            if not payload and not files:
+                response = self.session.get(url)
+            else:
+                response = self.session.post(url, data=payload, files=files)
+            response.raise_for_status()
+        except requests.RequestException as error:
+            print(red(str(error)))
+            #exit(1)
+        return response.json() if is_json else response
+
+
+class WeblateApi(Request):
+
+    def __init__(self):
+        super(WeblateApi, self).__init__()
+        self.repo_slug = None
+        self._token = os.environ.get("WEBLATE_TOKEN")
+        self.host = os.environ.get(
+            "WEBLATE_HOST", "https://weblate.vauxoo.com/api")
+        self.tempdir = os.path.join(tempfile.gettempdir(), 'weblate_api')
+        self._check()
 
     def get_project(self, repo_slug):
         self.repo_slug = repo_slug
@@ -93,14 +111,18 @@ class WeblateApi(object):
                              {'lock': False})
         return lock['locked']
 
-    def _request(self, url, payload=None, json=True, files={}):
-        try:
-            if not payload and not files:
-                response = self.session.get(url)
-            else:
-                response = self.session.post(url, data=payload, files=files)
-            response.raise_for_status()
-        except requests.RequestException as error:
-            print(red(str(error)))
-            exit(1)
-        return response.json() if json else response
+
+class GitHubApi(Request):
+
+    def __init__(self):
+        super(GitHubApi, self).__init__()
+        self._token = os.environ.get("GITHUB_TOKEN")
+        self.host = "https://api.github.com"
+        self._owner, self._repo = os.environ.get("TRAVIS_REPO_SLUG").split('/')
+        self.session = requests.Session()
+        self._check()
+
+    def create_pull_request(self, data):
+        pull = self._request(self.host + '/repos/%s/%s/pulls' %
+                             (self._owner, self._repo), json.dumps(data))
+        return pull
