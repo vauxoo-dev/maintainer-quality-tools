@@ -89,30 +89,26 @@ class TravisWeblateUpdate(object):
                     with open(po_file_path, 'wb') as f_po:
                         f_po.write(new_content)
 
-
     def _add_odoo_po_files(self, component):
         po_files = glob.glob(os.path.join(self._travis_build_dir,
                                           component['filemask']))
         self._git.run(["add"] + po_files)
 
+    def _last_modifier(self, repo):
+        login = ''
+        author_email = (self._git.run(
+            ["show", "--pretty=format:%ae", repo]).split('\n')[0])
+        if author_email:
+            user = self.gh_api.get_user_info(author_email)
+            if 'login' in user:
+                login = '@%s\n' % user['login']
+        return login
+
     def _register_pull_request(self, component, status):
         branch_name = 'conflict-%s-weblate' % component['branch']
-        message = ''
-        ori_author_email = (self._git.run(
-            ["show", "--pretty=format:%ae",
-             "origin/%s" % component['branch']]).split('\n')[0])
-        wl_author_email = (self._git.run(
-            ["show", "--pretty=format:%ae",
-             "%(branch)s-weblate/%(branch)s" %
-             {'branch': component['branch']}]).split('\n')[0])
-        if ori_author_email:
-            user = self.gh_api.get_user_info(ori_author_email)
-            if 'login' in user:
-                message += '@%s\n' % user['login']
-        if wl_author_email:
-            user = self.gh_api.get_user_info(wl_author_email)
-            if 'login' in user:
-                message += '@%s\n' % user['login']
+        message = (self._last_modifier("origin/%s" % component['branch']) +
+                   self._last_modifier("%(branch)s-weblate/%(branch)s" %
+                                       {'branch': component['branch']}))
         message += status
         self._add_odoo_po_files(component)
         self._git.run(["commit", "--no-verify",
@@ -129,7 +125,6 @@ class TravisWeblateUpdate(object):
             'body': message
         })
         print(yellow("The pull request register is: %s" % pull['html_url']))
-        return 0
 
     def update(self):
         self.wl_api.pull()
@@ -153,14 +148,16 @@ class TravisWeblateUpdate(object):
                                "%s/%s" % (name, component['branch'])])
                 status = self._git.run(["status"])
                 if 'both modified' in status:
-                    return self._register_pull_request(component, status)
+                    self._register_pull_request(component, status)
+                    self.wl_api.component_unlock(component)
+                    continue
                 self._add_odoo_po_files(component)
                 self._git.run(["commit", "--no-verify",
                                "--author='Weblate bot <weblate@bot>'",
                                "-m", "[REF] i18n: Updating translation"
                                "terms from weblate [ci skip]"])
                 self._git.run(["push", "origin", component['branch']])
-                self.wl_api.component_repository(component, 'reset')
+                self.wl_api.component_repository(component, 'pull')
                 self.wl_api.component_unlock(component)
         return 0
 
@@ -170,4 +167,4 @@ def main(argv=None):
 
 
 if __name__ == "__main__":
-    exit(TravisWeblateUpdate().update())
+    main()
