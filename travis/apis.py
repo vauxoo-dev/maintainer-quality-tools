@@ -35,7 +35,7 @@ class Request(object):
             response.raise_for_status()
         except requests.RequestException as error:
             print(red(str(error)))
-            #exit(1)
+            exit(1)
         return response.json() if is_json else response
 
 
@@ -121,6 +121,12 @@ class GitHubApi(Request):
         self._owner, self._repo = os.environ.get("TRAVIS_REPO_SLUG").split('/')
         self.session = requests.Session()
         self._check()
+
+    def get_user_info(self, email):
+        user_info = self._request(self.host + '/search/users?type=user&q=%s' %
+                                  email)
+        return user_info['items'][0] if (user_info['total_count'] == 1 and
+                                         len(user_info['items']) == 1) else {}
 
     def create_pull_request(self, data):
         pull = self._request(self.host + '/repos/%s/%s/pulls' %

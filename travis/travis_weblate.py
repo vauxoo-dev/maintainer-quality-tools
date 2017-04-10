@@ -96,7 +96,24 @@ class TravisWeblateUpdate(object):
         self._git.run(["add"] + po_files)
 
     def _register_pull_request(self, component, status):
-        branch_name = 'conflict-%s-weblate' % (component['branch'])
+        branch_name = 'conflict-%s-weblate' % component['branch']
+        message = ''
+        ori_author_email = (self._git.run(
+            ["show", "--pretty=format:%ae",
+             "origin/%s" % component['branch']]).split('\n')[0])
+        wl_author_email = (self._git.run(
+            ["show", "--pretty=format:%ae",
+             "%(branch)s-weblate/%(branch)s" %
+             {'branch': component['branch']}]).split('\n')[0])
+        if ori_author_email:
+            user = self.gh_api.get_user_info(ori_author_email)
+            if 'login' in user:
+                message += '@%s\n' % user['login']
+        if wl_author_email:
+            user = self.gh_api.get_user_info(wl_author_email)
+            if 'login' in user:
+                message += '@%s\n' % user['login']
+        message += status
         self._add_odoo_po_files(component)
         self._git.run(["commit", "--no-verify",
                        "--author='Weblate bot <weblate@bot>'",
@@ -109,7 +126,7 @@ class TravisWeblateUpdate(object):
             'title': '[REF] i18n: Conflict on the daily cron',
             'head': '%s:%s' % (self.repo_slug.split('/')[0], branch_name),
             'base': component['branch'],
-            'body': status
+            'body': message
         })
         print(yellow("The pull request register is: %s" % pull['html_url']))
         return 0
