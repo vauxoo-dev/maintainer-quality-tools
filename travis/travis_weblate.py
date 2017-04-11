@@ -15,7 +15,7 @@ from git_run import GitRun
 class TravisWeblateUpdate(object):
 
     def __init__(self):
-        self._git = GitRun(os.path.join(os.getcwd(), '.git'))
+        self._git = GitRun(os.path.join(os.getcwd(), '.git'), True)
         self.repo_slug = os.environ.get("TRAVIS_REPO_SLUG")
         self.branch = os.environ.get("TRAVIS_BRANCH",
                                      self._git.get_branch_name())
