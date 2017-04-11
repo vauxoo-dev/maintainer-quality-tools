@@ -15,11 +15,13 @@ from git_run import GitRun
 class TravisWeblateUpdate(object):
 
     def __init__(self):
-        self.repo_slug = os.environ.get("TRAVIS_REPO_SLUG")
-        self.wl_api = WeblateApi()
-        self.wl_api.load_project(self.repo_slug)
-        self.gh_api = GitHubApi()
         self._git = GitRun(os.path.join(os.getcwd(), '.git'))
+        self.repo_slug = os.environ.get("TRAVIS_REPO_SLUG")
+        self.branch = os.environ.get("TRAVIS_BRANCH",
+                                     self._git.get_branch_name())
+        self.wl_api = WeblateApi()
+        self.wl_api.load_project(self.repo_slug, self.branch)
+        self.gh_api = GitHubApi()
         self._travis_home = os.environ.get("HOME", "~/")
         self._travis_build_dir = os.environ.get("TRAVIS_BUILD_DIR", "../..")
         self._odoo_exclude = os.environ.get("EXCLUDE")
