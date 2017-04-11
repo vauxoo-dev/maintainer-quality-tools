@@ -44,14 +44,16 @@ class WeblateApi(Request):
     def __init__(self):
         super(WeblateApi, self).__init__()
         self.repo_slug = None
+        self.branch = None
         self._token = os.environ.get("WEBLATE_TOKEN")
         self.host = os.environ.get(
             "WEBLATE_HOST", "https://weblate.vauxoo.com/api")
         self.tempdir = os.path.join(tempfile.gettempdir(), 'weblate_api')
         self._check()
 
-    def get_project(self, repo_slug):
+    def get_project(self, repo_slug, branch):
         self.repo_slug = repo_slug
+        self.branch = branch
         projects = self._request(self.host + '/projects')
         for project in projects['results']:
             if project['web'].endswith(repo_slug):
@@ -60,8 +62,8 @@ class WeblateApi(Request):
                          (self.host, repo_slug))))
         exit(1)
 
-    def load_project(self, repo_slug):
-        self.project = self.get_project(repo_slug)
+    def load_project(self, repo_slug, branch):
+        self.project = self.get_project(repo_slug, branch)
         self.load_components()
 
     def get_components(self):
@@ -73,8 +75,9 @@ class WeblateApi(Request):
                              self.project['slug'])))
             exit(1)
         for value in values['results']:
-            if (value['repo'].endswith(self.repo_slug) or
-                    value['repo'].endswith(self.repo_slug + '.git')):
+            if ((value['repo'].endswith(self.repo_slug) or
+                 value['repo'].endswith(self.repo_slug + '.git')) and
+                    value['branch'] == self.branch):
                 components.append(value)
         return components
 
