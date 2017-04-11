@@ -141,7 +141,7 @@ class TravisWeblateUpdate(object):
                 self.wl_api.component_repository(component, 'pull')
                 self._git.run(["remote", "remove", name])
                 self._git.run(["remote", "add", name, remote])
-                self._git.run(["fetch", "--all"])
+                self._git.run(["fetch", "--all", "--depth=1"])
                 self._git.run(["reset", "--hard"])
                 self._git.run(["checkout", "-b", component['branch'],
                                "origin/%s" % component['branch']])
