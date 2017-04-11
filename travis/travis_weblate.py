@@ -146,7 +146,7 @@ class TravisWeblateUpdate(object):
                 self._git.run(["checkout", "-b", component['branch'],
                                "origin/%s" % component['branch']])
                 self._generate_odoo_po_files()
-                self._git.run(["merge",
+                self._git.run(["merge", "--squash",
                                "%s/%s" % (name, component['branch'])])
                 status = self._git.run(["status"])
                 if 'both modified' in status:
