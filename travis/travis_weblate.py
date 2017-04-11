@@ -159,7 +159,7 @@ class TravisWeblateUpdate(object):
                                "-m", "[REF] i18n: Updating translation"
                                "terms from weblate [ci skip]"])
                 self._git.run(["push", "origin", component['branch']])
-                self.wl_api.component_repository(component, 'pull')
+                self.wl_api.component_repository(component, 'reset')
                 self.wl_api.component_unlock(component)
         return 0
 
