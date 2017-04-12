@@ -92,9 +92,17 @@ class TravisWeblateUpdate(object):
                         f_po.write(new_content)
 
     def _add_odoo_po_files(self, component):
+        po_return = []
         po_files = glob.glob(os.path.join(self._travis_build_dir,
                                           component['filemask']))
-        self._git.run(["add"] + po_files)
+        status = self._git.run(["status"])
+        for po_file in po_files:
+            po = po_file.replace(os.getcwd(), '')[1:]
+            if po in status:
+                po_return.append(po_file)
+        if po_return:
+            self._git.run(["add"] + po_return)
+        return True if po_return else False
 
     def _last_modifier(self, repo):
         login = ''
@@ -132,6 +140,7 @@ class TravisWeblateUpdate(object):
         self.wl_api.pull()
         for component in self.wl_api.components:
             if component['vcs'] == 'git':
+                first_commit = False
                 name = '%s-weblate' % component['branch']
                 remote = (self.wl_api.host.replace('api', 'git') + '/' +
                           self.wl_api.project['slug'] + '/' +
@@ -146,6 +155,12 @@ class TravisWeblateUpdate(object):
                 self._git.run(["checkout", "-b", component['branch'],
                                "origin/%s" % component['branch']])
                 self._generate_odoo_po_files()
+                if self._add_odoo_po_files(component):
+                    first_commit = True
+                    self._git.run(["commit", "--no-verify",
+                                   "--author='Weblate bot <weblate@bot>'",
+                                   "-m", "[REF] i18n: Updating translation"
+                                   "terms from weblate [ci skip]"])
                 self._git.run(["merge", "--squash",
                                "%s/%s" % (name, component['branch'])])
                 status = self._git.run(["status"])
@@ -154,10 +169,14 @@ class TravisWeblateUpdate(object):
                     self.wl_api.component_unlock(component)
                     continue
                 self._add_odoo_po_files(component)
-                self._git.run(["commit", "--no-verify",
-                               "--author='Weblate bot <weblate@bot>'",
-                               "-m", "[REF] i18n: Updating translation"
-                               "terms from weblate [ci skip]"])
+                if first_commit:
+                    self._git.run(["commit", "--no-verify", "--amend",
+                                   "--no-edit"])
+                else:
+                    self._git.run(["commit", "--no-verify",
+                                   "--author='Weblate bot <weblate@bot>'",
+                                   "-m", "[REF] i18n: Updating translation"
+                                   "terms from weblate [ci skip]"])
                 self._git.run(["push", "origin", component['branch']])
                 self.wl_api.component_repository(component, 'reset')
                 self.wl_api.component_unlock(component)
