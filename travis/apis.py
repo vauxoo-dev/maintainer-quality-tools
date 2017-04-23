@@ -4,6 +4,7 @@ import os
 import tempfile
 import time
 import json
+from contextlib import contextmanager
 import requests
 
 
@@ -71,6 +72,8 @@ class WeblateApi(Request):
             raise ApiException('No components found in the project "%s"' %
                                self.project['slug'])
         for value in values['results']:
+            if value['branch'] and value['branch'] != self.branch:
+                continue
             components.append(value)
         return components
 
@@ -88,6 +91,16 @@ class WeblateApi(Request):
                                (self.project['slug'], component['slug']),
                                {'operation': operation})
         return result['result']
+
+    @contextmanager
+    def components_context_manager(self):
+        try:
+            for component in self.components:
+                self.component_lock(component)
+            yield
+        finally:
+            for component in self.components:
+                self.component_unlock(component)
 
     def component_lock(self, component):
         while True:
