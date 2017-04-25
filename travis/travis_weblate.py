@@ -49,8 +49,8 @@ class TravisWeblateUpdate(object):
         self._addons_list = list(self._main_depends)
         self._connection_context = context_mapping.get(
             self._odoo_version, Odoo10Context)
-        self._get_modules_installed()
         self._apply_patch_odoo()
+        self._get_modules_installed()
 
     def _check(self):
         self.wl_api._check()
