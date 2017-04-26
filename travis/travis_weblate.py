@@ -180,12 +180,12 @@ class TravisWeblateUpdate(object):
         if commit:
             for component in self.wl_api.components:
                 self.wl_api.component_repository(component, 'reset')
+                self.wl_api.component_repository(component, 'pull')
         return commit
 
     def update(self):
         self._check()
         self.wl_api.load_project(self.repo_slug, self.branch)
-        self.wl_api.pull()
         if not self.wl_api.components:
             print yellow("No component found for %s" % self.repo_slug)
             return 1
