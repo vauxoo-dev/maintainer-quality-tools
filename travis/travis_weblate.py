@@ -15,6 +15,12 @@ from git_run import GitRun
 
 class TravisWeblateUpdate(object):
 
+    GIT_COMMIT_INFO = {
+        'author': 'Weblate bot <weblate@bot>',
+        'message': '[REF] i18n: Updating translation terms from weblate '
+                   '[ci skip]'
+    }
+
     def __init__(self):
         self._git = GitRun(os.path.join(os.getcwd(), '.git'), True)
         self.repo_slug = os.environ.get("TRAVIS_REPO_SLUG")
@@ -158,11 +164,23 @@ class TravisWeblateUpdate(object):
                            "--no-edit"])
         else:
             self._git.run(["commit", "--no-verify",
-                           "--author='Weblate bot <weblate@bot>'",
-                           "-m", "[REF] i18n: Updating translation "
-                           "terms from weblate [ci skip]"])
+                           "--author='%s'" % self.GIT_COMMIT_INFO['author'],
+                           "-m", self.GIT_COMMIT_INFO['message']])
             first_commit = True
         return first_commit
+
+    def _push_git_repository(self):
+        po_files = self._git.run(["show", "--format=format:'%H'",
+                                  "--name-only"]).split('\n')
+        if not len(po_files) > 1:
+            return False
+        commit = self.gh_api.create_commit(self.GIT_COMMIT_INFO['message'],
+                                           self.branch,
+                                           po_files[1:])
+        if commit:
+            for component in self.wl_api.components:
+                self.wl_api.component_repository(component, 'reset')
+        return commit
 
     def update(self):
         self._check()
@@ -199,9 +217,8 @@ class TravisWeblateUpdate(object):
                 if self._check_conflict(component):
                     break
                 first_commit = self._commit_weblate(first_commit)
-            self._git.run(["push", "origin", self.branch])
-            for component in self.wl_api.components:
-                self.wl_api.component_repository(component, 'reset')
+            if not self._push_git_repository():
+                return 1
         return 0
 
 
