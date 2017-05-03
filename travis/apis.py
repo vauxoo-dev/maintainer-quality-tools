@@ -58,7 +58,7 @@ class WeblateApi(Request):
         self.branch = branch
         projects = self._request(self.host + '/projects')
         for project in projects['results']:
-            if project['web'].endswith(repo_slug):
+            if project['name'] == repo_slug:
                 return project
         raise ApiException('No project found in "%s" for this path "%s"' %
                            (self.host, repo_slug))

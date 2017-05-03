@@ -23,9 +23,17 @@ class TravisWeblateUpdate(object):
 
     def __init__(self):
         self._git = GitRun(os.path.join(os.getcwd(), '.git'), True)
-        self.repo_slug = os.environ.get("TRAVIS_REPO_SLUG")
         self.branch = os.environ.get("TRAVIS_BRANCH",
                                      self._git.get_branch_name())
+        remote = self._git.run(["ls-remote", "--get-url", "origin"])
+        slug = ''
+        if '@' in remote:
+            slug = remote.split('@')[1:].pop().replace('/', '-')
+        if (any([pre for pre in ['http://', 'https://'] if pre in remote])):
+            slug = remote.replace(
+                'https://', '').replace('http://', '').split('/')
+            slug = slug[0] + ':' + slug[1] + '-' + slug[2]
+        self.repo_slug = (slug.replace('.git', '') + '(' + self.branch + ')')
         self.wl_api = WeblateApi()
         self.gh_api = GitHubApi()
         self._travis_home = os.environ.get("HOME", "~/")
