@@ -2,6 +2,7 @@
 # coding: utf-8
 
 import os
+import re
 import glob
 import subprocess
 
@@ -26,14 +27,22 @@ class TravisWeblateUpdate(object):
         self.branch = os.environ.get("TRAVIS_BRANCH",
                                      self._git.get_branch_name())
         remote = self._git.run(["ls-remote", "--get-url", "origin"])
-        slug = ''
-        if '@' in remote:
-            slug = remote.split('@')[1:].pop().replace('/', '-')
-        if (any([pre for pre in ['http://', 'https://'] if pre in remote])):
-            slug = remote.replace(
-                'https://', '').replace('http://', '').split('/')
-            slug = slug[0] + ':' + slug[1] + '-' + slug[2]
-        self.repo_slug = (slug.replace('.git', '') + '(' + self.branch + ')')
+        name = remote.replace(':', '/')
+        name = re.sub('.+@', '', name)
+        name = re.sub('.git$', '', name)
+        match_object = re.search(
+            r'(?P<host>[^/]+)/(?P<owner>[^/]+)/(?P<repo>[^/]+)', name)
+        if match_object:
+            host = match_object.group("host").replace(
+                'https://', '').replace('http://', '')
+            owner = match_object.group("owner")
+            repo = match_object.group("repo")
+            name = '%(host)s:%(owner)s/%(repo)s' % {
+                'host': host,
+                'owner': owner,
+                'repo': repo
+            }
+        self.repo_name = name + '(' + self.branch + ')'
         self.wl_api = WeblateApi()
         self.gh_api = GitHubApi()
         self._travis_home = os.environ.get("HOME", "~/")
@@ -155,7 +164,8 @@ class TravisWeblateUpdate(object):
         self._git.run(["push", "-f", "origin", branch_name])
         pull = self.gh_api.create_pull_request({
             'title': '[REF] i18n: Conflict on the daily cron',
-            'head': '%s:%s' % (self.repo_slug.split('/')[0], branch_name),
+            'head': '%s:%s' % (self.repo_name.split('/')[0].split(':')[1],
+                               branch_name),
             'base': self.branch,
             'body': status
         })
@@ -194,9 +204,9 @@ class TravisWeblateUpdate(object):
 
     def update(self):
         self._check()
-        self.wl_api.load_project(self.repo_slug, self.branch)
+        self.wl_api.load_project(self.repo_name, self.branch)
         if not self.wl_api.components:
-            print yellow("No component found for %s" % self.repo_slug)
+            print yellow("No component found for %s" % self.repo_name)
             return 1
         with self.wl_api.componet_lock():
             self._git.run(["fetch", "origin"])

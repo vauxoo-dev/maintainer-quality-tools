@@ -54,11 +54,11 @@ class WeblateApi(Request):
         self.tempdir = os.path.join(tempfile.gettempdir(), 'weblate_api')
 
     def get_project(self, repo_slug, branch):
-        self.repo_slug = repo_slug
         self.branch = branch
         projects = self._request(self.host + '/projects')
         for project in projects['results']:
             if project['name'] == repo_slug:
+                self.repo_slug = project['slug']
                 return project
         raise ApiException('No project found in "%s" for this path "%s"' %
                            (self.host, repo_slug))
@@ -99,19 +99,18 @@ class WeblateApi(Request):
     def componet_lock(self):
         try:
             for component in self.components:
-                self._component_toggle(component)
+                self._component_lock(component)
             yield
         finally:
             for component in self.components:
-                self._component_toggle(component)
+                self._component_lock(component, lock=False)
 
-    def _component_toggle(self, component):
+    def _component_lock(self, component, lock=True):
         url = (self.host + '/components/%s/%s/lock/' %
                (self.project['slug'], component['slug']))
-        new_status = not self._request(url)['locked']
         while True:
-            lock = self._request(url, {'lock': new_status})
-            if lock['locked'] == new_status:
+            new_lock = self._request(url, {'lock': lock})
+            if new_lock['locked'] == lock:
                 break
             time.sleep(60)
         return True
