@@ -96,32 +96,25 @@ class WeblateApi(Request):
         return result['result']
 
     @contextmanager
-    def components_context_manager(self):
+    def componet_lock(self):
         try:
             for component in self.components:
-                self.component_lock(component)
+                self._component_toggle(component)
             yield
         finally:
             for component in self.components:
-                self.component_unlock(component)
+                self._component_toggle(component)
 
-    def component_lock(self, component):
+    def _component_toggle(self, component):
+        url = (self.host + '/components/%s/%s/lock/' %
+               (self.project['slug'], component['slug']))
+        new_status = not self._request(url)['locked']
         while True:
-            url = (self.host + '/components/%s/%s/lock/' %
-                   (self.project['slug'], component['slug']))
-            lock = self._request(url)
-            if not lock['locked']:
-                lock = self._request(url, {'lock': True})
-                if lock['locked']:
-                    break
+            lock = self._request(url, {'lock': new_status})
+            if lock['locked'] == new_status:
+                break
             time.sleep(60)
         return True
-
-    def component_unlock(self, component):
-        lock = self._request(self.host + '/components/%s/%s/lock/' %
-                             (self.project['slug'], component['slug']),
-                             {'lock': False})
-        return lock['locked']
 
 
 class GitHubApi(Request):

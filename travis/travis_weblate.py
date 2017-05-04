@@ -112,9 +112,10 @@ class TravisWeblateUpdate(object):
             for lang in self._langs:
                 if os.path.isfile(os.path.join(i18n_folder, lang + '.po')):
                     continue
+                po_content = odoo_context.get_pot_contents(module, lang)
                 with open(os.path.join(i18n_folder, lang + '.po'), 'wb')\
                         as f_po:
-                    f_po.write(odoo_context.get_pot_contents(module, lang))
+                    f_po.write(po_content)
             for po_file_name in po_files:
                 lang = os.path.basename(os.path.splitext(po_file_name)[0])
                 if self._langs and lang not in self._langs:
@@ -197,7 +198,7 @@ class TravisWeblateUpdate(object):
         if not self.wl_api.components:
             print yellow("No component found for %s" % self.repo_slug)
             return 1
-        with self.wl_api.components_context_manager():
+        with self.wl_api.componet_lock():
             self._git.run(["fetch", "origin"])
             first_commit = False
             for component in self.wl_api.components:
