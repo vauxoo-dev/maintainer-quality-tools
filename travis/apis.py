@@ -170,4 +170,4 @@ class GitHubApi(Request):
             (self._owner, self._repo, branch),
             json.dumps({'sha': info_commit['sha']}),
             patch=True)
-        return bool(info_commit['sha'] == update_branch['object']['sha'])
+        return info_commit['sha'] == update_branch['object']['sha']

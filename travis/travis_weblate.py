@@ -47,8 +47,6 @@ class TravisWeblateUpdate(object):
         self.gh_api = GitHubApi()
         self._travis_home = os.environ.get("HOME", "~/")
         self._travis_build_dir = os.environ.get("TRAVIS_BUILD_DIR", "../..")
-        self._odoo_exclude = os.environ.get("EXCLUDE")
-        self._odoo_include = os.environ.get("INCLUDE")
         self._odoo_version = os.environ.get("VERSION")
         self._odoo_branch = os.environ.get("ODOO_BRANCH")
         self._langs = (parse_list(os.environ.get("LANG_ALLOWED")) if
@@ -61,15 +59,6 @@ class TravisWeblateUpdate(object):
         self._addons_path = get_addons_path(self._travis_home,
                                             self._travis_build_dir,
                                             self._server_path)
-        self._addons_list = get_addons_to_check(self._travis_build_dir,
-                                                self._odoo_include,
-                                                self._odoo_exclude)
-        self._all_depends = (
-            get_depends(self._addons_path, self._addons_list) +
-            self._addons_list)
-        self._main_modules = set(os.listdir(self._travis_build_dir))
-        self._main_depends = self._main_modules & set(self._all_depends)
-        self._addons_list = list(self._main_depends)
         self._connection_context = context_mapping.get(
             self._odoo_version, Odoo10Context)
         self._apply_patch_odoo()
@@ -89,10 +78,11 @@ class TravisWeblateUpdate(object):
             s_file = os.path.join(self._server_path, path)
             if not os.path.isfile(s_file):
                 continue
-            cmd = ("sed -i -e \"s/row\\['translation'] = src/"
-                   "row['translation'] = ''/g\" %s" % s_file)
-            print cmd
-            subprocess.call(cmd, shell=True)
+            cmd = ["sed", "-i", "-e",
+                   r"s/translation'] = src/translation'] = ''/g",
+                   s_file]
+            print " ".join(cmd)
+            subprocess.call(cmd)
 
     def _get_modules_installed(self):
         self._installed_modules = []
@@ -122,6 +112,8 @@ class TravisWeblateUpdate(object):
                 if os.path.isfile(os.path.join(i18n_folder, lang + '.po')):
                     continue
                 po_content = odoo_context.get_pot_contents(module, lang)
+                if not po_content:
+                    continue
                 with open(os.path.join(i18n_folder, lang + '.po'), 'wb')\
                         as f_po:
                     f_po.write(po_content)
