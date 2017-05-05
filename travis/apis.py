@@ -108,7 +108,7 @@ class WeblateApi(Request):
     def _component_lock(self, component, lock=True):
         url = (self.host + '/components/%s/%s/lock/' %
                (self.project['slug'], component['slug']))
-        while True:
+        for i in range(10):
             new_lock = self._request(url, {'lock': lock})
             if new_lock['locked'] == lock:
                 break
