@@ -5,6 +5,7 @@ import os
 import tempfile
 import time
 import json
+import urllib
 from contextlib import contextmanager
 import requests
 
@@ -18,24 +19,27 @@ class Request(object):
     def __init__(self):
         self.session = requests.Session()
 
-    def _check(self):
+    def _get_headers(self):
+        return {'Authorization': 'Token %s' % self._token}
+
+    def _check(self, url=''):
         if not self._token:
             raise ApiException("WARNING! Token not defined exiting early.")
-        self.session.headers.update({
+        self.session.headers.update(dict({
             'Accept': 'application/json',
+            'Content-Type': 'application/json',
             'User-Agent': 'mqt',
-            'Authorization': 'Token %s' % self._token
-        })
-        self._request(self.host)
+        }.items() + self._get_headers().items()))
+        self._request('%s/%s' % (self.host, url))
 
     def _request(self, url, payload=None, is_json=True, patch=False):
         try:
             if not payload and not patch:
                 response = self.session.get(url)
             elif patch:
-                response = self.session.patch(url, data=payload)
+                response = self.session.patch(url, data=json.dumps(payload))
             else:
-                response = self.session.post(url, data=payload)
+                response = self.session.post(url, data=json.dumps(payload))
             response.raise_for_status()
         except requests.RequestException as error:
             raise ApiException(str(error))
@@ -116,18 +120,37 @@ class WeblateApi(Request):
         return True
 
 
-class GitHubApi(Request):
+class Api(Request):
 
-    def __init__(self):
-        super(GitHubApi, self).__init__()
+    def __init__(self, host=''):
+        super(Api, self).__init__()
         self._token = os.environ.get("GITHUB_TOKEN")
-        self.host = "https://api.github.com"
         self._owner, self._repo = os.environ.get("TRAVIS_REPO_SLUG").split('/')
+        self.host = host
 
-    def create_pull_request(self, data):
-        pull = self._request(self.host + '/repos/%s/%s/pulls' %
-                             (self._owner, self._repo), json.dumps(data))
-        return pull
+    def _check(self, url=''):
+        super(Api, self)._check('user')
+
+    @staticmethod
+    def get(git):
+        host = ''
+        protocol = 'https'
+        remote = git.run(["remote", "get-url", "origin"])
+        if '@' in remote:
+            host = remote.split('@')[1].split(':')[0].split('/')[0]
+        elif any([pro for pro in ['https://', 'http://'] if pro in remote]):
+            protocol = remote.split(':')[0]
+            host = remote.replace('https://', '').replace('http://', '')
+            host = host.split('/')[0]
+        if 'github.com' in host:
+            return GitHubApi()
+        return GitLabApi("%s://%s/api/v3" % (protocol, host))
+
+
+class GitHubApi(Api):
+
+    def __init__(self, host='https://api.github.com'):
+        super(GitHubApi, self).__init__(host)
 
     def create_commit(self, message, branch, files):
         tree = []
@@ -139,10 +162,10 @@ class GitHubApi(Request):
             (self._owner, self._repo, info_branch['object']['sha']))
         for item in files:
             with open(item) as f_po:
-                blob_data = json.dumps({
+                blob_data = {
                     'content': base64.b64encode(f_po.read()),
                     'encoding': 'base64'
-                })
+                }
                 blob_sha = self._request(
                     self.host + '/repos/%s/%s/git/blobs' %
                     (self._owner, self._repo), blob_data)
@@ -152,22 +175,53 @@ class GitHubApi(Request):
                     'type': 'blob',
                     'sha': blob_sha['sha']
                 })
-        tree_data = json.dumps({
+        tree_data = {
             'base_tree': branch_commit['tree']['sha'],
             'tree': tree
-        })
+        }
         info_tree = self._request(self.host + '/repos/%s/%s/git/trees' %
                                   (self._owner, self._repo), tree_data)
-        commit_data = json.dumps({
+        commit_data = {
             'message': message,
             'tree': info_tree['sha'],
             'parents': [branch_commit['sha']]
-        })
+        }
         info_commit = self._request(self.host + '/repos/%s/%s/git/commits' %
                                     (self._owner, self._repo), commit_data)
         update_branch = self._request(
             self.host + '/repos/%s/%s/git/refs/heads/%s' %
             (self._owner, self._repo, branch),
-            json.dumps({'sha': info_commit['sha']}),
+            {'sha': info_commit['sha']},
             patch=True)
         return info_commit['sha'] == update_branch['object']['sha']
+
+
+class GitLabApi(Api):
+
+    def __init__(self, host='https://gitlab.com/api/v3'):
+        super(GitLabApi, self).__init__(host)
+        self.name_project = urllib.quote('%s/%s' % (self._owner, self._repo),
+                                         safe='')
+
+    def _get_headers(self):
+        return {'PRIVATE-TOKEN': '%s' % self._token}
+
+    def create_commit(self, message, branch, files):
+        actions = []
+        for item in files:
+            with open(item) as f_po:
+                actions.append({
+                    'action': 'update',
+                    'file_path': item,
+                    'encoding': 'base64',
+                    'content': base64.b64encode(f_po.read())
+                })
+        data = {
+            'branch_name': branch,
+            'commit_message': message,
+            'actions': actions
+        }
+        info_commit = self._request(self.host +
+                                    '/projects/%s/repository/commits' %
+                                    (self.name_project), data)
+        return 'id' in info_commit
