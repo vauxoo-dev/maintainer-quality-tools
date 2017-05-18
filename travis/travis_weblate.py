@@ -158,8 +158,8 @@ class TravisWeblateUpdate(object):
         if not len(po_files) > 1:
             return False
         commit = self.git_api.create_commit(self.GIT_COMMIT_INFO['message'],
-                                           self.branch,
-                                           po_files[1:])
+                                            self.branch,
+                                            po_files[1:])
         if commit:
             for component in self.wl_api.components:
                 self.wl_api.component_repository(component, 'reset')
