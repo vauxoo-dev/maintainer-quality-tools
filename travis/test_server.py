@@ -348,7 +348,9 @@ def main(argv=None):
         argv = sys.argv
     run_from_env_var('RUN_COMMAND_MQT', os.environ)
     travis_home = os.environ.get("HOME", "~/")
-    travis_build_dir = os.environ.get("TRAVIS_BUILD_DIR", "../..")
+    travis_build_dir = os.environ.get("TRAVIS_BUILD_DIR",
+                                      os.environ.get('CI_PROJECT_DIR',
+                                                     "../.."))
     odoo_unittest = str2bool(os.environ.get("UNIT_TEST"))
     odoo_exclude = os.environ.get("EXCLUDE")
     odoo_include = os.environ.get("INCLUDE")

@@ -76,14 +76,18 @@ def get_extra_params(odoo_version):
                 params.extend(['--' + option, value])
     return params
 
-git_work_dir = os.environ.get('TRAVIS_BUILD_DIR', False)
-is_pull_request = os.environ.get(
-    'TRAVIS_PULL_REQUEST', 'false') != 'false'
-branch_base = os.environ.get('TRAVIS_BRANCH', False)
+git_work_dir = os.environ.get('TRAVIS_BUILD_DIR',
+                              os.environ.get('CI_PROJECT_DIR', False))
+is_pull_request = os.environ.get('TRAVIS_PULL_REQUEST',
+                                 os.environ.get('CI_MERGE_REQUEST', 'false'))
+is_pull_request = is_pull_request != 'false'
+branch_base = os.environ.get('TRAVIS_BRANCH',
+                             os.environ.get('CI_COMMIT_REF_NAME', False))
 
 extra_params_cmd = [
     '--extra-params', '--load-plugins=pylint_odoo',
 ]
+
 
 def get_beta_msgs():
     '''Get beta msgs from beta.cfg file
@@ -140,7 +144,9 @@ if os.environ.get('INCLUDE_LINT'):
     for path in os.environ.get('INCLUDE_LINT', '').split(' '):
         modules_cmd.extend(['--path', path])
 else:
-    modules_cmd.extend(["--path", os.environ.get('TRAVIS_BUILD_DIR')])
+    modules_cmd.extend(["--path",
+                        os.environ.get('TRAVIS_BUILD_DIR',
+                                       os.environ.get('CI_PROJECT_DIR', ''))])
 if os.environ.get('EXCLUDE_LINT'):
     modules_cmd.extend(['--ignore=%s' % path for path in
                         os.environ.get('EXCLUDE_LINT', '').split(',') if path])

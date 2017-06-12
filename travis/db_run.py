@@ -17,7 +17,9 @@ def run(cmd, env=None):
 
 def get_default_fname(dbname):
     fname = os.path.join(
-        os.path.expanduser(os.environ.get('TRAVIS_BUILD_DIR', '~')),
+        os.path.expanduser(os.environ.get('TRAVIS_BUILD_DIR',
+                                          os.environ.get('CI_PROJECT_DIR',
+                                                         '~'))),
         dbname + '.backup'
     )
     return fname

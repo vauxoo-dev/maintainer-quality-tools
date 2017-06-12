@@ -56,12 +56,16 @@ if __name__ == '__main__':
     tests_unspecified = os.environ.get('TESTS') is None
     transifex_enabled = os.environ.get('TRANSIFEX') == '1'
     weblate_enabled = os.environ.get('WEBLATE') == '1'
-    is_oca_project = os.environ.get('TRAVIS_REPO_SLUG', '').startswith('OCA/')
+    is_oca_project = os.environ.get('TRAVIS_REPO_SLUG',
+                                    os.environ.get('CI_PROJECT_PATH', ''))
+    is_oca_project = is_oca_project.startswith('OCA/')
     is_oca_transifex_user = os.environ.get('TRANSIFEX_USER') == \
         'transbot@odoo-community.org'
 
     # TRAVIS_PULL_REQUEST contains the pull request number or 'false'
-    is_pull_request = os.environ.get('TRAVIS_PULL_REQUEST') != 'false'
+    is_pull_request = os.environ.get('TRAVIS_PULL_REQUEST',
+                                     os.environ.get('CI_MERGE_REQUEST', ''))
+    is_pull_request = is_pull_request != 'false'
     # Avoid false red from forks using OCA transifex user
     is_valid_transifex = not is_pull_request and \
         is_oca_project == is_oca_transifex_user
@@ -75,7 +79,8 @@ if __name__ == '__main__':
     # Test module structure
     if do_odoo_lint:
         tests.append(['test_odoo_lint', '-p',
-                      os.environ.get("TRAVIS_BUILD_DIR")])
+                      os.environ.get("TRAVIS_BUILD_DIR",
+                                     os.environ.get("CI_PROJECT_DIR", ''))])
     if tests_unspecified and not lint_check_enabled:
         tests.append(['test_server.py'])
 

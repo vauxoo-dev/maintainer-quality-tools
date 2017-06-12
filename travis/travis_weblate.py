@@ -24,7 +24,9 @@ class TravisWeblateUpdate(object):
     def __init__(self):
         self._git = GitRun(os.path.join(os.getcwd(), '.git'), True)
         self.branch = os.environ.get("TRAVIS_BRANCH",
-                                     self._git.get_branch_name())
+                                     os.environ.get('CI_COMMIT_REF_NAME',
+                                                    self._git.get_branch_name()
+                                                    ))
         remote = self._git.run(["ls-remote", "--get-url", "origin"])
         name = remote.replace(':', '/')
         name = re.sub('.+@', '', name)
@@ -40,7 +42,8 @@ class TravisWeblateUpdate(object):
         self.wl_api = WeblateApi()
         self.gh_api = GitHubApi()
         self._travis_home = os.environ.get("HOME", "~/")
-        self._travis_build_dir = os.environ.get("TRAVIS_BUILD_DIR", "../..")
+        self._travis_build_dir = (os.environ.get("TRAVIS_BUILD_DIR") or
+                                  os.environ.get('CI_PROJECT_DIR', "../.."))
         self._odoo_version = os.environ.get("VERSION")
         self._odoo_branch = os.environ.get("ODOO_BRANCH")
         self._langs = (parse_list(os.environ.get("LANG_ALLOWED")) if

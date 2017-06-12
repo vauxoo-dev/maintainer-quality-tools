@@ -39,8 +39,11 @@ def main(argv=None):
         return 1
 
     travis_home = os.environ.get("HOME", "~/")
-    travis_build_dir = os.environ.get("TRAVIS_BUILD_DIR", "../..")
-    travis_repo_slug = os.environ.get("TRAVIS_REPO_SLUG")
+    travis_build_dir = os.environ.get("TRAVIS_BUILD_DIR",
+                                      os.environ.get('CI_PROJECT_DIR',
+                                                     "../.."))
+    travis_repo_slug = os.environ.get("TRAVIS_REPO_SLUG",
+                                      os.environ.get('CI_PROJECT_PATH'))
     travis_repo_owner = travis_repo_slug.split("/")[0]
     travis_repo_shortname = travis_repo_slug.split("/")[1]
     odoo_unittest = False
