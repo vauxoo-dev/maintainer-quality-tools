@@ -3,12 +3,14 @@ set -v
 
 if [ "${LINT_CHECK}" != "0" ]; then
     if [ -f "${HOME}/.nvm/nvm.sh" ]; then
+        echo "Configuring the nvm"
         # Update nodejs v6.latest required by eslint
         # Using nvm of travis
         CURRENT_NODE=$(which node)
         source ${HOME}/.nvm/nvm.sh
         nvm install 6
         ln -sf $(nvm which 6) $CURRENT_NODE
+        echo "source $HOME/.nvm/nvm.sh" >> ${HOME}/.bashrc
     fi
     pip install -q QUnitSuite flake8 Click
 
