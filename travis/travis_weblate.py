@@ -24,9 +24,7 @@ class TravisWeblateUpdate(object):
     def __init__(self):
         self._git = GitRun(os.path.join(os.getcwd(), '.git'), True)
         self.branch = os.environ.get("TRAVIS_BRANCH",
-                                     os.environ.get('CI_COMMIT_REF_NAME',
-                                                    self._git.get_branch_name()
-                                                    ))
+                                     self._git.get_branch_name())
         remote = self._git.run(["ls-remote", "--get-url", "origin"])
         name = remote.replace(':', '/')
         name = re.sub('.+@', '', name)

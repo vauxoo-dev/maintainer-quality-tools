@@ -7,6 +7,8 @@ import time
 import json
 from contextlib import contextmanager
 import requests
+import urllib
+import re
 
 
 class ApiException(Exception):
@@ -18,6 +20,9 @@ class Request(object):
     def __init__(self):
         self.session = requests.Session()
 
+    def _get_headers(self):
+        return {'Authorization': 'Token %s' % self._token}
+
     def _check(self):
         if not self._token:
             raise ApiException("WARNING! Token not defined exiting early.")
@@ -26,6 +31,7 @@ class Request(object):
             'User-Agent': 'mqt',
             'Authorization': 'Token %s' % self._token
         })
+        self.session.headers.update(self._get_headers())
         self._request(self.host)
 
     def _request(self, url, payload=None, is_json=True, patch=False):
@@ -178,3 +184,59 @@ class GitHubApi(Request):
             json.dumps({'sha': info_commit['sha']}),
             patch=True)
         return info_commit['sha'] == update_branch['object']['sha']
+
+
+class GitLabApi(Request):
+
+    def __init__(self, host="https://git.vauxoo.com"):
+        super(GitLabApi, self).__init__()
+        self.host = host
+        self.url = host+"/api/v4"
+        self._token = os.environ.get("CI_TOKEN")
+        self._id = os.environ.get("CI_PROJECT_ID")
+        self.branch_ref = os.environ.get('CI_COMMIT_REF_NAME')
+        self.remote_url = None
+
+    def _get_headers(self):
+        return {'PRIVATE-TOKEN': '%s' % self._token}
+
+    def get_project(self):
+        res = {}
+        url_project = urllib.quote('/projects/%s' % self._id)
+        data = self._request(self.url+url_project)
+        fork_project = data.get('forked_from_project', {})
+        res.update({'id': fork_project.get('id', data.get('id')),
+                    'remote': fork_project.get('http_url_to_repo',
+                                               data.get('http_url_to_repo'))})
+        return res
+
+    def get_merge_request(self):
+        res = {}
+        project = self.get_project()
+        self.remote_url = project.get('remote')
+        url_merge = urllib.quote("/projects/%s/merge_requests" %
+                                 project.get('id'))
+        merge_request = self._request(self.url+url_merge)
+        for data in merge_request:
+            if data.get('source_branch') == self.branch_ref:
+                res = data
+                break
+        return res
+
+    def get_environments(self):
+        self._check()
+        environments = {'CI_MERGE_REQUEST': False,
+                        'CI_BRANCH': None}
+        data = self.get_merge_request()
+        if data.get('state') == 'opened':
+            environments['CI_MERGE_REQUEST'] = True
+        environments['CI_BRANCH'] = data.get('target_branch')
+        return environments
+
+    def get_gitlab_remote(self):
+        remote = re.sub(r'https?://', '', self.remote_url)
+        url = "https://{register}:{token}@{remote}"
+        url = url.format(register=os.environ.get('CI_REGISTRY_USER'),
+                         token=os.environ.get('CI_JOB_TOKEN'),
+                         remote=re.sub(r'https?://', '', remote))
+        return url

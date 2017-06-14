@@ -52,6 +52,21 @@ import travis_helpers
 
 from getaddons import get_modules_changed
 from git_run import GitRun
+from apis import GitLabApi
+
+
+def get_gitlab_environments():
+    if not os.environ.get('GITLAB_CI'):
+        return {}
+    glb = GitLabApi()
+    envars = glb.get_environments() or {}
+    repo_path = os.path.join(os.environ.get('CI_PROJECT_DIR', ''),
+                             '.git')
+    gitrun = GitRun(repo_path)
+    remote = gitrun.run(["remote", "get-url", "origin"])
+    if remote != glb.remote_url:
+        gitrun.run(['remote', 'set-url', 'origin', glb.get_gitlab_remote()])
+    return envars
 
 
 def get_extra_params(odoo_version):
@@ -76,13 +91,15 @@ def get_extra_params(odoo_version):
                 params.extend(['--' + option, value])
     return params
 
+ci_envars = get_gitlab_environments()
+
 git_work_dir = os.environ.get('TRAVIS_BUILD_DIR',
                               os.environ.get('CI_PROJECT_DIR', False))
 is_pull_request = os.environ.get('TRAVIS_PULL_REQUEST',
-                                 os.environ.get('CI_MERGE_REQUEST', 'false'))
+                                 ci_envars.get('CI_MERGE_REQUEST', 'false'))
 is_pull_request = is_pull_request != 'false'
 branch_base = os.environ.get('TRAVIS_BRANCH',
-                             os.environ.get('CI_COMMIT_REF_NAME', False))
+                             ci_envars.get('CI_BRANCH', False))
 
 extra_params_cmd = [
     '--extra-params', '--load-plugins=pylint_odoo',
