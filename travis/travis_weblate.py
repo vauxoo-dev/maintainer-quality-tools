@@ -72,11 +72,14 @@ class TravisWeblateUpdate(object):
             s_file = os.path.join(self._server_path, path)
             if not os.path.isfile(s_file):
                 continue
-            cmd = ["sed", "-i", "-e",
-                   r"s/translation'] = src/translation'] = ''/g",
-                   s_file]
-            print " ".join(cmd)
-            subprocess.call(cmd)
+            cmds = []
+            cmds.append(("sed", "-i", "-e",
+                         r"s/translation'] = src/translation'] = ''/g",
+                         s_file))
+            cmds.append(("sed", "-i", "-e", r"s/and trad != src:/:/g", s_file))
+            for cmd in cmds:
+                print " ".join(cmd)
+                subprocess.call(cmd)
 
     def _get_modules_installed(self):
         self._installed_modules = []
