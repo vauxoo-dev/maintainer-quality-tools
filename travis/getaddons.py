@@ -84,7 +84,135 @@ def get_addons(path):
         res = [os.path.join(path, x)
                for x in os.listdir(path)
                if is_addons(os.path.join(path, x))]
-    return res
+    deps = dict([(addon, get_dependencies(addon))
+                 for addon in res])
+    sorted_addons = get_sorted_addons_by_level(deps)
+    return sorted_addons
+
+
+def get_dependencies(path):
+    """Gets the dependencies of an addon reading the `oca_dependencies.txt`
+    file.
+
+    :param path: The addon path
+    :rtype: str
+
+    :returns: The dependency list
+    :rtype: list
+    """
+    deps = []
+    dep_files = ['oca_dependencies.txt']
+    for dep_file in dep_files:
+        dep_path = os.path.join(path, dep_file)
+        try:
+            with open(dep_path) as dep:
+                for line in dep:
+                    line = line.strip()
+                    if not line or line.startswith('#'):
+                        continue
+                    deps.append(line.split()[0])
+        except IOError:
+            continue
+    return deps
+
+
+def get_sorted_addons_by_level(addons):
+    """Sorts a list of addons according to its level, and followed
+    by its dependencies also sorted by level.
+
+    It first sorts the addons using `sort_addons_by_level` and then
+    it puts the dependencies after their parents. This to keep the addons
+    with higher dependency level first and then its addons also sorted by
+    level.
+
+    :param addons: The addons with their dependencies.
+    :type addons: dict
+
+    :returns: The addons sorted by level
+    :rtype: list
+
+    Example::
+
+        get_sorted_addons_by_level({
+            "e": [],
+            "r": ["x"],
+            "c": [],
+            "t": ["r", "c"],
+            "x": ["e"],
+        })
+
+    Returns::
+
+        ["t", "r", "c", "x", "e"]
+
+    """
+    sorted_addons = []
+    addons_by_level = sort_addons_by_level(addons)
+    addons_list = sorted(addons_by_level.keys(),
+                         key=lambda dep: -addons_by_level.get(dep))
+    for addon in addons_list:
+        if addon not in sorted_addons:
+            sorted_addons.append(addon)
+        for dep in addons.get(addon, []):
+            dep_addon = os.path.join(os.path.dirname(addon), dep)
+            if dep_addon not in sorted_addons:
+                sorted_addons.append(dep_addon)
+    return sorted_addons
+
+
+def sort_addons_by_level(addons, _key=False, _res=False):
+    """Reads a dict of addons with dependencies and assigns a "level" that
+    represents how deep its dependencies go.
+
+    :param addons: The addons with their dependencies.
+    :type addons: dict
+
+    :param _key: This is for recursion purposes. Do not pass when calling
+        from the outside.
+    :param _res: This is for recursion purposes. Do not pass when calling
+        from the outside.
+
+    :returns: The addons with the level
+    :rtype: dict
+
+    Example::
+
+        sort_addons_by_level({
+            "e": [],
+            "r": ["x"],
+            "c": [],
+            "t": ["r", "c"],
+            "x": ["e"],
+        })
+
+    Returns::
+
+        {
+            "t": 3,
+            "r": 2,
+            "x": 1,
+            "c": 0,
+            "e": 0,
+        }
+
+    In this example "t" depends on "r" that depends on "x" that depends on "e".
+    There are three "levels" of dependencies below "t".
+    """
+    _res = _res or {}
+    if not _key:
+        for _key in addons:
+            _res.update(sort_addons_by_level(addons, _key, _res))
+        return _res
+    if _res.get(_key, -1) > -1:
+        return _res
+    for dep in addons.get(_key, []):
+        _res.update(sort_addons_by_level(
+            addons, os.path.join(os.path.dirname(_key), dep), _res))
+    _res[_key] = (max([
+        _res.get(os.path.join(os.path.dirname(_key), dep), -1)
+        for dep in addons.get(_key, [])
+    ] or [-1]) + 1)
+    return _res
 
 
 def get_modules_changed(path, ref='HEAD'):
