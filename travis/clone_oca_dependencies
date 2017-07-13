@@ -28,6 +28,7 @@ import os
 import os.path as osp
 import subprocess
 import logging
+from git_update import get_repo_data
 
 
 _logger = logging.getLogger()
@@ -39,7 +40,7 @@ travis_repo_slug = os.environ.get(
 travis_repo_owner = travis_repo_slug.split("/")[0]
 
 
-def parse_depfile(depfile):
+def parse_depfile(depfile, default_owner):
     deps = []
     for line in depfile:
         line = line.strip()
@@ -54,8 +55,10 @@ def parse_depfile(depfile):
         if len(parts) > 1:
             url = parts[1]
         else:
-            url = 'https://github.com/%s/%s' % (travis_repo_owner, repo)
-        deps.append((repo, url, branch))
+            url = 'https://github.com/%s/%s' % (default_owner, repo)
+        repo_data = get_repo_data(url)
+        owner = repo_data.get('owner') or default_owner
+        deps.append((repo, url, branch, owner))
     return deps
 
 
@@ -85,13 +88,15 @@ def run(home, build_dir):
         reqfilename = osp.join(build_dir, repo, 'requirements.txt')
         if osp.isfile(reqfilename):
             reqfilenames.append(reqfilename)
+    dep_owners = {}
     for depfilename in dependencies:
         try:
+            owner = dep_owners.get(depfilename) or travis_repo_owner
             with open(depfilename) as depfile:
-                deps = parse_depfile(depfile)
+                deps = parse_depfile(depfile, owner)
         except IOError:
             deps = []
-        for depname, url, branch in deps:
+        for depname, url, branch, owner in deps:
             _logger.info('* processing %s',  depname)
             if depname in processed:
                 continue
@@ -103,6 +108,7 @@ def run(home, build_dir):
                 reqfilenames.append(reqfilename)
             if new_dep_filename not in dependencies:
                 dependencies.append(new_dep_filename)
+                dep_owners[new_dep_filename] = owner
     for reqfilename in reqfilenames:
         command = ['pip', 'install', '--no-binary', 'pycparser',
                    '-Ur', reqfilename]
@@ -118,6 +124,6 @@ if __name__ == '__main__':
         print(__doc__)
         sys.exit(1)
     else:
-        home = sys.argv[1]
-        build_dir = sys.argv[2]
+        home = osp.expanduser(sys.argv[1])
+        build_dir = osp.expanduser(sys.argv[2])
     run(home, build_dir)
