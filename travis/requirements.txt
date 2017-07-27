@@ -39,3 +39,4 @@ werkzeug
 xlwt
 # odoo-10.0
 xlsxwriter
+future==0.16
