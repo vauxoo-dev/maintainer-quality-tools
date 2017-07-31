@@ -39,3 +39,5 @@ werkzeug
 xlwt
 # odoo-10.0
 xlsxwriter
+# odoo saas-17
+PyPDF2==1.26.0
