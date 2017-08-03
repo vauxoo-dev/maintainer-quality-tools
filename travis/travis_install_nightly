@@ -108,6 +108,9 @@ fi
 # Workaround to force using system site packages (see https://github.com/Shippable/support/issues/241#issuecomment-57947925)
 rm -f $VIRTUAL_ENV/lib/python2.7/no-global-site-packages.txt
 
+# Upgrade pip 
+pip install --upgrade pip
+
 echo "Installing odoo dependencies"
 # Odoo <= 7.0 don't have requirements.txt file then the 8.0 file is used by default
 if [ ! -f ${ODOO_PATH}/requirements.txt ]; then
@@ -118,12 +121,12 @@ sed -i '/^python-ldap\=\=/d' ${ODOO_PATH}/requirements.txt
 # Use requests with [security] suffix to fix [Errno 111] Connection refused for old python2.7 versions.
 sed -i 's/^requests\=\=/requests[security]\=\=/g' ${ODOO_PATH}/requirements.txt
 
-pip install -q pycparser -r ${ODOO_PATH}/requirements.txt
+pip install --no-binary pycparser -r ${ODOO_PATH}/requirements.txt
 
 if [ "x${WITHOUT_DEPENDENCIES}" == "x" ] ; then
     echo "Installing dependencies"
     pip install --upgrade pip
-    pip install pycparser -r ${HOME}/maintainer-quality-tools/requirements.txt
+    pip install --no-binary pycparser -r ${HOME}/maintainer-quality-tools/requirements.txt
 
     pip install QUnitSuite coveralls codecov
 
