@@ -16,7 +16,7 @@ except ImportError:
     depends_error = True
 
 
-def print_pstats(sort='cumulative'):
+def print_pstats(sort='factor'):
     pstats_list = get_pstats_print2list(
         os.path.expanduser(fname_pstats),
         filter_fnames=[travis_home],
@@ -91,7 +91,7 @@ if os.environ.get('TESTS', '0') == '1' and \
     travis_py = '/home/travis/virtualenv/python2.7_with_system_site_packages'
     fname_pstats = os.environ.get("FNAME_PSTATS", '~/.openerp_server.stats')
 
-    if print_pstats('cumulative'):
+    if print_pstats('factor'):
         print_pstats('calls')
         print_pstats('time')
     if os.environ.get('DB_BACKUP', False):
