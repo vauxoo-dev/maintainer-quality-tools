@@ -2,6 +2,8 @@
 
 import base64
 import os
+import re
+import subprocess
 import tempfile
 import time
 import json
@@ -54,6 +56,18 @@ class WeblateApi(Request):
         self.ssh = os.environ.get(
             "WEBLATE_SSH", "ssh://user@webpage.com")
         self.tempdir = os.path.join(tempfile.gettempdir(), 'weblate_api')
+        self._ssh_keyscan()
+
+    def _ssh_keyscan(self):
+        cmd = "ssh-keyscan -p %s %s"
+        match = re.search(r'@(?P<port_host>[^/]+)', self.ssh)
+        if match:
+            port_host = match.groupdict()['port_host'].split(':')
+            host, port = ((port_host[0], 22) if len(port_host) == 1 else
+                          (port_host[0], port_host[1]))
+            cmd = cmd % (port, host)
+            with open(os.path.expanduser('~/.ssh/known_hosts'), 'w') as hosts:
+                subprocess.Popen(cmd.split(), stdout=hosts)
 
     def get_project(self, repo_slug, branch):
         self.branch = branch
