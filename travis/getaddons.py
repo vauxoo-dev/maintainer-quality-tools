@@ -59,16 +59,26 @@ def is_installable_module(path):
     return False
 
 
-def get_modules(path):
+def is_python_package(path):
+    """Returns if a specified directory is a python package.
+    """
+    return os.path.isfile(os.path.join(path, '__init__.py'))
+
+
+def get_modules(path, python_packages=False):
 
     # Avoid empty basename when path ends with slash
     if not os.path.basename(path):
         path = os.path.dirname(path)
 
+    exclude = os.environ.get('EXCLUDE_LINT', '').split(',')
     res = []
     if os.path.isdir(path):
         res = [x for x in os.listdir(path)
-               if is_installable_module(os.path.join(path, x))]
+               if (is_installable_module(os.path.join(path, x))
+                   or (is_python_package(x) and python_packages))
+               and x not in exclude and x]
+
     return res
 
 

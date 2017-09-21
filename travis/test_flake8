@@ -11,9 +11,11 @@ flake8_config_dir = os.path.join(root_dir, 'cfg')
 
 status = 0
 
-exclude = os.environ.get('EXCLUDE_LINT', '').split(',')
-modules = [module for module in get_modules(os.path.abspath('.'))
-           if module not in exclude]
+include = os.environ.get('INCLUDE_LINT', '').split(' ')
+paths = [os.path.abspath('.')] + include
+modules = []
+for path in paths:
+    modules.extend(os.path.join(path, mod) for mod in get_modules(path))
 
 for addon in modules:
     status += subprocess.call(['flake8', addon,

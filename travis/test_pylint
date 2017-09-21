@@ -141,9 +141,6 @@ if os.environ.get('INCLUDE_LINT'):
         modules_cmd.extend(['--path', path])
 else:
     modules_cmd.extend(["--path", os.environ.get('TRAVIS_BUILD_DIR')])
-if os.environ.get('EXCLUDE_LINT'):
-    modules_cmd.extend(['--ignore=%s' % path for path in
-                        os.environ.get('EXCLUDE_LINT', '').split(',') if path])
 
 print "modules_cmd", modules_cmd
 print "extra_params_cmd", extra_params_cmd
