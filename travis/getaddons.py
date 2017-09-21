@@ -10,8 +10,6 @@ import ast
 import os
 import sys
 
-from itertools import ifilter, imap
-
 from git_run import GitRun
 
 MANIFEST_FILES = [
@@ -125,10 +123,10 @@ def get_depends(addons_path_list, modules_list):
         assert manifest_path, "Module not found %s in addons_paths %s" % (
             module, addons_path_list)
         try:
-            manifest_filename = next(ifilter(
+            manifest_filename = next(iter(filter(
                 os.path.isfile,
-                imap(lambda p: os.path.join(p, manifest_path), addons_paths)
-            ))
+                map(lambda p: os.path.join(p, manifest_path), addons_paths)
+            )))
         except StopIteration:
             # For some reason the module wasn't found
             continue
