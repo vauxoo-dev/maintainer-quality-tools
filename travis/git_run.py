@@ -15,7 +15,7 @@ class GitRun(object):
         :return: String output of command executed.
         """
         cmd = ['git', '--git-dir=' + self.repo_path] + command
-        print cmd if self.debug else ''
+        print (cmd if self.debug else '')
         try:
             res = subprocess.check_output(cmd)
         except subprocess.CalledProcessError:
