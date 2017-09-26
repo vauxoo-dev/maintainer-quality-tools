@@ -110,7 +110,7 @@ version = os.environ.get('VERSION', False)
 if not version:
     if git_work_dir:
         repo_path = os.path.join(git_work_dir, '.git')
-        branch_name = GitRun(repo_path).get_branch_name()
+        branch_name = GitRun(repo_path, debug=True).get_branch_name()
         version = branch_name.replace('_', '-').split('-')[:1] \
             if branch_name else False
         version = version[0] if version and len(version) else None
