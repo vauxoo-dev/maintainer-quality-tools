@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from __future__ import print_function
+from six import string_types
 import subprocess
 
 
@@ -21,7 +22,7 @@ class GitRun(object):
             res = subprocess.check_output(cmd)
         except subprocess.CalledProcessError:
             res = None
-        if isinstance(res, basestring):
+        if isinstance(res, string_types):
             res = res.strip('\n')
         return res
 
