@@ -46,7 +46,10 @@ Use the following types of pylint configuration files:
 from __future__ import print_function
 import os
 import re
-import ConfigParser
+try:
+    import ConfigParser
+except ImportError:
+    import configparser as ConfigParser
 
 import run_pylint
 import travis_helpers
