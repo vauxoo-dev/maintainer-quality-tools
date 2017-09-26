@@ -97,7 +97,7 @@ def get_modules_changed(path, ref='HEAD'):
     :param ref: branch or remote/branch or sha to compare
     :return: List of paths of modules changed
     '''
-    git_run_obj = GitRun(os.path.join(path, '.git'))
+    git_run_obj = GitRun(os.path.join(path, '.git'), debug=True)
     git_run_obj.run(['fetch'] + ref.split('/'))
     items_changed = git_run_obj.get_items_changed(ref)
     folders_changed = set([
