@@ -34,7 +34,8 @@ class GitRun(object):
             e.g. "master" or "SHA_NUMBER"
         :return: List of name of items changed
         """
-        command = ['diff-index', '--name-only', '--cached', base_ref]
+        origin, branch = base_ref.split('/')
+        command = ['diff-index', '--name-only', '--cached', branch]
         res = self.run(command)
         items = res.decode().split('\n') if res else []
         return items
