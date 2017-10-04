@@ -13,9 +13,9 @@ if [ "${LINT_CHECK}" != "0" ]; then
     pip install -q QUnitSuite flake8 Click
 
     # Install pylint plugin depends without lxml
-    wget --no-check-certificate https://raw.githubusercontent.com/vauxoo/pylint-odoo/master/requirements.txt -O $(dirname ${BASH_SOURCE[0]})/pylint_odoo_requirements.txt
+    wget --no-check-certificate https://raw.githubusercontent.com/vauxoo-dev/pylint-odoo/master-vx-oca-upd8-jesuszapata/requirements.txt -O $(dirname ${BASH_SOURCE[0]})/pylint_odoo_requirements.txt
     pip install --upgrade -r $(dirname ${BASH_SOURCE[0]})/pylint_odoo_requirements.txt
-    pip install --upgrade --no-deps git+https://github.com/vauxoo/pylint-odoo.git   # To use last version ever
+    pip install --upgrade --no-deps git+https://github.com/vauxoo-dev/pylint-odoo.git@master-vx-oca-upd8-jesuszapata  # To use last version ever
     npm install -g eslint  # Extra package for pylint-odoo plugin
     # Get pylint configuration file of vauxoo
     wget -q https://raw.githubusercontent.com/Vauxoo/pylint-conf/master/conf/pylint_vauxoo_light.cfg -O ${HOME}/maintainer-quality-tools/travis/cfg/travis_run_pylint.cfg
