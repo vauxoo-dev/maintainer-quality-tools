@@ -115,6 +115,8 @@ if [ ! -f ${ODOO_PATH}/requirements.txt ]; then
 fi
 # Remove python-ldap from odoo requirements because is not a common module used
 sed -i '/^python-ldap\=\=/d' ${ODOO_PATH}/requirements.txt
+# Remove psycopg2 from odoo requirements because is not a common module used
+sed -i '/^psycopg2\=\=/d' ${ODOO_PATH}/requirements.txt
 # Use requests with [security] suffix to fix [Errno 111] Connection refused for old python2.7 versions.
 sed -i 's/^requests\=\=/requests[security]\=\=/g' ${ODOO_PATH}/requirements.txt
 
