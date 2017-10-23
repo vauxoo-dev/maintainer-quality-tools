@@ -15,7 +15,7 @@ def get_psql_conf_files(psql_conf_path=None):
 
 def get_default_log_path(directory=None, filename=None, root_path=None):
     if directory is None:
-        directory = 'pg_log'
+        directory = '/var/log/pg_log'
     if filename is None:
         filename = 'postgresql.log'
     if root_path is None:
