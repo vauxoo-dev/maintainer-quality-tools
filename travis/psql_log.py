@@ -13,13 +13,9 @@ def get_psql_conf_files(psql_conf_path=None):
             yield fname_conf
 
 
-def get_default_log_path(directory=None, filename=None, root_path=None):
-    if directory is None:
-        directory = '/var/log/pg_log'
-    if filename is None:
-        filename = 'postgresql.log'
-    if root_path is None:
-        root_path = '/var/lib/postgresql/*/main*'
+def get_default_log_path(directory='/var/log/pg_log',
+                         filename='postgresql.log',
+                         root_path='/var/lib/postgresql/*/main*'):
     full_path = os.path.join(root_path, directory, filename)
     return [full_path, root_path, directory, filename]
 
