@@ -10,6 +10,10 @@ if [ "${LINT_CHECK}" != "0" ]; then
         nvm install 6
         ln -sf $(nvm which 6) $CURRENT_NODE
     fi
+    echo "*****"
+    echo "Install the pip requirements using the python version"
+    python -V
+    echo "*****"
     pip install -q QUnitSuite flake8 Click
 
     # Install pylint plugin depends without lxml
