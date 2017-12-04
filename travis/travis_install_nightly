@@ -19,10 +19,10 @@ if [ "${LINT_CHECK}" != "0" ]; then
     pip install --upgrade --no-deps git+https://github.com/vauxoo/pylint-odoo.git   # To use last version ever
     npm install -g eslint  # Extra package for pylint-odoo plugin
     # Get pylint configuration file of vauxoo
-    wget -q https://raw.githubusercontent.com/Vauxoo/pylint-conf/master/conf/pylint_vauxoo_light.cfg -O ${HOME}/maintainer-quality-tools/travis/cfg/travis_run_pylint.cfg
-    wget -q https://raw.githubusercontent.com/Vauxoo/pylint-conf/master/conf/pylint_vauxoo_light_pr.cfg -O ${HOME}/maintainer-quality-tools/travis/cfg/travis_run_pylint_pr.cfg
-    wget -q https://raw.githubusercontent.com/Vauxoo/pylint-conf/master/conf/pylint_vauxoo_light_beta.cfg -O ${HOME}/maintainer-quality-tools/travis/cfg/travis_run_pylint_beta.cfg
-    wget -q https://raw.githubusercontent.com/Vauxoo/pylint-conf/master/conf/.jslintrc -O ${HOME}/maintainer-quality-tools/travis/cfg/.jslintrc
+    wget -q https://raw.githubusercontent.com/vauxoo-dev/pylint-conf/master-enable-unnecessary-utf8-coding-comment-jesuszapata/conf/pylint_vauxoo_light.cfg -O ${HOME}/maintainer-quality-tools/travis/cfg/travis_run_pylint.cfg
+    wget -q https://raw.githubusercontent.com/vauxoo-dev/pylint-conf/master-enable-unnecessary-utf8-coding-comment-jesuszapata/conf/pylint_vauxoo_light_pr.cfg -O ${HOME}/maintainer-quality-tools/travis/cfg/travis_run_pylint_pr.cfg
+    wget -q https://raw.githubusercontent.com/vauxoo-dev/pylint-conf/master-enable-unnecessary-utf8-coding-comment-jesuszapata/conf/pylint_vauxoo_light_beta.cfg -O ${HOME}/maintainer-quality-tools/travis/cfg/travis_run_pylint_beta.cfg
+    wget -q https://raw.githubusercontent.com/vauxoo-dev/pylint-conf/master-enable-unnecessary-utf8-coding-comment-jesuszapata/conf/.jslintrc -O ${HOME}/maintainer-quality-tools/travis/cfg/.jslintrc
     # Ugly patch to apply https://github.com/PyCQA/pylint/pull/1055
     wget -q https://raw.githubusercontent.com/Vauxoo/pylint-conf/master/conf/pylint_pr1055.patch -O /tmp/pylint_pr1055.patch
     patch -f -p0 $(python -c "from __future__ import print_function; from pylint.checkers import similar; print(similar.__file__.rstrip('c'))") -i /tmp/pylint_pr1055.patch
