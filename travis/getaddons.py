@@ -10,11 +10,7 @@ import ast
 import os
 import sys
 
-try:
-    from itertools import ifilter, imap
-except ImportError:
-    ifilter = filter
-    imap = map
+from itertools import ifilter, imap
 
 from git_run import GitRun
 
@@ -98,7 +94,11 @@ def get_modules_changed(path, ref='HEAD'):
     :return: List of paths of modules changed
     '''
     git_run_obj = GitRun(os.path.join(path, '.git'))
-    git_run_obj.run(['fetch'] + ref.split('/'))
+    if '/' in ref:
+        origin, branch = ref.split('/')
+        git_run_obj.run(['fetch', origin, '%(br)s:%(br)s' % {'br': branch}])
+    else:
+        git_run_obj.run(['fetch'] + ref.split('/'))
     items_changed = git_run_obj.get_items_changed(ref)
     folders_changed = set([
         item_changed.split('/')[0]

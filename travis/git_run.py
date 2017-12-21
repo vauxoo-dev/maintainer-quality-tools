@@ -1,7 +1,5 @@
 # -*- coding: utf-8 -*-
 
-from __future__ import print_function
-from six import string_types
 import subprocess
 
 
@@ -17,16 +15,12 @@ class GitRun(object):
         :return: String output of command executed.
         """
         cmd = ['git', '--git-dir=' + self.repo_path] + command
-        print(cmd if self.debug else '')
+        print cmd if self.debug else ''
         try:
             res = subprocess.check_output(cmd)
         except subprocess.CalledProcessError:
             res = None
-        try:
-            res = res.decode()
-        except (UnicodeDecodeError, AttributeError):
-            pass
-        if isinstance(res, string_types):
+        if isinstance(res, basestring):
             res = res.strip('\n')
         return res
 
@@ -38,8 +32,12 @@ class GitRun(object):
             e.g. "master" or "SHA_NUMBER"
         :return: List of name of items changed
         """
-        command = ['diff-index', '--name-only',
-                   '--cached', base_ref]
+        if '/' in base_ref:
+            origin, branch = base_ref.split('/')
+            command = ['diff-index', '--name-only', '--cached', branch]
+        else:
+            command = ['diff-index', '--name-only',
+                       '--cached', base_ref]
         res = self.run(command)
         items = res.split('\n') if res else []
         return items
