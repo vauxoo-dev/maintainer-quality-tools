@@ -120,9 +120,9 @@ for file in ${ODOO_PATH}/{odoo,openerp}/addons/base/{base.sql,data/base_data.sql
             ${ODOO_PATH}/{odoo,openerp}/models.py \
             ${ODOO_PATH}/{odoo,openerp}/tools/sql.py
     do
-        if [[ -f ${file} ]] && grep -q "CREATE TABLE" ${file} ; then
+        if [[ -f ${file} ]] && grep -iq "CREATE TABLE" ${file} ; then
             echo -e "\tPatching file '${file}' to create tables as unlogged"
-            sed -i 's/CREATE TABLE/CREATE UNLOGGED TABLE/g' ${file}
+            sed -i 's/CREATE TABLE/CREATE UNLOGGED TABLE/gI' ${file}
         fi
 done
 
