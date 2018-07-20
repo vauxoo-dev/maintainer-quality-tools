@@ -107,6 +107,8 @@ sed -i '/^python-ldap\=\=/d' ${ODOO_PATH}/requirements.txt
 # Use requests with [security] suffix to fix [Errno 111] Connection refused for old python2.7 versions.
 sed -i 's/^requests\=\=/requests[security]\=\=/g' ${ODOO_PATH}/requirements.txt
 
+
+sed -i "s/PyYAML==3.12/PyYAML==3.13/g" ${ODOO_PATH}/requirements.txt
 pip install -q --no-binary pycparser -r ${ODOO_PATH}/requirements.txt
 pip install -q QUnitSuite coveralls codecov
 
