@@ -173,7 +173,9 @@ pylint_rcfile_pr = os.path.join(
     "travis_run_pylint_pr.cfg")
 
 
+print("printing: is_pull_request, branch_base, git_work_dir:", is_pull_request, branch_base, git_work_dir)
 if is_pull_request and branch_base and git_work_dir:
+    print("It's a pull request")
     if os.environ.get("GITLAB_CI"):
         # When running on GitLab CI, there's no way to know the base/target
         # branch, thus there's no way to know for sure what files were
@@ -185,6 +187,7 @@ if is_pull_request and branch_base and git_work_dir:
     modules_changed = get_modules_changed(
         git_work_dir,
         branch_base)
+    print("modules_changed, count_errors:", modules_changed, count_errors)
     if modules_changed and count_errors >= 0:
         modules_changed_cmd = [
             '--path=%s' % module
@@ -194,6 +197,10 @@ if is_pull_request and branch_base and git_work_dir:
             '--ignore=%s' % path.strip()
             for path in exclude_lint.split(',') if path
         ])
+        print("modules_changed_cmd:", modules_changed_cmd)
+        print("run_pylint.main params:", [
+            "--config-file=" + pylint_rcfile_pr,
+            ] + modules_changed_cmd + extra_params_cmd)
         pr_errors = run_pylint.main([
             "--config-file=" + pylint_rcfile_pr,
         ] + modules_changed_cmd + extra_params_cmd, standalone_mode=False)
