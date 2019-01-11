@@ -451,8 +451,13 @@ def main(argv=None):
         lambda other_project: os.path.join(travis_home, other_project),
         test_other_projects)
     tested_addons = ','.join(tested_addons_list)
-    if tested_addons and odoo_version == '8.0' and not no_extra_repos:
-        tested_addons += ',odoolint_isolated'
+
+    odoolint_path = find_module('odoolint', addons_path_list)
+    if tested_addons and odoolint_path:
+        with open(odoolint_path) as f_odoolint_path:
+            odoolint_autoinstall = eval(f_odoolint_path.read()).get('auto_install')
+        if odoolint_autoinstall:
+            tested_addons += ',odoolint'
 
     print("Working in %s" % travis_build_dir)
     print("Using repo %s and addons path %s" % (odoo_full, addons_path))
