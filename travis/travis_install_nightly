@@ -148,7 +148,7 @@ if [ "x${WITHOUT_DEPENDENCIES}" == "x" ] ; then
     echo "Installing dependencies"
     pip install -q --no-binary pycparser -r ${HOME}/maintainer-quality-tools/requirements.txt
 
-    pip install -q QUnitSuite coveralls codecov
+    pip install -q QUnitSuite coveralls codecov coverage==5.1
 
     pip install pstats_print2list
     pip install certifi
@@ -220,6 +220,7 @@ fi;
 
 # Use reference .coveragerc
 cp ${HOME}/maintainer-quality-tools/cfg/.coveragerc ${TRAVIS_BUILD_DIR}
+cp ${HOME}/maintainer-quality-tools/cfg/.coverage.css ${TRAVIS_BUILD_DIR}
 
 # Expected directory structure:
 #

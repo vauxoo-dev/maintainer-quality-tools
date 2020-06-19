@@ -1,0 +1,99 @@
+/* Page-wide styles */
+html, body, h1, h2, h3, p, table, td, th {
+    font-family: Courier;
+}
+
+h1 {
+    font-size: 1.5em;
+    text-align: center;
+    text-decoration: underline #282c2f;
+}
+
+#header {
+    background-image: url(https://s3.amazonaws.com/s3.vauxoo.com/logoHorizontal.png);
+    background-color: white;
+    background-size: 10%;
+    background-position: 5% 50%;
+    background-repeat: no-repeat;
+    border-bottom: 2px solid #282c2f;
+    text-align: center;
+    color: #282c2f;
+    margin-top: 0;
+    position: fixed;
+}
+
+#filter {
+    font-size: 1.25em;
+}
+
+#footer {
+    position: fixed;
+    left: 0;
+    bottom: 0;
+    width: 100%;
+    background-color: red;
+    color: white;
+    text-align: center;
+    background-color: #282c2f;
+    z-index: 1000;
+    color: white;
+    margin: 0 !important;
+}
+
+#footer p {
+    color: white;
+    padding: 20px;
+}
+
+#index {
+    margin-top: 0px;
+}
+
+table.index {
+    padding-top: 300px;
+    position: absolute;
+    margin-left: -45px;
+    margin-top: 60px;
+    margin-bottom: 80px;
+    z-index: -100;
+}
+
+#source {
+    position: absolute;
+    margin-top: 100px;
+    z-index: -100;
+    padding-bottom: 60px
+}
+
+#index th {
+    font-style: normal;
+    font-weight: bold;
+    padding-top: 15px;
+    padding-bottom: 15px;
+    text-align: center;
+    text-transform: capitalize;
+}
+
+#index th.name {
+    padding-left: 15px;
+}
+#index td.name {
+    padding-left: 15px;
+}
+
+#index th.headerSortDown, #index th.headerSortUp {
+    border-bottom: 2px solid #000;
+    white-space: nowrap;
+    background: #eee;
+}
+#index tr.total td, #index tr.total_dynamic td {
+    border-top: 2px solid #000;
+}
+
+#source p .r {
+    right: -3.5em;
+}
+
+#source p .ctxs {
+    margin-right: -3.5em;
+}
