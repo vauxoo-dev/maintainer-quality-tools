@@ -1,106 +1,43 @@
 #!/usr/bin/env python
 
-from __future__ import print_function
-
 import os
+import logging
+
+_logger = logging.getLogger(__name__)
+
+
 try:
-    depends_error = False
     from coverage.cmdline import main as coverage_main
-    from coveralls import cli as coveralls_cli
+except ImportError as e:
+    _logger.error("The coverage python library is not installed")
+    exit(1)
 
-    import db_run
-    import psql_log
-    from pstats_print2list.pstats_print2list import get_pstats_print2list, print_pstats_list
-    from test_server import get_server_path
-except ImportError:
-    depends_error = True
+test_enabled = (os.environ.get('TESTS', '0') == '1' and
+                os.environ.get('TEST_ENABLE', '1') == '1')
 
+if not test_enabled:
+    exit(0)
 
-def print_pstats(sort='cumulative'):
-    pstats_list = get_pstats_print2list(
-        os.path.expanduser(fname_pstats),
-        filter_fnames=[travis_home],
-        exclude_fnames=[server_path, 'odoo-profiler', travis_py],
-        sort=sort,
-        limit=30,
-    )
-    if not pstats_list:
-        return False
-    print("Print cProfile sorted by ", sort)
-    print_pstats_list(pstats_list)
-    return True
+build_dir = os.environ.get('TRAVIS_BUILD_DIR') or os.environ.get('CI_PROJECT_DIR') or ''
+coveragerc = os.path.join(build_dir, '.coveragerc')
+coverage_min = int(os.environ.get('COVERAGE_MIN', '60'))
 
+if not os.path.isfile(coveragerc):
+    _logger.error("Coverage configuration file not found: [%s]", coveragerc)
+    exit(1)
 
-def list2param(param, items):
-    params = []
-    for item in items:
-        params.extend([param, item])
-    return params
+html_extra_params = []
+if 'CI_COMMIT_REF_SLUG' in os.environ:
+    # coverage html extra params to store in artifacts directory of gitlab
+    html_extra_params = [
+        '-d', os.environ['CI_COMMIT_REF_SLUG'],
+        '--title', "Branch: %s" % os.environ['CI_COMMIT_REF_NAME'],
+    ]
+# coverage html
+coverage_main(["html", "--rcfile=%s" % coveragerc, "--show-contexts"] + html_extra_params)
 
-
-def generate_pgbadger(exclude_regex=None):
-    # TODO: Receive the begin and end dates params
-    if exclude_regex is None:
-        exclude_regex = [
-            r"(v.model = 'res\.lang')",
-            r"^(INSERT INTO|DELETE FROM|CREATE TEMP TABLE|DROP TABLE|drop table|update|UPDATE)( tmp_ir_translation_import)",  # noqa
-            r"^(INSERT INTO|UPDATE ONLY|insert into|update only)( ir_translation)",  # noqa
-            r'^(SELECT|select)( \"res_lang\".id FROM \"res_lang\" WHERE )',
-            r'^(UPDATE|SELECT|INSERT INTO)( \"ir_module_module\")',
-            r'^(UPDATE|SELECT|INSERT INTO)( \"ir_model\")',
-            r'^(SELECT "ir_ui_view".id FROM \"ir_model_data\" )',
-            r'(from|FROM|update|UPDATE)( wkf)(_|\w)*( )',
-            r'^(COPY|COMMIT|SAVEPOINT|commit|copy|savepoint)',
-            r'^(INSERT INTO \"ir_attachment\" )',
-            r'^(select \"res_company\"\.id from \"res_company\" )',
-            r'^(select id from ir_model_fields where)',
-            r'^(select \"res_users\"\.\"id\",\"res_users\"\.\"company_id\" from)',
-            r'^(select \"ir_config_parameter\"\.id)',
-            r'ir_module_module_dependency',
-        ]
-    fname_log = psql_log.get_current_log_path()
-    if not fname_log:
-        print("postgresql log file don't exists.", fname_log)
-        return False
-    pgbadger_out = os.path.join(
-        os.path.expanduser("~"), '.openerp_server.pgbadger')
-    extra_params = list2param('--exclude-query', exclude_regex)
-    extra_params.extend([
-        '--top', '15', '--sample', '2',
-        '--disable-type', '--disable-error', '--disable-hourly',
-        '--disable-session', '--disable-connection', '--disable-temporary',
-        '--maxlength', '400', '--quiet',
-    ])
-    psql_log.generate_pgbadger_html(
-        fname_log, fout=pgbadger_out,
-        extra_params=extra_params,
-    )
-    with open(pgbadger_out) as p_pgbadger_out:
-        print("*" * 50, "PGBADGER STATS \n",
-              p_pgbadger_out.read(), "\n", "*" * 50,)
-    return True
-
-
-if os.environ.get('TESTS', '0') == '1' and \
-        os.environ.get('TEST_ENABLE', '1') == '1' and not depends_error:
-
-    odoo_full = os.environ.get("ODOO_REPO", "odoo/odoo")
-    odoo_version = os.environ.get("VERSION")
-    travis_home = os.environ.get("HOME", "~/")
-    server_path = get_server_path(odoo_full, odoo_version, travis_home)
-    travis_py = '/home/travis/virtualenv/python2.7_with_system_site_packages'
-    fname_pstats = os.environ.get("FNAME_PSTATS", '~/.openerp_server.stats')
-
-    if print_pstats('cumulative'):
-        print_pstats('calls')
-        print_pstats('time')
-    if os.environ.get('DB_BACKUP', False):
-        backup_result = db_run.backup('openerp_template')
-        if backup_result:
-            print("Backup of database created successfully.")
-        else:
-            print("Error creating backup of database.")
-    if os.environ.get('PG_LOGS_ENABLE', False):
-        generate_pgbadger()
-    coverage_main(["report", "--show-missing"])
-    exit(coveralls_cli.main(argv=None))
+# coverage txt
+result = coverage_main(["report", "-m", "--show-missing", "--rcfile=%s" % coveragerc,
+                        '--fail-under=%d' % coverage_min])
+# fail only if coverage is under minimal value
+exit(result != 2)
